@@ -161,7 +161,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <span class="offline-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>Saves to this device</span>
-      <span class="version-label">v9 — Jun 6, 2026</span>
+      <span class="version-label">v11 — Jun 9, 2026</span>
     </div>
   </div>
 
@@ -217,7 +217,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
       <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm — TC minus FC</div></div>
       <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 80–120</div></div>
       <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 200–400</div></div>
-      <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="40" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm — outdoor pools only</div></div>
+      <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 50 ppm (outdoor pools)</div></div>
       <div class="icard"><label>Temperature (°F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
     </div>
 
@@ -241,6 +241,18 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
           <div class="orp-bar-track"><div class="orp-bar-fill" id="orp-bar" style="width:0%;background:#378ADD;"></div></div>
           <div class="orp-bar-labels"><span>0 mV</span><span id="orp-sp-label">Setpoint</span><span>900 mV</span></div>
           <div style="font-size:12px;color:var(--text2);margin-top:6px;" id="orp-status-sub"></div>
+        </div>
+      </div>
+
+      <div id="cya-orp-card" style="display:none;margin-bottom:1rem;">
+        <p class="slabel">CYA correction for ORP</p>
+        <div class="cc-result" id="cya-orp-inner">
+          <div class="cc-row">
+            <div class="cc-val-block"><div class="cc-val-label">Free active chlorine</div><div class="cc-val-num" id="fac-val">—</div></div>
+            <div class="cc-val-block"><div class="cc-val-label">CYA level</div><div class="cc-val-num" id="cya-level-val">—</div></div>
+            <div class="cc-val-block"><div class="cc-val-label">ORP reliability</div><div class="cc-val-num" id="orp-reliability" style="font-size:15px;margin-top:4px;">—</div></div>
+          </div>
+          <div class="cc-note" id="cya-orp-note"></div>
         </div>
       </div>
 
@@ -468,6 +480,62 @@ function renderCC(cc,fc,vol){
   }
 }
 
+// CYA correction — calculates Free Active Chlorine (HOCl fraction)
+// Based on Henderson-Hasselbalch: HOCl fraction depends on pH and CYA buffering
+// FAC (ppm) = FC × (1 / (1 + (CYA/K) × 10^(pH - pKa)))
+// pKa of HOCl = 7.54, pKa of CYA-HOCl = 6.8
+// Simplified industry approximation used here
+function calcFAC(fc, cya, pH){
+  if(!fc||!cya||!pH) return null;
+  // HOCl fraction without CYA
+  var pKaHOCl=7.54;
+  var hoClFraction=1/(1+Math.pow(10,pH-pKaHOCl));
+  // CYA binding factor — at pH 7.5, ~97% of FC is bound at 50ppm CYA
+  // Effective FAC approximation: FAC = FC × hoClFraction / (1 + cya/K)
+  // K empirically ~5 at pH 7.5, adjusted for pH
+  var K=5*Math.pow(10,7.5-pH);
+  var fac=fc*hoClFraction/(1+cya/K);
+  return parseFloat(fac.toFixed(3));
+}
+
+function renderCYACorrection(fc, cya, pH, orp, orpSP){
+  var card=document.getElementById('cya-orp-card');
+  var inner=document.getElementById('cya-orp-inner');
+  card.style.display='block';
+  inner.style.borderColor='';inner.style.background='';
+
+  var fac=calcFAC(fc,cya,pH);
+  document.getElementById('cya-level-val').textContent=cya+' ppm';
+  document.getElementById('fac-val').textContent=fac!=null?fac.toFixed(3)+' ppm':'—';
+
+  var relEl=document.getElementById('orp-reliability');
+  var noteEl=document.getElementById('cya-orp-note');
+
+  // ORP suppression estimate: each 10ppm CYA suppresses ORP by ~5-7mV at typical FC
+  var orpSuppression=Math.round(cya*0.6);
+
+  // Suggested setpoint adjustment
+  var suggestedSP=orpSP?Math.round(orpSP+orpSuppression):null;
+
+  if(cya<=20){
+    relEl.textContent='High reliability';relEl.style.color='var(--success-text)';
+    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) — ORP is highly reliable but stabiliser should be raised. Estimated ORP suppression from CYA: ~'+orpSuppression+' mV.';
+  }else if(cya<=60){
+    relEl.textContent='Normal — within target range';relEl.style.color='var(--success-text)';
+    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Estimated ORP suppression: ~'+orpSuppression+' mV. Free active chlorine is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');
+  }else if(cya<=80){
+    relEl.textContent='Elevated — some suppression';relEl.style.color='var(--warn-text)';
+    inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is above target. ORP is suppressed by approximately '+orpSuppression+' mV — cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');
+  }else{
+    relEl.textContent='Unreliable — CYA too high';relEl.style.color='var(--danger-text)';
+    inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is excessive — ORP is suppressed by ~'+orpSuppression+' mV and is no longer a reliable disinfection indicator. FAC is only ~'+fac.toFixed(3)+' ppm despite FC reading of '+fc+' ppm. Partial drain/refill recommended to bring CYA back to 50 ppm target.';
+  }
+}
+
 function calculate(){
   saveInputs();
   var d=st.inputs[bkey()]||{};
@@ -480,6 +548,13 @@ function calculate(){
 
   if(!isNaN(orp)){renderORP(orp,isNaN(orpSP)?null:orpSP);}
   else{document.getElementById('orp-result-card').style.display='none';}
+
+  // CYA correction — outdoor pools only, needs ORP + FC + CYA + pH
+  if(outdoor&&!spa&&!isNaN(orp)&&!isNaN(fc)&&!isNaN(cya)&&cya>0){
+    renderCYACorrection(fc,cya,pH,orp,isNaN(orpSP)?null:orpSP);
+  }else{
+    document.getElementById('cya-orp-card').style.display='none';
+  }
 
   if(!isNaN(cc)&&!isNaN(fc)){renderCC(cc,fc,vol);}
   else{document.getElementById('cc-result-card').style.display='none';}
@@ -538,10 +613,10 @@ function calculate(){
   }else{doses.push({chem:'Calcium hardness',amount:'✓ OK',note:ch+' ppm — within range',ok:true});}
 
   if(outdoor&&!spa&&!isNaN(cya)){
-    var cyaDiff=40-cya;
-    if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~40 ppm'});}
-    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill.'});}
-    else{doses.push({chem:'Cyanuric acid',amount:'✓ OK',note:cya+' ppm — within range',ok:true});}
+    var cyaDiff=50-cya;
+    if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~50 ppm'});}
+    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill. Target: 40–60 ppm.'});}
+    else{doses.push({chem:'Cyanuric acid',amount:'✓ OK',note:cya+' ppm — within range (target 40–60 ppm)',ok:true});}
   }
 
   lastDoses=doses;
@@ -577,6 +652,21 @@ function buildReadingText(){
   if(lastLSI!=null){
     var lsiStatus=lastLSI<-0.5?'⚠ Corrosive':lastLSI>0.5?'⚠ Scaling':'✓ Balanced';
     lines.push('LSI: '+lastLSI.toFixed(2)+'  '+lsiStatus);
+  }
+  // CYA correction summary if applicable
+  var d2=st.inputs[bkey()]||{};
+  var fc2=parseFloat(d2.fc),cya2=parseFloat(d2['cya']),pH2=parseFloat(d2.pH);
+  if(isOutdoor()&&!isSpa()&&!isNaN(fc2)&&!isNaN(cya2)&&cya2>0&&!isNaN(pH2)){
+    var fac2=calcFAC(fc2,cya2,pH2);
+    if(fac2!=null){
+      lines.push('');
+      lines.push('── CYA CORRECTION ────────────────');
+      lines.push('CYA:               '+cya2+' ppm');
+      lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');
+      var supp=Math.round(cya2*0.6);
+      lines.push('Est. ORP suppression: ~'+supp+' mV from CYA');
+      lines.push(cya2>80?'⚠ ORP unreliable at this CYA level — partial drain/refill recommended':cya2>60?'⚠ CYA above target — cross-check with manual FC test':'✓ CYA within target range (50 ppm)');
+    }
   }
   lines.push('');
   lines.push('── DOSAGES ───────────────────────');
