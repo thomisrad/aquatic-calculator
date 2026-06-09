@@ -317,7 +317,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   <!-- HISTORY -->
   <div id="hist-page" style="display:none;">
     <div class="storage-row">
-      <span id="hist-status-badge" style="font-size:11px;color:var(--text3);">Loading...</span>
+      <span class="storage-badge" id="storage-badge">Connecting...</span>
       <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}else if(this.value==='refresh'){ghLoad().then(renderHistory);this.value='';}else if(this.value==='reset'){resetToken();this.value='';}">
         <option value="">Actions</option>
         <option value="refresh">⟳ Refresh from GitHub</option>
@@ -439,9 +439,7 @@ async function ghLoad(){
     var content=atob(j.content.replace(/\n/g,''));
     st.history=JSON.parse(content);
     ghSynced=true;
-    setSyncStatus('ok','Shared — '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
-    // Refresh history page if open
-    if(document.getElementById('hist-page').style.display!=='none') renderHistory();
+    setSyncStatus('ok','Synced — '+st.history.length+' shared reading'+(st.history.length!==1?'s':''));
   }catch(e){
     ghSynced=false;
     setSyncStatus('err','GitHub offline — using local data');
@@ -889,11 +887,6 @@ function setHistFilter(f){
 }
 function renderHistory(){
   setSyncStatus(ghSynced?'ok':'err', ghSynced?'Shared — '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)':'Local only — GitHub offline');
-  var badge2=document.getElementById('hist-status-badge');
-  if(badge2){
-    badge2.textContent=ghSynced?'✓ Synced with GitHub':'⚠ Local only — GitHub offline';
-    badge2.style.cssText=ghSynced?'font-size:11px;color:var(--success-text);':'font-size:11px;color:var(--danger-text);';
-  }
   var html='<button class="filt-btn'+(st.histFilter==='all'?' active':'')+'" data-f="all" onclick="setHistFilter(\'all\')">All</button>';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var fk=li+'-'+bi;html+='<button class="filt-btn'+(st.histFilter===fk?' active':'')+'" data-f="'+fk+'" onclick="setHistFilter(\''+fk+'\')">'+b.name+' ('+l.short+')</button>';});});
   document.getElementById('hist-filters').innerHTML=html;
