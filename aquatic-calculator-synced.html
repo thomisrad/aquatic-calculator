@@ -192,7 +192,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <span class="storage-badge" id="storage-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;">Connecting...</span>
-      <span class="version-label">v14 (synced) — Jun 9, 2026</span>
+      <span class="version-label">v15 (synced) — Jun 9, 2026</span>
     </div>
   </div>
 
@@ -449,7 +449,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 
     <div class="guide-section" style="text-align:center;">
       <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-        OSLU Aquatic Chemical Calculator · v14 (synced)<br>
+        OSLU Aquatic Chemical Calculator · v15 (synced)<br>
         For water chemistry questions consult your Senior Maintenance Manager.
       </div>
     </div>
@@ -779,9 +779,13 @@ function renderCYACorrection(fc, cya, pH, orp, orpSP){
 }
 
 function calculate(){
+  // Guard: ensure a location has been selected
+  var locSel=document.getElementById('location-select');
+  if(!locSel||!locSel.value){alert('Please select a body of water first.');return;}
   saveInputs();
   var d=st.inputs[bkey()]||{};
   var vol=currentVol();
+  if(!vol||vol<=0){alert('Volume not found — please re-select the body of water.');return;}
   var pH=parseFloat(d.pH),fc=parseFloat(d.fc),cc=parseFloat(d['cc']);
   var ta=parseFloat(d.ta),ch=parseFloat(d.ch),cya=parseFloat(d.cya),temp=parseFloat(d.temp);
   var orp=parseFloat(d['orp']),orpSP=parseFloat(d['orp-setpoint']);
