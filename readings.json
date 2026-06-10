@@ -1,56 +1,8 @@
 [
   {
-    "id": 1781134576792,
-    "ts": 1781134576792,
-    "level": "Level 1 — Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jun 10, 2026 at 4:36 PM",
-    "lsi": null,
-    "readings": {
-      "pH": 13,
-      "fc": 7.6,
-      "cc": 3,
-      "ta": 40,
-      "ch": null,
-      "cya": null,
-      "temp": 52,
-      "orp": 884,
-      "orpSetpoint": 880
-    },
-    "doses": [
-      {
-        "chem": "Shock dose — sodium hypochlorite (12.5%)",
-        "amount": "20.6 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "Muriatic acid (31.45%)",
-        "amount": "12.9 fl oz",
-        "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Sodium bicarbonate",
-        "amount": "0.96 lbs",
-        "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Calcium hardness",
-        "amount": "✓ OK",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
     "id": 1781134357858,
     "ts": 1781134357858,
-    "level": "Level 1 — Indoor",
+    "level": "Level 1 â Indoor",
     "levelIdx": 0,
     "bodyIdx": 1,
     "body": "Hot spa",
@@ -70,26 +22,26 @@
     },
     "doses": [
       {
-        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "chem": "Shock dose â sodium hypochlorite (12.5%)",
         "amount": "10.2 fl oz",
         "ok": false,
         "shock": true
       },
       {
         "chem": "pH",
-        "amount": "✓ OK",
+        "amount": "â OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Total alkalinity",
-        "amount": "✓ OK",
+        "amount": "â OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Calcium hardness",
-        "amount": "✓ OK",
+        "amount": "â OK",
         "ok": true,
         "shock": false
       }
@@ -98,7 +50,7 @@
   {
     "id": 1781134332548,
     "ts": 1781134332548,
-    "level": "Level 1 — Indoor",
+    "level": "Level 1 â Indoor",
     "levelIdx": 0,
     "bodyIdx": 0,
     "body": "Pool",
@@ -118,14 +70,14 @@
     },
     "doses": [
       {
-        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "chem": "Shock dose â sodium hypochlorite (12.5%)",
         "amount": "85.7 fl oz",
         "ok": false,
         "shock": true
       },
       {
         "chem": "pH",
-        "amount": "✓ OK",
+        "amount": "â OK",
         "ok": true,
         "shock": false
       },
@@ -137,7 +89,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "✓ OK",
+        "amount": "â OK",
         "ok": true,
         "shock": false
       }
@@ -146,7 +98,7 @@
   {
     "id": 1781133468754,
     "ts": 1781133468754,
-    "level": "Level 2 â Outdoor",
+    "level": "Level 2 Ã¢ÂÂ Outdoor",
     "levelIdx": 1,
     "bodyIdx": 1,
     "body": "Hot spa",
@@ -167,25 +119,25 @@
     "doses": [
       {
         "chem": "Sodium hypochlorite (12.5%)",
-        "amount": "Hold â FC high",
+        "amount": "Hold Ã¢ÂÂ FC high",
         "ok": false,
         "shock": false
       },
       {
-        "chem": "Soda ash (NaâCOâ)",
+        "chem": "Soda ash (NaÃ¢ÂÂCOÃ¢ÂÂ)",
         "amount": "1.6 oz",
         "ok": false,
         "shock": false
       },
       {
         "chem": "Total alkalinity",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Calcium hardness",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       }
@@ -194,7 +146,7 @@
   {
     "id": 1781133300036,
     "ts": 1781133300036,
-    "level": "Level 2 â Outdoor",
+    "level": "Level 2 Ã¢ÂÂ Outdoor",
     "levelIdx": 1,
     "bodyIdx": 0,
     "body": "Pool",
@@ -221,7 +173,7 @@
       },
       {
         "chem": "pH",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
@@ -233,13 +185,13 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Cyanuric acid",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       }
@@ -248,7 +200,7 @@
   {
     "id": 1781133037698,
     "ts": 1781133037698,
-    "level": "Level 13 â Outdoor",
+    "level": "Level 13 Ã¢ÂÂ Outdoor",
     "levelIdx": 2,
     "bodyIdx": 1,
     "body": "Hot tub",
@@ -269,7 +221,7 @@
     "doses": [
       {
         "chem": "pH",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
@@ -281,7 +233,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       }
@@ -290,7 +242,7 @@
   {
     "id": 1781132650924,
     "ts": 1781132650924,
-    "level": "Level 13 â Outdoor",
+    "level": "Level 13 Ã¢ÂÂ Outdoor",
     "levelIdx": 2,
     "bodyIdx": 0,
     "body": "Pool",
@@ -311,7 +263,7 @@
     "doses": [
       {
         "chem": "pH",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
@@ -323,13 +275,13 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Cyanuric acid",
-        "amount": "â OK",
+        "amount": "Ã¢ÂÂ OK",
         "ok": true,
         "shock": false
       }
@@ -338,7 +290,7 @@
   {
     "id": 1781114595206,
     "ts": 1781114595206,
-    "level": "Level 2 Ã¢ÂÂ Outdoor",
+    "level": "Level 2 ÃÂ¢ÃÂÃÂ Outdoor",
     "levelIdx": 1,
     "bodyIdx": 1,
     "body": "Hot spa",
@@ -359,19 +311,19 @@
     "doses": [
       {
         "chem": "pH",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Total alkalinity",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -380,7 +332,7 @@
   {
     "id": 1781114379934,
     "ts": 1781114379934,
-    "level": "Level 2 Ã¢ÂÂ Outdoor",
+    "level": "Level 2 ÃÂ¢ÃÂÃÂ Outdoor",
     "levelIdx": 1,
     "bodyIdx": 0,
     "body": "Pool",
@@ -419,13 +371,13 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Cyanuric acid",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -434,7 +386,7 @@
   {
     "id": 1781113864448,
     "ts": 1781113864448,
-    "level": "Level 13 Ã¢ÂÂ Outdoor",
+    "level": "Level 13 ÃÂ¢ÃÂÃÂ Outdoor",
     "levelIdx": 2,
     "bodyIdx": 1,
     "body": "Hot tub",
@@ -455,7 +407,7 @@
     "doses": [
       {
         "chem": "pH",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
@@ -467,7 +419,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -476,7 +428,7 @@
   {
     "id": 1781113752575,
     "ts": 1781113752575,
-    "level": "Level 13 Ã¢ÂÂ Outdoor",
+    "level": "Level 13 ÃÂ¢ÃÂÃÂ Outdoor",
     "levelIdx": 2,
     "bodyIdx": 0,
     "body": "Pool",
@@ -496,7 +448,7 @@
     },
     "doses": [
       {
-        "chem": "Shock dose Ã¢ÂÂ sodium hypochlorite (12.5%)",
+        "chem": "Shock dose ÃÂ¢ÃÂÃÂ sodium hypochlorite (12.5%)",
         "amount": "50.7 fl oz",
         "ok": false,
         "shock": true
@@ -515,13 +467,13 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
       {
         "chem": "Cyanuric acid",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -530,7 +482,7 @@
   {
     "id": 1781113463008,
     "ts": 1781113463008,
-    "level": "Level 1 Ã¢ÂÂ Indoor",
+    "level": "Level 1 ÃÂ¢ÃÂÃÂ Indoor",
     "levelIdx": 0,
     "bodyIdx": 2,
     "body": "Cold spa",
@@ -550,14 +502,14 @@
     },
     "doses": [
       {
-        "chem": "Shock dose Ã¢ÂÂ sodium hypochlorite (12.5%)",
+        "chem": "Shock dose ÃÂ¢ÃÂÃÂ sodium hypochlorite (12.5%)",
         "amount": "16.1 fl oz",
         "ok": false,
         "shock": true
       },
       {
         "chem": "pH",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
@@ -569,7 +521,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -578,7 +530,7 @@
   {
     "id": 1781113296032,
     "ts": 1781113296032,
-    "level": "Level 1 Ã¢ÂÂ Indoor",
+    "level": "Level 1 ÃÂ¢ÃÂÃÂ Indoor",
     "levelIdx": 0,
     "bodyIdx": 0,
     "body": "Pool",
@@ -598,7 +550,7 @@
     },
     "doses": [
       {
-        "chem": "Shock dose Ã¢ÂÂ sodium hypochlorite (12.5%)",
+        "chem": "Shock dose ÃÂ¢ÃÂÃÂ sodium hypochlorite (12.5%)",
         "amount": "104.8 fl oz",
         "ok": false,
         "shock": true
@@ -617,7 +569,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
@@ -626,7 +578,7 @@
   {
     "id": 1781113158327,
     "ts": 1781113158327,
-    "level": "Level 1 Ã¢ÂÂ Indoor",
+    "level": "Level 1 ÃÂ¢ÃÂÃÂ Indoor",
     "levelIdx": 0,
     "bodyIdx": 1,
     "body": "Hot spa",
@@ -646,14 +598,14 @@
     },
     "doses": [
       {
-        "chem": "Shock dose Ã¢ÂÂ sodium hypochlorite (12.5%)",
+        "chem": "Shock dose ÃÂ¢ÃÂÃÂ sodium hypochlorite (12.5%)",
         "amount": "3.1 fl oz",
         "ok": false,
         "shock": true
       },
       {
         "chem": "pH",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       },
@@ -665,7 +617,7 @@
       },
       {
         "chem": "Calcium hardness",
-        "amount": "Ã¢ÂÂ OK",
+        "amount": "ÃÂ¢ÃÂÃÂ OK",
         "ok": true,
         "shock": false
       }
