@@ -1,5 +1,47 @@
 [
   {
+    "id": 1781113864448,
+    "ts": 1781113864448,
+    "level": "Level 13 — Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 10, 2026 at 10:51 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 10,
+      "cc": 0.5,
+      "ta": 40,
+      "ch": null,
+      "cya": 25,
+      "temp": 103,
+      "orp": 771,
+      "orpSetpoint": 775
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "3.74 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium hardness",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781113752575,
     "ts": 1781113752575,
     "level": "Level 13 — Outdoor",
