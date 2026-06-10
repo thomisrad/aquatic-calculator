@@ -1,0 +1,200 @@
+[
+  {
+    "id": 1781113752575,
+    "ts": 1781113752575,
+    "level": "Level 13 — Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jun 10, 2026 at 10:49 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 3.5,
+      "cc": 0.5,
+      "ta": 60,
+      "ch": null,
+      "cya": 45,
+      "temp": 82,
+      "orp": 706,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "amount": "50.7 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "17.2 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "23.50 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium hardness",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781113463008,
+    "ts": 1781113463008,
+    "level": "Level 1 — Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 10, 2026 at 10:44 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 7.5,
+      "cc": 2.5,
+      "ta": 40,
+      "ch": null,
+      "cya": null,
+      "temp": 52,
+      "orp": 872,
+      "orpSetpoint": 880
+    },
+    "doses": [
+      {
+        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "amount": "16.1 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "0.96 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium hardness",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781113296032,
+    "ts": 1781113296032,
+    "level": "Level 1 — Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 10, 2026 at 10:41 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 4.5,
+      "cc": 1,
+      "ta": 80,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 839,
+      "orpSetpoint": 840
+    },
+    "doses": [
+      {
+        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "amount": "104.8 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "9.7 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "6.62 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium hardness",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781113158327,
+    "ts": 1781113158327,
+    "level": "Level 1 — Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Jun 10, 2026 at 10:39 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 8.5,
+      "cc": 1,
+      "ta": 80,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 809,
+      "orpSetpoint": 810
+    },
+    "doses": [
+      {
+        "chem": "Shock dose — sodium hypochlorite (12.5%)",
+        "amount": "3.1 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "0.71 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium hardness",
+        "amount": "✓ OK",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  }
+]
