@@ -40,7 +40,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .version-label{font-size:10px;color:var(--text3);text-align:right;}
 button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-select:none;pointer-events:all;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
 .page-btns{display:flex;gap:8px;margin-bottom:1.25rem;}
-.page-btn{flex:1;padding:10px 6px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;}
+.page-btn{flex:1;padding:10px 4px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:12px;}
 .page-btn.active{background:var(--bg2);color:var(--text);font-weight:500;}
 .location-select-wrap{margin-bottom:1rem;}
 .location-select-wrap select{font-size:15px;padding:10px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-weight:500;min-height:44px;}
@@ -120,6 +120,19 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .copy-preview-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;}
 .copy-preview-close{background:none;border:none;color:var(--text3);font-size:13px;padding:2px 6px;cursor:pointer;}
 .copy-preview-text{padding:12px;font-size:12px;line-height:1.7;color:var(--text);font-family:var(--font);white-space:pre-wrap;word-break:break-word;}
+.guide-section{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;}
+.guide-icon{font-size:24px;margin-bottom:8px;}
+.guide-step-label{font-size:11px;font-weight:500;color:var(--info-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
+.guide-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;}
+.guide-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;}
+.guide-body:last-child{margin-bottom:0;}
+.guide-table{border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:8px;}
+.guide-row{display:flex;justify-content:space-between;padding:8px 12px;font-size:12px;color:var(--text2);border-bottom:0.5px solid var(--border);}
+.guide-row:last-child{border-bottom:none;}
+.guide-row span:first-child{color:var(--text);font-weight:500;}
+.guide-row-head{background:var(--bg2);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+.guide-row-head span{color:var(--text3) !important;font-weight:400 !important;}
+.guide-tip{background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--info-text);line-height:1.6;margin-top:10px;}
 .disclaimer{font-size:11px;color:var(--text3);margin-top:1rem;line-height:1.6;}
 .storage-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
 .storage-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--success-bg);color:var(--success-text);border:0.5px solid var(--success-border);}
@@ -154,6 +167,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 </head>
 <body>
 <div class="wrap">
+
   <div class="app-header">
     <div>
       <h1>OSLU Aquatic Chemical Calculator</h1>
@@ -161,7 +175,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <span class="offline-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>Saves to this device</span>
-      <span class="version-label">v11 — Jun 9, 2026</span>
+      <span class="version-label">v18 (offline) — Jun 10, 2026</span>
     </div>
   </div>
 
@@ -169,6 +183,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <button class="page-btn active" id="pb-calc" onclick="showPage('calc')">Calculator</button>
     <button class="page-btn" id="pb-hist" onclick="showPage('hist')">History</button>
     <button class="page-btn" id="pb-trend" onclick="showPage('trend')">Trends</button>
+    <button class="page-btn" id="pb-info" onclick="showPage('info')">Guide</button>
   </div>
 
   <!-- CALCULATOR -->
@@ -268,7 +283,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
         </div>
       </div>
 
-      <p class="slabel" style="margin-top:1rem;">Langelier Saturation Index</p>
+      <p class="slabel" id="lsi-slabel" style="margin-top:1rem;">Langelier Saturation Index</p>
       <div class="status-card" id="lsi-card">
         <div class="status-num" id="lsi-val">—</div>
         <div><div class="status-title" id="lsi-title">—</div><div class="status-sub" id="lsi-sub"></div></div>
@@ -299,7 +314,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   <!-- HISTORY -->
   <div id="hist-page" style="display:none;">
     <div class="storage-row">
-      <span class="storage-badge" id="storage-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>0 readings stored</span>
+      <span class="storage-badge" id="storage-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>0 readings on this device</span>
       <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}">
         <option value="">Actions</option>
         <option value="csv">⬇ Export CSV</option>
@@ -332,7 +347,94 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <div class="chart-wrap" style="height:280px;"><canvas id="trend-chart" role="img" aria-label="Parameter trend chart">No data yet.</canvas></div>
     <div class="stat-grid" id="trend-stats"></div>
   </div>
-</div>
+
+  <!-- GUIDE PAGE -->
+  <div id="info-page" style="display:none;">
+    <div class="guide-section">
+      <div class="guide-icon">💧</div>
+      <div class="guide-title">Welcome to the OSLU Aquatic Chemical Calculator</div>
+      <div class="guide-body">This app helps you test water chemistry, calculate chemical dosages, and track readings over time across all 7 bodies of water at OSLU. Readings are saved to this device. Use the Export CSV option in History to share your readings with your team.</div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-step-label">Step 1</div>
+      <div class="guide-title">Select your body of water</div>
+      <div class="guide-body">On the Calculator tab, use the dropdown to choose which body of water you are testing. The volume is pre-set for each location — you do not need to enter it.</div>
+      <div class="guide-table">
+        <div class="guide-row"><span>Level 1 Indoor — Pool</span><span>18,600 gal</span></div>
+        <div class="guide-row"><span>Level 1 Indoor — Hot spa</span><span>2,000 gal</span></div>
+        <div class="guide-row"><span>Level 1 Indoor — Cold spa</span><span>900 gal</span></div>
+        <div class="guide-row"><span>Level 2 Outdoor — Pool</span><span>47,000 gal</span></div>
+        <div class="guide-row"><span>Level 2 Outdoor — Hot spa</span><span>900 gal</span></div>
+        <div class="guide-row"><span>Level 13 Outdoor — Pool</span><span>33,000 gal</span></div>
+        <div class="guide-row"><span>Level 13 Outdoor — Hot tub</span><span>3,500 gal</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-step-label">Step 2</div>
+      <div class="guide-title">Enter your ORP controller readings</div>
+      <div class="guide-body">Enter the current ORP probe reading and the controller setpoint in millivolts (mV). These come directly from your ORP controller display. ORP measures the sanitising power of the water — the higher the reading, the more active the chlorine.</div>
+      <div class="guide-tip">💡 If ORP is well below setpoint, check: chemical supply level, probe condition, and pH (high pH suppresses ORP).</div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-step-label">Step 3</div>
+      <div class="guide-title">Enter your water chemistry readings</div>
+      <div class="guide-body">Fill in your test kit results. All fields are optional except pH and free chlorine — these are the minimum required to generate useful dosage recommendations. Total alkalinity, calcium hardness, and temperature are also needed if you want the LSI calculation.</div>
+      <div class="guide-table">
+        <div class="guide-row guide-row-head"><span>Parameter</span><span>Target range</span></div>
+        <div class="guide-row"><span>pH</span><span>7.4 – 7.6 (pools) · 7.5 (spas)</span></div>
+        <div class="guide-row"><span>Free chlorine</span><span>1 – 5 ppm (pools) · 4 ppm (spas)</span></div>
+        <div class="guide-row"><span>Combined chlorine</span><span>Below 0.2 ppm</span></div>
+        <div class="guide-row"><span>Total alkalinity</span><span>80 – 120 ppm</span></div>
+        <div class="guide-row"><span>Calcium hardness</span><span>200 – 400 ppm (pools) · 150 ppm (spas)</span></div>
+        <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm (outdoor pools only)</span></div>
+        <div class="guide-row"><span>Temperature</span><span>Current water temp in °F</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-step-label">Step 4</div>
+      <div class="guide-title">Calculate dosages</div>
+      <div class="guide-body">Select "Calculate now" from the calculate dropdown. The app will show you three result sections:</div>
+      <div class="guide-table">
+        <div class="guide-row"><span>🔵 ORP status</span><span>How your controller is performing vs setpoint</span></div>
+        <div class="guide-row"><span>🟢 LSI</span><span>Whether water is balanced, corrosive, or scaling</span></div>
+        <div class="guide-row"><span>📋 Chemical dosages</span><span>Exact amounts of each chemical to add</span></div>
+      </div>
+      <div class="guide-tip">💡 A 🚨 red shock dose card means combined chlorine is too high — follow the dose instructions and retest after 4 hours.</div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-step-label">Step 5</div>
+      <div class="guide-title">Save and share the reading</div>
+      <div class="guide-body">Use the "Save or share" dropdown after calculating. You have two options:</div>
+      <div class="guide-table">
+        <div class="guide-row"><span>💾 Save to history</span><span>Saves reading to this device</span></div>
+        <div class="guide-row"><span>📋 Copy to clipboard</span><span>Paste a formatted report into Teams or email</span></div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-icon">📈</div>
+      <div class="guide-title">History and Trends tabs</div>
+      <div class="guide-body">The History tab shows all saved readings from all staff, filterable by body of water. The Trends tab charts any parameter over time for any body of water — useful for spotting drifting chemistry before it becomes a problem. Use the Actions dropdown in History to refresh data from GitHub or export a CSV file.</div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-icon">⚠️</div>
+      <div class="guide-title">Important reminders</div>
+      <div class="guide-body">Always add chemicals with the pump running and allow full circulation before retesting. Sodium hypochlorite (12.5%) degrades over time — check concentration before dosing. Never mix chemicals directly. Dosages are estimates based on standard water chemistry formulas — consult a licensed pool professional for critical decisions.</div>
+    </div>
+
+    <div class="guide-section" style="text-align:center;">
+      <div style="font-size:12px;color:var(--text3);line-height:1.8;">
+        OSLU Aquatic Chemical Calculator · v17 (offline)<br>
+        For water chemistry questions consult your Senior Maintenance Manager.
+      </div>
+    </div>
+  </div>
 
 <script>
 // ─── Facility configuration ───────────────────────────────────────────
@@ -359,10 +461,12 @@ var st={level:0,body:0,inputs:{},history:[],histFilter:'all'};
 var trendChart=null;
 var lastDoses=[],lastLSI=null;
 
-function currentBody(){return LEVELS[st.level].bodies[st.body];}
-function currentVol(){return currentBody().vol;}
-function isSpa(){return currentBody().spa;}
-function isOutdoor(){return st.level>0;}
+function setSyncStatus(type,text){
+  var b=document.getElementById('storage-badge');
+  if(!b) return;
+  b.textContent=(type==='ok'?'✓ ':'⚠ ')+text;
+}
+function bkey(){return st.level+'-'+st.body;}
 
 function loadLocal(){
   try{var h=localStorage.getItem(HKEY);if(h)st.history=JSON.parse(h);}catch(e){}
@@ -371,7 +475,11 @@ function loadLocal(){
 function saveLocal(){
   try{localStorage.setItem(HKEY,JSON.stringify(st.history));localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}
 }
-function bkey(){return st.level+'-'+st.body;}
+
+function currentBody(){return LEVELS[st.level].bodies[st.body];}
+function currentVol(){return currentBody().vol;}
+function isSpa(){return currentBody().spa;}
+function isOutdoor(){return st.level>0;}
 
 function saveInputs(){
   var d={};
@@ -411,7 +519,7 @@ function renderBodyTabs(){
 }
 
 function showPage(p){
-  ['calc','hist','trend'].forEach(function(n){
+  ['calc','hist','trend','info'].forEach(function(n){
     document.getElementById(n+'-page').style.display=n===p?'block':'none';
     document.getElementById('pb-'+n).classList.toggle('active',n===p);
   });
@@ -537,14 +645,19 @@ function renderCYACorrection(fc, cya, pH, orp, orpSP){
 }
 
 function calculate(){
+  // Guard: ensure a location has been selected
+  var locSel=document.getElementById('location-select');
+  if(!locSel||!locSel.value){alert('Please select a body of water first.');return;}
   saveInputs();
   var d=st.inputs[bkey()]||{};
   var vol=currentVol();
+  if(!vol||vol<=0){alert('Volume not found — please re-select the body of water.');return;}
   var pH=parseFloat(d.pH),fc=parseFloat(d.fc),cc=parseFloat(d['cc']);
   var ta=parseFloat(d.ta),ch=parseFloat(d.ch),cya=parseFloat(d.cya),temp=parseFloat(d.temp);
   var orp=parseFloat(d['orp']),orpSP=parseFloat(d['orp-setpoint']);
-  if([pH,ta,ch,temp].some(isNaN)){alert('Please fill in pH, total alkalinity, calcium hardness, and temperature.');return;}
+  if(isNaN(pH)){alert('Please fill in pH — this is required.');return;}
   var spa=isSpa(),outdoor=isOutdoor();
+  var lsiReady=!isNaN(ta)&&!isNaN(ch)&&!isNaN(temp);
 
   if(!isNaN(orp)){renderORP(orp,isNaN(orpSP)?null:orpSP);}
   else{document.getElementById('orp-result-card').style.display='none';}
@@ -559,14 +672,22 @@ function calculate(){
   if(!isNaN(cc)&&!isNaN(fc)){renderCC(cc,fc,vol);}
   else{document.getElementById('cc-result-card').style.display='none';}
 
-  var lsi=calcLSI(pH,ta,ch,temp);lastLSI=lsi;
+  var lsiLabel=document.getElementById('lsi-slabel');
   var lc=document.getElementById('lsi-card');
-  document.getElementById('lsi-val').textContent=lsi.toFixed(2);
-  lc.className='status-card';
-  if(lsi<-0.5){lc.classList.add('s-danger');document.getElementById('lsi-title').textContent='Corrosive — water is aggressive';document.getElementById('lsi-sub').textContent='Raise alkalinity or calcium hardness to protect surfaces and equipment.';}
-  else if(lsi>0.5){lc.classList.add('s-warn');document.getElementById('lsi-title').textContent='Scaling — calcium deposits likely';document.getElementById('lsi-sub').textContent='Lower pH or alkalinity to prevent cloudy water and scale buildup.';}
-  else{lc.classList.add('s-ok');document.getElementById('lsi-title').textContent='Balanced — properly saturated';document.getElementById('lsi-sub').textContent='LSI of '+lsi.toFixed(2)+' is within the ideal range of −0.3 to +0.3.';}
-
+  if(lsiReady){
+    var lsi=calcLSI(pH,ta,ch,temp);lastLSI=lsi;
+    lc.style.display='flex';
+    if(lsiLabel) lsiLabel.style.display='block';
+    document.getElementById('lsi-val').textContent=lsi.toFixed(2);
+    lc.className='status-card';
+    if(lsi<-0.5){lc.classList.add('s-danger');document.getElementById('lsi-title').textContent='Corrosive — water is aggressive';document.getElementById('lsi-sub').textContent='Raise alkalinity or calcium hardness to protect surfaces and equipment.';}
+    else if(lsi>0.5){lc.classList.add('s-warn');document.getElementById('lsi-title').textContent='Scaling — calcium deposits likely';document.getElementById('lsi-sub').textContent='Lower pH or alkalinity to prevent cloudy water and scale buildup.';}
+    else{lc.classList.add('s-ok');document.getElementById('lsi-title').textContent='Balanced — properly saturated';document.getElementById('lsi-sub').textContent='LSI of '+lsi.toFixed(2)+' is within the ideal range of −0.3 to +0.3.';}
+  }else{
+    lc.style.display='none';
+    if(lsiLabel) lsiLabel.style.display='none';
+    lastLSI=null;
+  }
   var doses=[];
   var fcTarget=spa?4.0:3.0;
   var shockNeeded=!isNaN(cc)&&cc>=0.5;
@@ -715,7 +836,7 @@ function showCopyFallback(text){
 function saveToHistory(){
   var d=st.inputs[bkey()]||{};
   var b=currentBody();
-  st.history.unshift({
+  var entry={
     id:Date.now(),ts:Date.now(),
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
@@ -728,9 +849,12 @@ function saveToHistory(){
       orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null
     },
     doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
-  });
+  };
+  st.history.unshift(entry);
   saveLocal();
+  setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
   alert('Saved — '+b.name+' ('+LEVELS[st.level].name+')');
+  renderHistory();
 }
 
 function lsiStyle(lsi){
@@ -745,7 +869,9 @@ function setHistFilter(f){
   renderHistory();
 }
 function renderHistory(){
-  document.getElementById('storage-badge').innerHTML='<i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>'+st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device';
+  setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
+  var badge2=document.getElementById('hist-status-badge');
+  if(badge2){badge2.textContent='✓ Saved locally';badge2.style.cssText='font-size:11px;color:var(--success-text);';}
   var html='<button class="filt-btn'+(st.histFilter==='all'?' active':'')+'" data-f="all" onclick="setHistFilter(\'all\')">All</button>';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var fk=li+'-'+bi;html+='<button class="filt-btn'+(st.histFilter===fk?' active':'')+'" data-f="'+fk+'" onclick="setHistFilter(\''+fk+'\')">'+b.name+' ('+l.short+')</button>';});});
   document.getElementById('hist-filters').innerHTML=html;
@@ -754,7 +880,7 @@ function renderHistory(){
   var list=document.getElementById('hist-list');
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
-    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' <span style="font-weight:400;color:var(--text2)">— '+e.level+'</span></div><div class="hist-when">'+e.when+(e.volume?' · '+(e.volume).toLocaleString()+' gal':'')+'</div></div>'
+    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' <span style="font-weight:400;color:var(--text2)">&#8212; '+e.level+'</span></div><div class="hist-when">'+e.when+(e.volume?' &middot; '+(e.volume).toLocaleString()+' gal':'')+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'—')+'</span>'
       +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">✕</button></div></div>'
       +'<div class="hist-params">'
@@ -774,7 +900,8 @@ function renderHistory(){
 function deleteEntry(id){
   if(!confirm('Delete this reading? This cannot be undone.'))return;
   st.history=st.history.filter(function(e){return e.id!==id;});
-  saveLocal();renderHistory();
+  saveLocal();
+  renderHistory();
 }
 
 function exportCSV(){
@@ -834,5 +961,6 @@ window.onload=function(){
   loadInputs();
 };
 </script>
+</div><!-- end wrap -->
 </body>
 </html>

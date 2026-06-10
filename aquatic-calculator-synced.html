@@ -192,7 +192,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <span class="storage-badge" id="storage-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;">Connecting...</span>
-      <span class="version-label">v17 (synced) — Jun 9, 2026</span>
+      <span class="version-label">v18 (synced) — Jun 10, 2026</span>
     </div>
   </div>
 
@@ -1037,7 +1037,7 @@ function renderHistory(){
   var list=document.getElementById('hist-list');
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
-    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' <span style="font-weight:400;color:var(--text2)">— '+e.level+'</span></div><div class="hist-when">'+e.when+(e.volume?' · '+(e.volume).toLocaleString()+' gal':'')+'</div></div>'
+    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' <span style="font-weight:400;color:var(--text2)">&#8212; '+e.level+'</span></div><div class="hist-when">'+e.when+(e.volume?' &middot; '+(e.volume).toLocaleString()+' gal':'')+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'—')+'</span>'
       +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">✕</button></div></div>'
       +'<div class="hist-params">'
