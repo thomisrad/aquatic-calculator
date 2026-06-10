@@ -192,7 +192,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
       <span class="storage-badge" id="storage-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;">Connecting...</span>
-      <span class="version-label">v16 (synced) — Jun 9, 2026</span>
+      <span class="version-label">v17 (synced) — Jun 9, 2026</span>
     </div>
   </div>
 
@@ -615,6 +615,19 @@ function setSyncStatus(type,text){
 }
 function bkey(){return st.level+'-'+st.body;}
 
+function loadLocal(){
+  try{var h=localStorage.getItem(HKEY);if(h)st.history=JSON.parse(h);}catch(e){}
+  try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
+}
+function saveLocal(){
+  try{localStorage.setItem(HKEY,JSON.stringify(st.history));localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}
+}
+
+function currentBody(){return LEVELS[st.level].bodies[st.body];}
+function currentVol(){return currentBody().vol;}
+function isSpa(){return currentBody().spa;}
+function isOutdoor(){return st.level>0;}
+
 function saveInputs(){
   var d={};
   ['pH','fc','cc','ta','ch','cya','temp','orp','orp-setpoint'].forEach(function(f){d[f]=document.getElementById(f).value;});
@@ -779,7 +792,6 @@ function renderCYACorrection(fc, cya, pH, orp, orpSP){
 }
 
 function calculate(){
-  try{
   // Guard: ensure a location has been selected
   var locSel=document.getElementById('location-select');
   if(!locSel||!locSel.value){alert('Please select a body of water first.');return;}
@@ -880,7 +892,6 @@ function calculate(){
     return '<div class="'+(d.shock?'dcard shock-card':'dcard')+'"><div class="dchem">'+d.chem+'</div><div class="damt">'+d.amount+'</div><div class="dnote">'+d.note+'</div>'+(d.ok?'<span class="ok-pill">in range</span>':'')+'</div>';
   }).join('');
   document.getElementById('results').classList.add('on');
-  }catch(err){alert('Calculate error: '+err.message);}
 }
 
 function buildReadingText(){
