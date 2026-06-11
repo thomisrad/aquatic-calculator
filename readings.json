@@ -1,5 +1,47 @@
 [
   {
+    "id": 1781191894853,
+    "ts": 1781191894853,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 11, 2026 at 8:31 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 4,
+      "cc": 0.5,
+      "ta": 50,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 646,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "48.1 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "41.83 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781191137365,
     "ts": 1781191137365,
     "level": "Level 13 - Outdoor",
