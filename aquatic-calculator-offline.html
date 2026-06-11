@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OSLU Aquatic Chemical Calculator</title>
-<link rel="stylesheet" href="https://unpkg.com/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -42,24 +41,18 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .page-btns{display:flex;gap:8px;margin-bottom:1.25rem;}
 .page-btn{flex:1;padding:10px 4px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:12px;}
 .page-btn.active{background:var(--bg2);color:var(--text);font-weight:500;}
-.location-select-wrap{margin-bottom:1rem;}
-.location-select-wrap select{font-size:15px;padding:10px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-weight:500;min-height:44px;}
-.calc-select-wrap{margin-bottom:1.25rem;}
-.calc-select-wrap select{font-size:15px;padding:10px 12px;border-radius:var(--radius);border:0.5px solid var(--info-border);background:var(--info-bg);color:var(--info-text);font-weight:500;min-height:44px;}
-.action-select-wrap{margin-bottom:1.25rem;}
-.action-select-wrap select{font-size:14px;padding:10px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-weight:500;min-height:44px;}
-.export-select{font-size:13px;padding:6px 12px;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);font-family:var(--font);min-height:36px;}
-.top-tabs{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
-.tab-btn{padding:10px 16px;border:0.5px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:14px;min-height:44px;}
-.tab-btn.active{background:var(--bg2);color:var(--text);border-color:var(--border2);font-weight:500;}
-.body-tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;}
-.body-btn{padding:8px 16px;border:0.5px solid var(--border);border-radius:20px;background:transparent;color:var(--text2);font-size:13px;min-height:36px;}
-.body-btn.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
-.vol-display{display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;padding:8px 14px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);}
-.vol-display .vol-icon{font-size:14px;color:var(--text3);}
-.vol-display .vol-text{font-size:13px;color:var(--text2);}
-.vol-display .vol-num{font-size:14px;font-weight:500;color:var(--text);margin-left:auto;}
 .slabel{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;}
+.location-select-wrap{margin-bottom:1rem;}
+.location-select-wrap select,.calc-select-wrap select,.action-select-wrap select,.export-select{width:100%;padding:10px 12px;border-radius:var(--radius);font-family:var(--font);min-height:44px;}
+.location-select-wrap select{font-size:15px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text);font-weight:500;}
+.calc-select-wrap{margin-bottom:1.25rem;}
+.calc-select-wrap select{font-size:15px;border:0.5px solid var(--info-border);background:var(--info-bg);color:var(--info-text);font-weight:500;}
+.action-select-wrap{margin-bottom:1.25rem;}
+.action-select-wrap select{font-size:14px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text);font-weight:500;}
+.export-select{font-size:13px;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);width:auto;}
+.vol-display{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding:8px 14px;background:var(--bg2);border-radius:var(--radius);border:0.5px solid var(--border);}
+.vol-display .vol-text{font-size:13px;color:var(--text2);}
+.vol-display .vol-num{font-size:14px;font-weight:500;color:var(--text);}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:1.25rem;}
 .icard{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;}
 .icard label{display:block;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
@@ -76,8 +69,6 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .orp-icard label{display:block;font-size:11px;color:var(--info-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
 .orp-icard input{border-color:var(--info-border);}
 .orp-icard .hint{font-size:11px;color:var(--text3);margin-top:4px;}
-.calc-btn{width:100%;padding:12px;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;font-weight:500;color:var(--text);margin-bottom:1.25rem;min-height:44px;}
-.calc-btn:active{background:var(--bg2);}
 .results{display:none;}
 .results.on{display:block;}
 .status-card{padding:14px 18px;border-radius:var(--radius-lg);border:0.5px solid var(--border);background:var(--bg);margin-bottom:1rem;display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
@@ -103,43 +94,23 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .divider{border:none;border-top:0.5px solid var(--border);margin:1.25rem 0;}
 .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:1.25rem;}
 .dcard{background:var(--bg2);border-radius:var(--radius);padding:12px;border:0.5px solid var(--border);}
+.shock-card{background:var(--danger-bg);border-color:var(--danger-border);}
+.shock-card .dchem{color:var(--danger-text);}
+.shock-card .damt{color:var(--danger-text);}
 .dchem{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
 .damt{font-size:20px;font-weight:500;color:var(--text);}
 .dnote{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.4;}
 .ok-pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--success-bg);color:var(--success-text);border:0.5px solid var(--success-border);margin-top:4px;}
-.shock-card{background:var(--danger-bg);border:0.5px solid var(--danger-border);border-radius:var(--radius);padding:12px;}
-.shock-card .dchem{color:var(--danger-text);}
-.shock-card .damt{color:var(--danger-text);}
-.save-btn{width:100%;padding:12px;background:var(--info-bg);color:var(--info-text);border:0.5px solid var(--info-border);border-radius:var(--radius);font-size:13px;font-weight:500;margin-bottom:10px;min-height:44px;}
-.save-btn:active{opacity:0.85;}
-.copy-btn{width:100%;padding:12px;background:var(--bg);color:var(--text2);border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-weight:500;margin-bottom:1.25rem;min-height:44px;}
-.copy-btn:active{background:var(--bg2);}
-.copy-btn.copied{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
 .copy-preview{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);margin-bottom:1.25rem;overflow:hidden;}
 .copy-preview-head{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--bg2);border-bottom:0.5px solid var(--border);}
 .copy-preview-label{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;}
 .copy-preview-close{background:none;border:none;color:var(--text3);font-size:13px;padding:2px 6px;cursor:pointer;}
 .copy-preview-text{padding:12px;font-size:12px;line-height:1.7;color:var(--text);font-family:var(--font);white-space:pre-wrap;word-break:break-word;}
-.guide-section{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;}
-.guide-icon{font-size:24px;margin-bottom:8px;}
-.guide-step-label{font-size:11px;font-weight:500;color:var(--info-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
-.guide-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;}
-.guide-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;}
-.guide-body:last-child{margin-bottom:0;}
-.guide-table{border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:8px;}
-.guide-row{display:flex;justify-content:space-between;padding:8px 12px;font-size:12px;color:var(--text2);border-bottom:0.5px solid var(--border);}
-.guide-row:last-child{border-bottom:none;}
-.guide-row span:first-child{color:var(--text);font-weight:500;}
-.guide-row-head{background:var(--bg2);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
-.guide-row-head span{color:var(--text3) !important;font-weight:400 !important;}
-.guide-tip{background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--info-text);line-height:1.6;margin-top:10px;}
 .disclaimer{font-size:11px;color:var(--text3);margin-top:1rem;line-height:1.6;}
 .storage-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
 .storage-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--success-bg);color:var(--success-text);border:0.5px solid var(--success-border);}
-.export-btn{font-size:12px;padding:6px 14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);min-height:36px;}
-.export-btn:active{background:var(--bg2);}
 .filter-row{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;}
-.filt-btn{padding:7px 14px;border:0.5px solid var(--border);border-radius:20px;background:transparent;color:var(--text2);font-size:12px;min-height:36px;}
+.filt-btn{padding:7px 14px;border:0.5px solid var(--border);border-radius:20px;background:transparent;color:var(--text2);font-size:12px;min-height:36px;cursor:pointer;font-family:var(--font);}
 .filt-btn.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
 .hist-entry{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;}
 .hist-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
@@ -153,8 +124,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .hist-dose-row{font-size:12px;color:var(--text2);margin-bottom:2px;}
 .hist-dose-row b{color:var(--text);font-weight:500;}
 .empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;}
-.del-btn{background:none;border:none;color:var(--text3);font-size:13px;padding:4px 8px;border-radius:4px;min-height:32px;min-width:32px;}
-.del-btn:active{color:var(--danger-text);}
+.del-btn{background:none;border:none;color:var(--text3);font-size:13px;padding:4px 8px;border-radius:4px;min-height:32px;min-width:32px;cursor:pointer;}
 .trend-selects{display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
 .trend-selects select{width:auto;flex:1;}
 .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:12px;color:var(--text2);}
@@ -163,310 +133,295 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .stat-card{background:var(--bg2);border-radius:var(--radius);padding:1rem;}
 .stat-label{font-size:12px;color:var(--text2);margin-bottom:4px;}
 .stat-val{font-size:22px;font-weight:500;}
+.guide-section{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:12px;}
+.guide-step-label{font-size:11px;font-weight:500;color:var(--info-text);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;}
+.guide-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;}
+.guide-body{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:10px;}
+.guide-table{border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:8px;}
+.guide-row{display:flex;justify-content:space-between;padding:8px 12px;font-size:12px;color:var(--text2);border-bottom:0.5px solid var(--border);}
+.guide-row:last-child{border-bottom:none;}
+.guide-row span:first-child{color:var(--text);font-weight:500;}
+.guide-row-head{background:var(--bg2);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
+.guide-row-head span{color:var(--text3) !important;font-weight:400 !important;}
+.guide-tip{background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--info-text);line-height:1.6;margin-top:10px;}
 </style>
 </head>
 <body>
 <div class="wrap">
+<div class="app-header">
+  <div>
+    <h1>OSLU Aquatic Chemical Calculator</h1>
+    <p>Level 1 Indoor | Level 2 Outdoor | Level 13 Outdoor</p>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+    <span class="offline-badge">Saves to this device</span>
+    <span class="version-label">v19 (offline) - Jun 11, 2026</span>
+  </div>
+</div>
 
-  <div class="app-header">
-    <div>
-      <h1>OSLU Aquatic Chemical Calculator</h1>
-      <p>Level 1 Indoor · Level 2 Outdoor · Level 13 Outdoor</p>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-      <span class="offline-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>Saves to this device</span>
-      <span class="version-label">v18 (offline) — Jun 10, 2026</span>
+<div class="page-btns">
+  <button class="page-btn active" id="pb-calc" onclick="showPage('calc')">Calculator</button>
+  <button class="page-btn" id="pb-hist" onclick="showPage('hist')">History</button>
+  <button class="page-btn" id="pb-trend" onclick="showPage('trend')">Trends</button>
+  <button class="page-btn" id="pb-info" onclick="showPage('info')">Guide</button>
+</div>
+
+<!-- CALCULATOR -->
+<div id="calc-page">
+  <div class="location-select-wrap">
+    <label class="slabel" for="location-select">Select body of water</label>
+    <select id="location-select" onchange="onLocationChange(this.value)">
+      <option value="">-- Choose a body of water --</option>
+      <option value="0-0">Level 1 Indoor - Pool - 18,600 gal</option>
+      <option value="0-1">Level 1 Indoor - Hot spa - 2,000 gal</option>
+      <option value="0-2">Level 1 Indoor - Cold spa - 900 gal</option>
+      <option value="1-0">Level 2 Outdoor - Pool - 47,000 gal</option>
+      <option value="1-1">Level 2 Outdoor - Hot spa - 900 gal</option>
+      <option value="2-0">Level 13 Outdoor - Pool - 33,000 gal</option>
+      <option value="2-1">Level 13 Outdoor - Hot tub - 3,500 gal</option>
+    </select>
+  </div>
+
+  <div class="vol-display" id="vol-display" style="display:none;">
+    <span class="vol-text" id="vol-label">Volume</span>
+    <span class="vol-num" id="vol-num">--</span>
+  </div>
+
+  <div class="orp-section">
+    <p class="slabel">ORP Controller</p>
+    <div class="orp-grid">
+      <div class="orp-icard">
+        <label>ORP Reading</label>
+        <input type="number" id="orp" placeholder="680" min="0" max="900" step="1" inputmode="decimal"/>
+        <div class="hint">mV -- current probe reading</div>
+      </div>
+      <div class="orp-icard">
+        <label>ORP Setpoint</label>
+        <input type="number" id="orp-setpoint" placeholder="750" min="0" max="900" step="1" inputmode="decimal"/>
+        <div class="hint">mV -- controller target</div>
+      </div>
     </div>
   </div>
 
-  <div class="page-btns">
-    <button class="page-btn active" id="pb-calc" onclick="showPage('calc')">Calculator</button>
-    <button class="page-btn" id="pb-hist" onclick="showPage('hist')">History</button>
-    <button class="page-btn" id="pb-trend" onclick="showPage('trend')">Trends</button>
-    <button class="page-btn" id="pb-info" onclick="showPage('info')">Guide</button>
+  <p class="slabel">Water chemistry readings</p>
+  <div class="grid">
+    <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">Target: 7.4 - 7.6</div></div>
+    <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="20" step="0.1" inputmode="decimal"/><div class="hint">ppm -- verify against ORP</div></div>
+    <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm -- TC minus FC</div></div>
+    <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 80-120</div></div>
+    <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 200-400</div></div>
+    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm (outdoor pools)</div></div>
+    <div class="icard"><label>Temperature (F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
   </div>
 
-  <!-- CALCULATOR -->
-  <div id="calc-page">
-    <div class="location-select-wrap">
-      <label class="slabel" for="location-select">Select body of water</label>
-      <select id="location-select" onchange="onLocationChange(this.value)">
-        <option value="">— Choose a body of water —</option>
-        <option value="0-0">Level 1 Indoor · Pool · 18,600 gal</option>
-        <option value="0-1">Level 1 Indoor · Hot spa · 2,000 gal</option>
-        <option value="0-2">Level 1 Indoor · Cold spa · 900 gal</option>
-        <option value="1-0">Level 2 Outdoor · Pool · 47,000 gal</option>
-        <option value="1-1">Level 2 Outdoor · Hot spa · 900 gal</option>
-        <option value="2-0">Level 13 Outdoor · Pool · 33,000 gal</option>
-        <option value="2-1">Level 13 Outdoor · Hot tub · 3,500 gal</option>
+  <div class="calc-select-wrap">
+    <label class="slabel" for="calc-trigger">Calculate dosages</label>
+    <select id="calc-trigger" onchange="if(this.value==='go'){calculate();this.value='';}">
+      <option value="">-- Tap here to calculate --</option>
+      <option value="go">Calculate now</option>
+    </select>
+  </div>
+
+  <div class="results" id="results">
+    <p class="slabel">ORP Status</p>
+    <div class="status-card" id="orp-result-card" style="display:none;">
+      <div>
+        <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Reading</div>
+        <div class="status-num" id="orp-result-val">--</div>
+      </div>
+      <div class="orp-bar-wrap">
+        <div style="font-size:13px;font-weight:500;margin-bottom:8px;" id="orp-status-title">--</div>
+        <div class="orp-bar-track"><div class="orp-bar-fill" id="orp-bar" style="width:0%;background:#378ADD;"></div></div>
+        <div class="orp-bar-labels"><span>0 mV</span><span id="orp-sp-label">Setpoint</span><span>900 mV</span></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:6px;" id="orp-status-sub"></div>
+      </div>
+    </div>
+
+    <div id="cya-orp-card" style="display:none;margin-bottom:1rem;">
+      <p class="slabel">CYA Correction for ORP</p>
+      <div class="cc-result" id="cya-orp-inner">
+        <div class="cc-row">
+          <div class="cc-val-block"><div class="cc-val-label">Free active chlorine</div><div class="cc-val-num" id="fac-val">--</div></div>
+          <div class="cc-val-block"><div class="cc-val-label">CYA level</div><div class="cc-val-num" id="cya-level-val">--</div></div>
+          <div class="cc-val-block"><div class="cc-val-label">ORP reliability</div><div class="cc-val-num" id="orp-reliability" style="font-size:15px;margin-top:4px;">--</div></div>
+        </div>
+        <div class="cc-note" id="cya-orp-note"></div>
+      </div>
+    </div>
+
+    <div id="cc-result-card" style="display:none;">
+      <p class="slabel">Combined Chlorine</p>
+      <div class="cc-result" id="cc-result-inner">
+        <div class="cc-row">
+          <div class="cc-val-block"><div class="cc-val-label">Combined chlorine</div><div class="cc-val-num" id="cc-val">--</div></div>
+          <div class="cc-val-block"><div class="cc-val-label">Shock threshold (10x CC)</div><div class="cc-val-num" id="cc-shock-thresh">--</div></div>
+          <div class="cc-val-block"><div class="cc-val-label">Status</div><div class="cc-val-num" id="cc-status-text" style="font-size:15px;margin-top:4px;">--</div></div>
+        </div>
+        <div class="cc-note" id="cc-note"></div>
+      </div>
+    </div>
+
+    <p class="slabel" id="lsi-slabel" style="margin-top:1rem;">Langelier Saturation Index</p>
+    <div class="status-card" id="lsi-card">
+      <div class="status-num" id="lsi-val">--</div>
+      <div><div class="status-title" id="lsi-title">--</div><div class="status-sub" id="lsi-sub"></div></div>
+    </div>
+
+    <hr class="divider"/>
+    <p class="slabel">Chemical Dosages</p>
+    <div class="dgrid" id="dose-grid"></div>
+
+    <div class="action-select-wrap">
+      <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}">
+        <option value="">-- Save or share this reading --</option>
+        <option value="save">Save reading to history</option>
+        <option value="copy">Copy reading to clipboard</option>
       </select>
     </div>
 
-    <!-- Volume display — filled by onLocationChange -->
-    <div class="vol-display" id="vol-display" style="display:none;">
-      <i class="ti ti-droplet vol-icon" aria-hidden="true"></i>
-      <span class="vol-text" id="vol-label">Volume</span>
-      <span class="vol-num" id="vol-num">—</span>
+    <div id="copy-preview" class="copy-preview" style="display:none;">
+      <div class="copy-preview-head">
+        <span class="copy-preview-label">Preview -- paste into Teams or email</span>
+        <button class="copy-preview-close" onclick="document.getElementById('copy-preview').style.display='none'">X</button>
+      </div>
+      <pre id="copy-preview-text" class="copy-preview-text"></pre>
     </div>
 
-    <div class="orp-section">
-      <p class="slabel"><i class="ti ti-bolt" aria-hidden="true"></i> ORP controller</p>
-      <div class="orp-grid">
-        <div class="orp-icard">
-          <label>ORP reading</label>
-          <input type="number" id="orp" placeholder="680" min="0" max="900" step="1" inputmode="decimal"/>
-          <div class="hint">mV — current probe reading</div>
-        </div>
-        <div class="orp-icard">
-          <label>ORP setpoint</label>
-          <input type="number" id="orp-setpoint" placeholder="750" min="0" max="900" step="1" inputmode="decimal"/>
-          <div class="hint">mV — controller target</div>
-        </div>
-      </div>
-    </div>
+    <p class="disclaimer">[!] Estimates based on standard water chemistry formulas. ORP is influenced by pH -- high pH suppresses ORP even when FC is adequate. Always cross-reference ORP with manual FC tests. Breakpoint shock doses calculated at 10x combined chlorine -- retest after 4 hours. Sodium hypochlorite degrades over time -- verify concentration. Consult a licensed pool professional for critical decisions.</p>
+  </div>
+</div>
 
-    <p class="slabel">Water chemistry readings</p>
-    <div class="grid">
-      <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">Target: 7.4 – 7.6</div></div>
-      <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="20" step="0.1" inputmode="decimal"/><div class="hint">ppm — verify against ORP</div></div>
-      <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm — TC minus FC</div></div>
-      <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 80–120</div></div>
-      <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 200–400</div></div>
-      <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm — Target: 50 ppm (outdoor pools)</div></div>
-      <div class="icard"><label>Temperature (°F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
-    </div>
+<!-- HISTORY -->
+<div id="hist-page" style="display:none;">
+  <div class="storage-row">
+    <span class="storage-badge" id="storage-badge">0 readings on this device</span>
+    <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}">
+      <option value="">Actions</option>
+      <option value="csv">Export CSV</option>
+    </select>
+  </div>
+  <p class="slabel">Filter by body</p>
+  <div class="filter-row" id="hist-filters"></div>
+  <div id="hist-list"></div>
+</div>
 
-    <div class="calc-select-wrap">
-      <label class="slabel" for="calc-trigger">Calculate dosages</label>
-      <select id="calc-trigger" onchange="if(this.value==='go'){calculate();this.value='';}">
-        <option value="">— Tap here to calculate —</option>
-        <option value="go">▶ Calculate now</option>
-      </select>
-    </div>
+<!-- TRENDS -->
+<div id="trend-page" style="display:none;">
+  <p class="slabel">Select body of water</p>
+  <div class="trend-selects">
+    <select id="trend-body" onchange="renderTrends()"></select>
+    <select id="trend-param" onchange="renderTrends()">
+      <option value="lsi">LSI</option>
+      <option value="orp">ORP (mV)</option>
+      <option value="orpSetpoint">ORP Setpoint (mV)</option>
+      <option value="pH">pH</option>
+      <option value="fc">Free chlorine (ppm)</option>
+      <option value="cc">Combined chlorine (ppm)</option>
+      <option value="ta">Total alkalinity (ppm)</option>
+      <option value="ch">Calcium hardness (ppm)</option>
+      <option value="cya">Cyanuric acid (ppm)</option>
+      <option value="temp">Temperature (F)</option>
+    </select>
+  </div>
+  <div id="trend-legend" class="legend-row"></div>
+  <div class="chart-wrap" style="height:280px;"><canvas id="trend-chart" role="img" aria-label="Parameter trend chart">No data yet.</canvas></div>
+  <div class="stat-grid" id="trend-stats"></div>
+</div>
 
-    <div class="results" id="results">
-      <p class="slabel">ORP status</p>
-      <div class="status-card" id="orp-result-card" style="display:none;">
-        <div>
-          <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Reading</div>
-          <div class="status-num" id="orp-result-val">—</div>
-        </div>
-        <div class="orp-bar-wrap">
-          <div style="font-size:13px;font-weight:500;margin-bottom:8px;" id="orp-status-title">—</div>
-          <div class="orp-bar-track"><div class="orp-bar-fill" id="orp-bar" style="width:0%;background:#378ADD;"></div></div>
-          <div class="orp-bar-labels"><span>0 mV</span><span id="orp-sp-label">Setpoint</span><span>900 mV</span></div>
-          <div style="font-size:12px;color:var(--text2);margin-top:6px;" id="orp-status-sub"></div>
-        </div>
-      </div>
-
-      <div id="cya-orp-card" style="display:none;margin-bottom:1rem;">
-        <p class="slabel">CYA correction for ORP</p>
-        <div class="cc-result" id="cya-orp-inner">
-          <div class="cc-row">
-            <div class="cc-val-block"><div class="cc-val-label">Free active chlorine</div><div class="cc-val-num" id="fac-val">—</div></div>
-            <div class="cc-val-block"><div class="cc-val-label">CYA level</div><div class="cc-val-num" id="cya-level-val">—</div></div>
-            <div class="cc-val-block"><div class="cc-val-label">ORP reliability</div><div class="cc-val-num" id="orp-reliability" style="font-size:15px;margin-top:4px;">—</div></div>
-          </div>
-          <div class="cc-note" id="cya-orp-note"></div>
-        </div>
-      </div>
-
-      <div id="cc-result-card" style="display:none;">
-        <p class="slabel">Combined chlorine</p>
-        <div class="cc-result" id="cc-result-inner">
-          <div class="cc-row">
-            <div class="cc-val-block"><div class="cc-val-label">Combined chlorine</div><div class="cc-val-num" id="cc-val">—</div></div>
-            <div class="cc-val-block"><div class="cc-val-label">Shock threshold (10× CC)</div><div class="cc-val-num" id="cc-shock-thresh">—</div></div>
-            <div class="cc-val-block"><div class="cc-val-label">Status</div><div class="cc-val-num" id="cc-status-text" style="font-size:15px;margin-top:4px;">—</div></div>
-          </div>
-          <div class="cc-note" id="cc-note"></div>
-        </div>
-      </div>
-
-      <p class="slabel" id="lsi-slabel" style="margin-top:1rem;">Langelier Saturation Index</p>
-      <div class="status-card" id="lsi-card">
-        <div class="status-num" id="lsi-val">—</div>
-        <div><div class="status-title" id="lsi-title">—</div><div class="status-sub" id="lsi-sub"></div></div>
-      </div>
-
-      <hr class="divider"/>
-      <p class="slabel">Chemical dosages</p>
-      <div class="dgrid" id="dose-grid"></div>
-
-      <div class="action-select-wrap">
-        <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}">
-          <option value="">— Save or share this reading —</option>
-          <option value="save">💾 Save reading to history</option>
-          <option value="copy">📋 Copy reading to clipboard</option>
-        </select>
-      </div>
-      <div id="copy-preview" class="copy-preview" style="display:none;">
-        <div class="copy-preview-head">
-          <span class="copy-preview-label">Preview — paste into Teams or email</span>
-          <button class="copy-preview-close" onclick="document.getElementById('copy-preview').style.display='none'">✕</button>
-        </div>
-        <pre id="copy-preview-text" class="copy-preview-text"></pre>
-      </div>
-      <p class="disclaimer">⚠ Estimates based on standard water chemistry formulas. ORP is influenced by pH — high pH suppresses ORP even when FC is adequate. Always cross-reference ORP with manual FC tests. Breakpoint shock doses are calculated at 10× combined chlorine — retest after 4 hours of circulation. Sodium hypochlorite degrades over time — verify concentration. Consult a licensed pool professional for critical decisions.</p>
+<!-- GUIDE -->
+<div id="info-page" style="display:none;">
+  <div class="guide-section">
+    <div class="guide-title">Welcome to the OSLU Aquatic Chemical Calculator</div>
+    <div class="guide-body">This app helps you test water chemistry, calculate chemical dosages, and track readings over time across all 7 bodies of water at OSLU. Readings are saved to this device. Use Export CSV in History to share readings with your team.</div>
+  </div>
+  <div class="guide-section">
+    <div class="guide-step-label">Step 1</div>
+    <div class="guide-title">Select your body of water</div>
+    <div class="guide-body">Use the dropdown to choose which body of water you are testing. The volume is pre-set for each location.</div>
+    <div class="guide-table">
+      <div class="guide-row"><span>Level 1 Indoor - Pool</span><span>18,600 gal</span></div>
+      <div class="guide-row"><span>Level 1 Indoor - Hot spa</span><span>2,000 gal</span></div>
+      <div class="guide-row"><span>Level 1 Indoor - Cold spa</span><span>900 gal</span></div>
+      <div class="guide-row"><span>Level 2 Outdoor - Pool</span><span>47,000 gal</span></div>
+      <div class="guide-row"><span>Level 2 Outdoor - Hot spa</span><span>900 gal</span></div>
+      <div class="guide-row"><span>Level 13 Outdoor - Pool</span><span>33,000 gal</span></div>
+      <div class="guide-row"><span>Level 13 Outdoor - Hot tub</span><span>3,500 gal</span></div>
     </div>
   </div>
-
-  <!-- HISTORY -->
-  <div id="hist-page" style="display:none;">
-    <div class="storage-row">
-      <span class="storage-badge" id="storage-badge"><i class="ti ti-device-floppy" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:4px;"></i>0 readings on this device</span>
-      <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}">
-        <option value="">Actions</option>
-        <option value="csv">⬇ Export CSV</option>
-      </select>
-    </div>
-    <p class="slabel">Filter by body</p>
-    <div class="filter-row" id="hist-filters"></div>
-    <div id="hist-list"></div>
+  <div class="guide-section">
+    <div class="guide-step-label">Step 2</div>
+    <div class="guide-title">Enter your ORP controller readings</div>
+    <div class="guide-body">Enter the current ORP probe reading and the controller setpoint in millivolts (mV). These come directly from your ORP controller display.</div>
+    <div class="guide-tip">Tip: If ORP is well below setpoint, check chemical supply level, probe condition, and pH (high pH suppresses ORP).</div>
   </div>
-
-  <!-- TRENDS -->
-  <div id="trend-page" style="display:none;">
-    <p class="slabel">Select body of water</p>
-    <div class="trend-selects">
-      <select id="trend-body" onchange="renderTrends()"></select>
-      <select id="trend-param" onchange="renderTrends()">
-        <option value="lsi">LSI</option>
-        <option value="orp">ORP (mV)</option>
-        <option value="orpSetpoint">ORP setpoint (mV)</option>
-        <option value="pH">pH</option>
-        <option value="fc">Free chlorine (ppm)</option>
-        <option value="cc">Combined chlorine (ppm)</option>
-        <option value="ta">Total alkalinity (ppm)</option>
-        <option value="ch">Calcium hardness (ppm)</option>
-        <option value="cya">Cyanuric acid (ppm)</option>
-        <option value="temp">Temperature (°F)</option>
-      </select>
-    </div>
-    <div id="trend-legend" class="legend-row"></div>
-    <div class="chart-wrap" style="height:280px;"><canvas id="trend-chart" role="img" aria-label="Parameter trend chart">No data yet.</canvas></div>
-    <div class="stat-grid" id="trend-stats"></div>
-  </div>
-
-  <!-- GUIDE PAGE -->
-  <div id="info-page" style="display:none;">
-    <div class="guide-section">
-      <div class="guide-icon">💧</div>
-      <div class="guide-title">Welcome to the OSLU Aquatic Chemical Calculator</div>
-      <div class="guide-body">This app helps you test water chemistry, calculate chemical dosages, and track readings over time across all 7 bodies of water at OSLU. Readings are saved to this device. Use the Export CSV option in History to share your readings with your team.</div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-step-label">Step 1</div>
-      <div class="guide-title">Select your body of water</div>
-      <div class="guide-body">On the Calculator tab, use the dropdown to choose which body of water you are testing. The volume is pre-set for each location — you do not need to enter it.</div>
-      <div class="guide-table">
-        <div class="guide-row"><span>Level 1 Indoor — Pool</span><span>18,600 gal</span></div>
-        <div class="guide-row"><span>Level 1 Indoor — Hot spa</span><span>2,000 gal</span></div>
-        <div class="guide-row"><span>Level 1 Indoor — Cold spa</span><span>900 gal</span></div>
-        <div class="guide-row"><span>Level 2 Outdoor — Pool</span><span>47,000 gal</span></div>
-        <div class="guide-row"><span>Level 2 Outdoor — Hot spa</span><span>900 gal</span></div>
-        <div class="guide-row"><span>Level 13 Outdoor — Pool</span><span>33,000 gal</span></div>
-        <div class="guide-row"><span>Level 13 Outdoor — Hot tub</span><span>3,500 gal</span></div>
-      </div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-step-label">Step 2</div>
-      <div class="guide-title">Enter your ORP controller readings</div>
-      <div class="guide-body">Enter the current ORP probe reading and the controller setpoint in millivolts (mV). These come directly from your ORP controller display. ORP measures the sanitising power of the water — the higher the reading, the more active the chlorine.</div>
-      <div class="guide-tip">💡 If ORP is well below setpoint, check: chemical supply level, probe condition, and pH (high pH suppresses ORP).</div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-step-label">Step 3</div>
-      <div class="guide-title">Enter your water chemistry readings</div>
-      <div class="guide-body">Fill in your test kit results. All fields are optional except pH and free chlorine — these are the minimum required to generate useful dosage recommendations. Total alkalinity, calcium hardness, and temperature are also needed if you want the LSI calculation.</div>
-      <div class="guide-table">
-        <div class="guide-row guide-row-head"><span>Parameter</span><span>Target range</span></div>
-        <div class="guide-row"><span>pH</span><span>7.4 – 7.6 (pools) · 7.5 (spas)</span></div>
-        <div class="guide-row"><span>Free chlorine</span><span>1 – 5 ppm (pools) · 4 ppm (spas)</span></div>
-        <div class="guide-row"><span>Combined chlorine</span><span>Below 0.2 ppm</span></div>
-        <div class="guide-row"><span>Total alkalinity</span><span>80 – 120 ppm</span></div>
-        <div class="guide-row"><span>Calcium hardness</span><span>200 – 400 ppm (pools) · 150 ppm (spas)</span></div>
-        <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm (outdoor pools only)</span></div>
-        <div class="guide-row"><span>Temperature</span><span>Current water temp in °F</span></div>
-      </div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-step-label">Step 4</div>
-      <div class="guide-title">Calculate dosages</div>
-      <div class="guide-body">Select "Calculate now" from the calculate dropdown. The app will show you three result sections:</div>
-      <div class="guide-table">
-        <div class="guide-row"><span>🔵 ORP status</span><span>How your controller is performing vs setpoint</span></div>
-        <div class="guide-row"><span>🟢 LSI</span><span>Whether water is balanced, corrosive, or scaling</span></div>
-        <div class="guide-row"><span>📋 Chemical dosages</span><span>Exact amounts of each chemical to add</span></div>
-      </div>
-      <div class="guide-tip">💡 A 🚨 red shock dose card means combined chlorine is too high — follow the dose instructions and retest after 4 hours.</div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-step-label">Step 5</div>
-      <div class="guide-title">Save and share the reading</div>
-      <div class="guide-body">Use the "Save or share" dropdown after calculating. You have two options:</div>
-      <div class="guide-table">
-        <div class="guide-row"><span>💾 Save to history</span><span>Saves reading to this device</span></div>
-        <div class="guide-row"><span>📋 Copy to clipboard</span><span>Paste a formatted report into Teams or email</span></div>
-      </div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-icon">📈</div>
-      <div class="guide-title">History and Trends tabs</div>
-      <div class="guide-body">The History tab shows all saved readings from all staff, filterable by body of water. The Trends tab charts any parameter over time for any body of water — useful for spotting drifting chemistry before it becomes a problem. Use the Actions dropdown in History to refresh data from GitHub or export a CSV file.</div>
-    </div>
-
-    <div class="guide-section">
-      <div class="guide-icon">⚠️</div>
-      <div class="guide-title">Important reminders</div>
-      <div class="guide-body">Always add chemicals with the pump running and allow full circulation before retesting. Sodium hypochlorite (12.5%) degrades over time — check concentration before dosing. Never mix chemicals directly. Dosages are estimates based on standard water chemistry formulas — consult a licensed pool professional for critical decisions.</div>
-    </div>
-
-    <div class="guide-section" style="text-align:center;">
-      <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-        OSLU Aquatic Chemical Calculator · v17 (offline)<br>
-        For water chemistry questions consult your Senior Maintenance Manager.
-      </div>
+  <div class="guide-section">
+    <div class="guide-step-label">Step 3</div>
+    <div class="guide-title">Enter your water chemistry readings</div>
+    <div class="guide-body">Fill in your test kit results. Only pH and free chlorine are required. Total alkalinity, calcium hardness, and temperature are also needed for the LSI calculation.</div>
+    <div class="guide-table">
+      <div class="guide-row guide-row-head"><span>Parameter</span><span>Target range</span></div>
+      <div class="guide-row"><span>pH</span><span>7.4 - 7.6 (pools), 7.5 (spas)</span></div>
+      <div class="guide-row"><span>Free chlorine</span><span>1 - 5 ppm (pools), 4 ppm (spas)</span></div>
+      <div class="guide-row"><span>Combined chlorine</span><span>Below 0.2 ppm</span></div>
+      <div class="guide-row"><span>Total alkalinity</span><span>80 - 120 ppm</span></div>
+      <div class="guide-row"><span>Calcium hardness</span><span>200 - 400 ppm (pools), 150 ppm (spas)</span></div>
+      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm (outdoor pools only)</span></div>
+      <div class="guide-row"><span>Temperature</span><span>Current water temp in F</span></div>
     </div>
   </div>
+  <div class="guide-section">
+    <div class="guide-step-label">Step 4</div>
+    <div class="guide-title">Calculate dosages</div>
+    <div class="guide-body">Select "Calculate now" from the dropdown. The app shows ORP status, LSI balance, and exact chemical dosages.</div>
+    <div class="guide-tip">A [SHOCK] red card means combined chlorine is too high -- follow the dose and retest after 4 hours of circulation.</div>
+  </div>
+  <div class="guide-section">
+    <div class="guide-step-label">Step 5</div>
+    <div class="guide-title">Save and share the reading</div>
+    <div class="guide-table">
+      <div class="guide-row"><span>Save to history</span><span>Saves reading to this device</span></div>
+      <div class="guide-row"><span>Copy to clipboard</span><span>Paste a formatted report into Teams or email</span></div>
+    </div>
+  </div>
+  <div class="guide-section">
+    <div class="guide-title">History and Trends tabs</div>
+    <div class="guide-body">History shows all saved readings, filterable by body of water. Trends charts any parameter over time. Use Export CSV in History to share data with your team.</div>
+  </div>
+  <div class="guide-section">
+    <div class="guide-title">Important reminders</div>
+    <div class="guide-body">Always add chemicals with the pump running and allow full circulation before retesting. Sodium hypochlorite (12.5%) degrades over time -- check concentration before dosing. Never mix chemicals directly.</div>
+  </div>
+  <div class="guide-section" style="text-align:center;">
+    <div style="font-size:12px;color:var(--text3);line-height:1.8;">
+      OSLU Aquatic Chemical Calculator v19 (offline)<br>
+      For water chemistry questions consult your Senior Maintenance Manager.
+    </div>
+  </div>
+</div>
+
+</div><!-- end wrap -->
 
 <script>
-// ─── Facility configuration ───────────────────────────────────────────
-// Volumes in gallons — edit here if they ever change
 var LEVELS=[
-  {name:'Level 1 — Indoor', short:'L1', bodies:[
-    {name:'Pool',    vol:18600, spa:false},
-    {name:'Hot spa', vol:2000,  spa:true},
-    {name:'Cold spa',vol:900,   spa:true}
+  {name:'Level 1 - Indoor',short:'L1',bodies:[
+    {name:'Pool',vol:18600,spa:false},
+    {name:'Hot spa',vol:2000,spa:true},
+    {name:'Cold spa',vol:900,spa:true}
   ]},
-  {name:'Level 2 — Outdoor', short:'L2', bodies:[
-    {name:'Pool',    vol:47000, spa:false},
-    {name:'Hot spa', vol:900,   spa:true}
+  {name:'Level 2 - Outdoor',short:'L2',bodies:[
+    {name:'Pool',vol:47000,spa:false},
+    {name:'Hot spa',vol:900,spa:true}
   ]},
-  {name:'Level 13 — Outdoor', short:'L13', bodies:[
-    {name:'Pool',    vol:33000, spa:false},
-    {name:'Hot tub', vol:3500,  spa:true}
+  {name:'Level 13 - Outdoor',short:'L13',bodies:[
+    {name:'Pool',vol:33000,spa:false},
+    {name:'Hot tub',vol:3500,spa:true}
   ]}
 ];
-
 var HKEY='aquatic_history_v5';
 var IKEY='aquatic_inputs_v5';
 var st={level:0,body:0,inputs:{},history:[],histFilter:'all'};
 var trendChart=null;
 var lastDoses=[],lastLSI=null;
-
-function setSyncStatus(type,text){
-  var b=document.getElementById('storage-badge');
-  if(!b) return;
-  b.textContent=(type==='ok'?'✓ ':'⚠ ')+text;
-}
-function bkey(){return st.level+'-'+st.body;}
 
 function loadLocal(){
   try{var h=localStorage.getItem(HKEY);if(h)st.history=JSON.parse(h);}catch(e){}
@@ -475,11 +430,11 @@ function loadLocal(){
 function saveLocal(){
   try{localStorage.setItem(HKEY,JSON.stringify(st.history));localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}
 }
-
 function currentBody(){return LEVELS[st.level].bodies[st.body];}
 function currentVol(){return currentBody().vol;}
 function isSpa(){return currentBody().spa;}
 function isOutdoor(){return st.level>0;}
+function bkey(){return st.level+'-'+st.body;}
 
 function saveInputs(){
   var d={};
@@ -489,21 +444,19 @@ function saveInputs(){
 function loadInputs(){
   var d=st.inputs[bkey()]||{};
   ['pH','fc','cc','ta','ch','cya','temp','orp','orp-setpoint'].forEach(function(f){document.getElementById(f).value=d[f]||'';});
-  // Sync dropdown to current state
   var sel=document.getElementById('location-select');
-  if(sel) sel.value=st.level+'-'+st.body;
+  if(sel)sel.value=st.level+'-'+st.body;
   document.getElementById('results').classList.remove('on');
 }
 function updateVolDisplay(){
   var b=currentBody();
   var disp=document.getElementById('vol-display');
-  if(disp) disp.style.display='flex';
+  if(disp)disp.style.display='flex';
   document.getElementById('vol-label').textContent=b.name+' volume';
   document.getElementById('vol-num').textContent=b.vol.toLocaleString()+' gal';
 }
-
 function onLocationChange(val){
-  if(!val) return;
+  if(!val)return;
   saveInputs();
   var parts=val.split('-');
   st.level=parseInt(parts[0]);
@@ -511,11 +464,6 @@ function onLocationChange(val){
   updateVolDisplay();
   loadInputs();
   document.getElementById('results').classList.remove('on');
-}
-function setLevel(i){st.level=i;st.body=0;updateVolDisplay();loadInputs();}
-function setBody(i){st.body=i;updateVolDisplay();loadInputs();}
-function renderBodyTabs(){
-  // No longer needed — using dropdown instead
 }
 
 function showPage(p){
@@ -527,8 +475,23 @@ function showPage(p){
   if(p==='trend'){populateTrendSelect();renderTrends();}
 }
 
+function setSyncStatus(type,text){
+  var b=document.getElementById('storage-badge');
+  if(!b)return;
+  b.textContent=text;
+}
+
 function tempFactor(f){return parseFloat((Math.log10((f-32)*5/9+273)*10-22.66).toFixed(2));}
 function calcLSI(pH,ta,ch,temp){return parseFloat((pH-(12.1-tempFactor(temp)-(Math.log10(ta)-1)-(Math.log10(ch/2)-0.4))).toFixed(2));}
+
+function calcFAC(fc,cya,pH){
+  if(!fc||!cya||!pH)return null;
+  var pKaHOCl=7.54;
+  var hoClFraction=1/(1+Math.pow(10,pH-pKaHOCl));
+  var K=5*Math.pow(10,7.5-pH);
+  var fac=fc*hoClFraction/(1+cya/K);
+  return parseFloat(fac.toFixed(3));
+}
 
 function renderORP(orp,sp){
   var card=document.getElementById('orp-result-card');
@@ -543,16 +506,47 @@ function renderORP(orp,sp){
   card.className='status-card';valEl.style.color='var(--text)';
   if(sp!=null){
     var diff=orp-sp;
-    if(Math.abs(diff)<=20){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='At setpoint — controller satisfied';subEl.textContent='ORP '+orp+' mV is within 20 mV of setpoint ('+sp+' mV). Dosing is off or minimal.';bar.style.background='#1D9E75';}
-    else if(diff<-20&&diff>=-80){card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Below setpoint by '+Math.abs(diff)+' mV — controller dosing';subEl.textContent='Controller is actively feeding sodium hypochlorite. Check chemical supply level.';bar.style.background='#BA7517';}
-    else if(diff<-80){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Well below setpoint by '+Math.abs(diff)+' mV — verify system';subEl.textContent='Check: chemical supply empty, probe fouled, pH too high, or controller fault.';bar.style.background='#E24B4A';}
-    else if(diff>20&&diff<=80){titleEl.textContent='Above setpoint by '+diff+' mV — dosing paused';subEl.textContent='ORP exceeds setpoint. Controller has stopped dosing — normal operation.';bar.style.background='#378ADD';}
-    else{card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Well above setpoint by '+diff+' mV — check controller';subEl.textContent='ORP significantly exceeds setpoint. Verify controller is not over-feeding.';bar.style.background='#D85A30';}
+    if(Math.abs(diff)<=20){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='At setpoint - controller satisfied';subEl.textContent='ORP '+orp+' mV is within 20 mV of setpoint ('+sp+' mV). Dosing is off or minimal.';bar.style.background='#1D9E75';}
+    else if(diff<-20&&diff>=-80){card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Below setpoint by '+Math.abs(diff)+' mV - controller dosing';subEl.textContent='Controller is actively feeding sodium hypochlorite. Check chemical supply level.';bar.style.background='#BA7517';}
+    else if(diff<-80){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Well below setpoint by '+Math.abs(diff)+' mV - verify system';subEl.textContent='Check: chemical supply empty, probe fouled, pH too high, or controller fault.';bar.style.background='#E24B4A';}
+    else if(diff>20&&diff<=80){titleEl.textContent='Above setpoint by '+diff+' mV - dosing paused';subEl.textContent='ORP exceeds setpoint. Controller has stopped dosing - normal operation.';bar.style.background='#378ADD';}
+    else{card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Well above setpoint by '+diff+' mV - check controller';subEl.textContent='ORP significantly exceeds setpoint. Verify controller is not over-feeding.';bar.style.background='#D85A30';}
   }else{
-    if(orp<650){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Low ORP — sanitiser may be insufficient';subEl.textContent='ORP below 650 mV suggests inadequate disinfection. Check FC and pH.';bar.style.background='#E24B4A';}
-    else if(orp<750){titleEl.textContent='Acceptable ORP range';subEl.textContent='650–750 mV is a reasonable target for most pools.';bar.style.background='#BA7517';}
-    else if(orp<=850){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='Good ORP — effective disinfection';subEl.textContent='750–850 mV indicates strong sanitiser activity.';bar.style.background='#1D9E75';}
-    else{card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='High ORP — monitor closely';subEl.textContent='Above 850 mV. Verify FC levels manually.';bar.style.background='#D85A30';}
+    if(orp<650){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Low ORP - sanitiser may be insufficient';subEl.textContent='ORP below 650 mV suggests inadequate disinfection. Check FC and pH.';bar.style.background='#E24B4A';}
+    else if(orp<750){titleEl.textContent='Acceptable ORP range';subEl.textContent='650-750 mV is a reasonable target for most pools.';bar.style.background='#BA7517';}
+    else if(orp<=850){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='Good ORP - effective disinfection';subEl.textContent='750-850 mV indicates strong sanitiser activity.';bar.style.background='#1D9E75';}
+    else{card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='High ORP - monitor closely';subEl.textContent='Above 850 mV. Verify FC levels manually.';bar.style.background='#D85A30';}
+  }
+}
+
+function renderCYACorrection(fc,cya,pH,orp,orpSP){
+  var card=document.getElementById('cya-orp-card');
+  var inner=document.getElementById('cya-orp-inner');
+  card.style.display='block';
+  inner.style.borderColor='';inner.style.background='';
+  var fac=calcFAC(fc,cya,pH);
+  document.getElementById('cya-level-val').textContent=cya+' ppm';
+  document.getElementById('fac-val').textContent=fac!=null?fac.toFixed(3)+' ppm':'--';
+  var relEl=document.getElementById('orp-reliability');
+  var noteEl=document.getElementById('cya-orp-note');
+  var orpSuppression=Math.round(cya*0.6);
+  var suggestedSP=orpSP?Math.round(orpSP+orpSuppression):null;
+  if(cya<=20){
+    relEl.textContent='High reliability';relEl.style.color='var(--success-text)';
+    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) -- ORP is highly reliable but stabiliser should be raised. Est. ORP suppression: ~'+orpSuppression+' mV.';
+  }else if(cya<=60){
+    relEl.textContent='Normal - within target range';relEl.style.color='var(--success-text)';
+    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Est. ORP suppression: ~'+orpSuppression+' mV. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');
+  }else if(cya<=80){
+    relEl.textContent='Elevated - some suppression';relEl.style.color='var(--warn-text)';
+    inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is above target. ORP suppressed by ~'+orpSuppression+' mV -- cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');
+  }else{
+    relEl.textContent='Unreliable - CYA too high';relEl.style.color='var(--danger-text)';
+    inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
+    noteEl.textContent='CYA at '+cya+' ppm is excessive -- ORP suppressed by ~'+orpSuppression+' mV and is not a reliable indicator. FAC is only ~'+fac.toFixed(3)+' ppm. Partial drain/refill recommended to bring CYA back to 50 ppm target.';
   }
 }
 
@@ -560,10 +554,10 @@ function renderCC(cc,fc,vol){
   var card=document.getElementById('cc-result-card');
   var inner=document.getElementById('cc-result-inner');
   card.style.display='block';
+  inner.style.borderColor='';inner.style.background='';
   document.getElementById('cc-val').textContent=cc.toFixed(1)+' ppm';
   var shockTarget=cc*10;
   document.getElementById('cc-shock-thresh').textContent=shockTarget.toFixed(1)+' ppm FC';
-  inner.style.borderColor='';inner.style.background='';
   var noteEl=document.getElementById('cc-note');
   var statusEl=document.getElementById('cc-status-text');
   if(cc<0.2){
@@ -571,7 +565,7 @@ function renderCC(cc,fc,vol){
     inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
     noteEl.textContent='Combined chlorine below 0.2 ppm is acceptable. No shock required.';
   }else if(cc<0.5){
-    statusEl.textContent='Monitor — approaching threshold';statusEl.style.color='var(--warn-text)';
+    statusEl.textContent='Monitor - approaching threshold';statusEl.style.color='var(--warn-text)';
     inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
     noteEl.textContent='CC at '+cc.toFixed(1)+' ppm. Watch for chloramine odour. Consider shocking soon if CC rises further.';
   }else{
@@ -581,88 +575,30 @@ function renderCC(cc,fc,vol){
     if(fcNeeded>0){
       var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);
       var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';
-      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm — breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC (10× CC). Retest after 4 hours of circulation with pump running.';
+      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC (10x CC). Retest after 4 hours of circulation with pump running.';
     }else{
-      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient for breakpoint — retest after 4 hours of circulation.';
+      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient -- retest after 4 hours of circulation.';
     }
   }
 }
 
-// CYA correction — calculates Free Active Chlorine (HOCl fraction)
-// Based on Henderson-Hasselbalch: HOCl fraction depends on pH and CYA buffering
-// FAC (ppm) = FC × (1 / (1 + (CYA/K) × 10^(pH - pKa)))
-// pKa of HOCl = 7.54, pKa of CYA-HOCl = 6.8
-// Simplified industry approximation used here
-function calcFAC(fc, cya, pH){
-  if(!fc||!cya||!pH) return null;
-  // HOCl fraction without CYA
-  var pKaHOCl=7.54;
-  var hoClFraction=1/(1+Math.pow(10,pH-pKaHOCl));
-  // CYA binding factor — at pH 7.5, ~97% of FC is bound at 50ppm CYA
-  // Effective FAC approximation: FAC = FC × hoClFraction / (1 + cya/K)
-  // K empirically ~5 at pH 7.5, adjusted for pH
-  var K=5*Math.pow(10,7.5-pH);
-  var fac=fc*hoClFraction/(1+cya/K);
-  return parseFloat(fac.toFixed(3));
-}
-
-function renderCYACorrection(fc, cya, pH, orp, orpSP){
-  var card=document.getElementById('cya-orp-card');
-  var inner=document.getElementById('cya-orp-inner');
-  card.style.display='block';
-  inner.style.borderColor='';inner.style.background='';
-
-  var fac=calcFAC(fc,cya,pH);
-  document.getElementById('cya-level-val').textContent=cya+' ppm';
-  document.getElementById('fac-val').textContent=fac!=null?fac.toFixed(3)+' ppm':'—';
-
-  var relEl=document.getElementById('orp-reliability');
-  var noteEl=document.getElementById('cya-orp-note');
-
-  // ORP suppression estimate: each 10ppm CYA suppresses ORP by ~5-7mV at typical FC
-  var orpSuppression=Math.round(cya*0.6);
-
-  // Suggested setpoint adjustment
-  var suggestedSP=orpSP?Math.round(orpSP+orpSuppression):null;
-
-  if(cya<=20){
-    relEl.textContent='High reliability';relEl.style.color='var(--success-text)';
-    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) — ORP is highly reliable but stabiliser should be raised. Estimated ORP suppression from CYA: ~'+orpSuppression+' mV.';
-  }else if(cya<=60){
-    relEl.textContent='Normal — within target range';relEl.style.color='var(--success-text)';
-    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Estimated ORP suppression: ~'+orpSuppression+' mV. Free active chlorine is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');
-  }else if(cya<=80){
-    relEl.textContent='Elevated — some suppression';relEl.style.color='var(--warn-text)';
-    inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is above target. ORP is suppressed by approximately '+orpSuppression+' mV — cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');
-  }else{
-    relEl.textContent='Unreliable — CYA too high';relEl.style.color='var(--danger-text)';
-    inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is excessive — ORP is suppressed by ~'+orpSuppression+' mV and is no longer a reliable disinfection indicator. FAC is only ~'+fac.toFixed(3)+' ppm despite FC reading of '+fc+' ppm. Partial drain/refill recommended to bring CYA back to 50 ppm target.';
-  }
-}
-
 function calculate(){
-  // Guard: ensure a location has been selected
   var locSel=document.getElementById('location-select');
   if(!locSel||!locSel.value){alert('Please select a body of water first.');return;}
   saveInputs();
   var d=st.inputs[bkey()]||{};
   var vol=currentVol();
-  if(!vol||vol<=0){alert('Volume not found — please re-select the body of water.');return;}
+  if(!vol||vol<=0){alert('Volume not found -- please re-select the body of water.');return;}
   var pH=parseFloat(d.pH),fc=parseFloat(d.fc),cc=parseFloat(d['cc']);
   var ta=parseFloat(d.ta),ch=parseFloat(d.ch),cya=parseFloat(d.cya),temp=parseFloat(d.temp);
   var orp=parseFloat(d['orp']),orpSP=parseFloat(d['orp-setpoint']);
-  if(isNaN(pH)){alert('Please fill in pH — this is required.');return;}
+  if(isNaN(pH)){alert('Please fill in pH -- this is required.');return;}
   var spa=isSpa(),outdoor=isOutdoor();
   var lsiReady=!isNaN(ta)&&!isNaN(ch)&&!isNaN(temp);
 
   if(!isNaN(orp)){renderORP(orp,isNaN(orpSP)?null:orpSP);}
   else{document.getElementById('orp-result-card').style.display='none';}
 
-  // CYA correction — outdoor pools only, needs ORP + FC + CYA + pH
   if(outdoor&&!spa&&!isNaN(orp)&&!isNaN(fc)&&!isNaN(cya)&&cya>0){
     renderCYACorrection(fc,cya,pH,orp,isNaN(orpSP)?null:orpSP);
   }else{
@@ -677,17 +613,18 @@ function calculate(){
   if(lsiReady){
     var lsi=calcLSI(pH,ta,ch,temp);lastLSI=lsi;
     lc.style.display='flex';
-    if(lsiLabel) lsiLabel.style.display='block';
+    if(lsiLabel)lsiLabel.style.display='block';
     document.getElementById('lsi-val').textContent=lsi.toFixed(2);
     lc.className='status-card';
-    if(lsi<-0.5){lc.classList.add('s-danger');document.getElementById('lsi-title').textContent='Corrosive — water is aggressive';document.getElementById('lsi-sub').textContent='Raise alkalinity or calcium hardness to protect surfaces and equipment.';}
-    else if(lsi>0.5){lc.classList.add('s-warn');document.getElementById('lsi-title').textContent='Scaling — calcium deposits likely';document.getElementById('lsi-sub').textContent='Lower pH or alkalinity to prevent cloudy water and scale buildup.';}
-    else{lc.classList.add('s-ok');document.getElementById('lsi-title').textContent='Balanced — properly saturated';document.getElementById('lsi-sub').textContent='LSI of '+lsi.toFixed(2)+' is within the ideal range of −0.3 to +0.3.';}
+    if(lsi<-0.5){lc.classList.add('s-danger');document.getElementById('lsi-title').textContent='Corrosive - water is aggressive';document.getElementById('lsi-sub').textContent='Raise alkalinity or calcium hardness to protect surfaces and equipment.';}
+    else if(lsi>0.5){lc.classList.add('s-warn');document.getElementById('lsi-title').textContent='Scaling - calcium deposits likely';document.getElementById('lsi-sub').textContent='Lower pH or alkalinity to prevent cloudy water and scale buildup.';}
+    else{lc.classList.add('s-ok');document.getElementById('lsi-title').textContent='Balanced - properly saturated';document.getElementById('lsi-sub').textContent='LSI of '+lsi.toFixed(2)+' is within the ideal range of -0.3 to +0.3.';}
   }else{
     lc.style.display='none';
-    if(lsiLabel) lsiLabel.style.display='none';
+    if(lsiLabel)lsiLabel.style.display='none';
     lastLSI=null;
   }
+
   var doses=[];
   var fcTarget=spa?4.0:3.0;
   var shockNeeded=!isNaN(cc)&&cc>=0.5;
@@ -701,43 +638,44 @@ function calculate(){
       if(fcNeeded>0){
         var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);
         var shockAmt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';
-        doses.push({chem:'Shock dose — sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10× CC of '+cc.toFixed(1)+' ppm)',shock:true});
+        doses.push({chem:'[SHOCK] Sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10x CC of '+cc.toFixed(1)+' ppm)',shock:true});
       }
     }else if(!isNaN(orp)&&orpOk&&fc>=1&&fc<=6){
-      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV — controller is maintaining chlorine. Manual dosing not needed.',ok:true});
+      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});
     }else if(diff>0.2){
       var floz2=((diff*vol/10000)*10.24).toFixed(1);
       doses.push({chem:'Sodium hypochlorite (12.5%)',amount:(parseFloat(floz2)<128?floz2+' fl oz':(floz2/128).toFixed(2)+' gal'),note:'Raise FC from '+fc+' to ~'+fcTarget+' ppm'});
     }else if(diff<-0.5){
-      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold — FC high',note:'FC is '+fc+' ppm. Allow to drop. Target: '+fcTarget+' ppm.'});
+      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop. Target: '+fcTarget+' ppm.'});
     }else{
-      doses.push({chem:'Free chlorine',amount:'✓ OK',note:fc+' ppm — within range',ok:true});
+      doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within range',ok:true});
     }
   }
 
   var phTarget=spa?7.5:7.4,phDiff=phTarget-pH;
   if(Math.abs(phDiff)>0.1){
-    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+(!isNaN(orp)?' — will also improve ORP':'')});}
-    else{doses.push({chem:'Soda ash (Na₂CO₃)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget});}
-  }else{doses.push({chem:'pH',amount:'✓ OK',note:pH+' — within range',ok:true});}
+    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+(!isNaN(orp)?' -- will also improve ORP':'')});}
+    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget});}
+  }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within range',ok:true});}
 
   var taDiff=100-ta;
-  if(Math.abs(taDiff)>10){
+  if(!isNaN(ta)&&Math.abs(taDiff)>10){
     if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~100 ppm'});}
     else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~100 ppm'});}
-  }else{doses.push({chem:'Total alkalinity',amount:'✓ OK',note:ta+' ppm — within range',ok:true});}
+  }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within range',ok:true});}
 
-  var chTarget=spa?150:300,chDiff=chTarget-ch;
-  if(Math.abs(chDiff)>25){
+  var chTarget=spa?150:300;
+  var chDiff=chTarget-ch;
+  if(!isNaN(ch)&&Math.abs(chDiff)>25){
     if(chDiff>0){doses.push({chem:'Calcium chloride',amount:(chDiff*vol*0.0000112).toFixed(2)+' lbs',note:'Raise CH from '+ch+' to ~'+chTarget+' ppm'});}
     else{doses.push({chem:'Calcium hardness',amount:'Dilute required',note:'CH '+ch+' ppm too high. Partial drain/refill. Target: '+chTarget+' ppm.'});}
-  }else{doses.push({chem:'Calcium hardness',amount:'✓ OK',note:ch+' ppm — within range',ok:true});}
+  }else if(!isNaN(ch)){doses.push({chem:'Calcium hardness',amount:'OK - in range',note:ch+' ppm -- within range',ok:true});}
 
   if(outdoor&&!spa&&!isNaN(cya)){
     var cyaDiff=50-cya;
     if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~50 ppm'});}
-    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill. Target: 40–60 ppm.'});}
-    else{doses.push({chem:'Cyanuric acid',amount:'✓ OK',note:cya+' ppm — within range (target 40–60 ppm)',ok:true});}
+    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill. Target: 40-60 ppm.'});}
+    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within range (target 40-60 ppm)',ok:true});}
   }
 
   lastDoses=doses;
@@ -753,56 +691,57 @@ function buildReadingText(){
   var level=LEVELS[st.level].name;
   var now=new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
   var lines=[];
-  lines.push('📋 AQUATIC WATER QUALITY REPORT');
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('Location:  '+b.name+' — '+level);
+  lines.push('AQUATIC WATER QUALITY REPORT');
+  lines.push('================================');
+  lines.push('Location:  '+b.name+' - '+level);
   lines.push('Volume:    '+b.vol.toLocaleString()+' gal');
   lines.push('Date/Time: '+now);
   lines.push('');
-  lines.push('── READINGS ──────────────────────');
-  if(d['orp'])       lines.push('ORP:               '+d['orp']+' mV'+(d['orp-setpoint']?' (setpoint: '+d['orp-setpoint']+' mV)':''));
-  if(d.pH)           lines.push('pH:                '+d.pH);
-  if(d.fc)           lines.push('Free chlorine:     '+d.fc+' ppm');
-  if(d['cc'])        lines.push('Combined chlorine: '+d['cc']+' ppm');
-  if(d.ta)           lines.push('Total alkalinity:  '+d.ta+' ppm');
-  if(d.ch)           lines.push('Calcium hardness:  '+d.ch+' ppm');
-  if(d.cya)          lines.push('Cyanuric acid:     '+d.cya+' ppm');
-  if(d.temp)         lines.push('Temperature:       '+d.temp+' °F');
+  lines.push('-- READINGS --');
+  if(d['orp'])lines.push('ORP:               '+d['orp']+' mV'+(d['orp-setpoint']?' (setpoint: '+d['orp-setpoint']+' mV)':''));
+  if(d.pH)lines.push('pH:                '+d.pH);
+  if(d.fc)lines.push('Free chlorine:     '+d.fc+' ppm');
+  if(d['cc'])lines.push('Combined chlorine: '+d['cc']+' ppm');
+  if(d.ta)lines.push('Total alkalinity:  '+d.ta+' ppm');
+  if(d.ch)lines.push('Calcium hardness:  '+d.ch+' ppm');
+  if(d.cya)lines.push('Cyanuric acid:     '+d.cya+' ppm');
+  if(d.temp)lines.push('Temperature:       '+d.temp+' F');
   lines.push('');
-  lines.push('── LSI ───────────────────────────');
+  lines.push('-- LSI --');
   if(lastLSI!=null){
-    var lsiStatus=lastLSI<-0.5?'⚠ Corrosive':lastLSI>0.5?'⚠ Scaling':'✓ Balanced';
+    var lsiStatus=lastLSI<-0.5?'[!] Corrosive':lastLSI>0.5?'[!] Scaling':'OK Balanced';
     lines.push('LSI: '+lastLSI.toFixed(2)+'  '+lsiStatus);
+  }else{
+    lines.push('LSI: Not calculated (TA, CH, Temp needed)');
   }
-  // CYA correction summary if applicable
   var d2=st.inputs[bkey()]||{};
   var fc2=parseFloat(d2.fc),cya2=parseFloat(d2['cya']),pH2=parseFloat(d2.pH);
   if(isOutdoor()&&!isSpa()&&!isNaN(fc2)&&!isNaN(cya2)&&cya2>0&&!isNaN(pH2)){
     var fac2=calcFAC(fc2,cya2,pH2);
     if(fac2!=null){
       lines.push('');
-      lines.push('── CYA CORRECTION ────────────────');
+      lines.push('-- CYA CORRECTION --');
       lines.push('CYA:               '+cya2+' ppm');
       lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');
       var supp=Math.round(cya2*0.6);
       lines.push('Est. ORP suppression: ~'+supp+' mV from CYA');
-      lines.push(cya2>80?'⚠ ORP unreliable at this CYA level — partial drain/refill recommended':cya2>60?'⚠ CYA above target — cross-check with manual FC test':'✓ CYA within target range (50 ppm)');
+      lines.push(cya2>80?'[!] ORP unreliable at this CYA level':cya2>60?'[!] CYA above target -- cross-check with manual FC test':'OK CYA within target range (50 ppm)');
     }
   }
   lines.push('');
-  lines.push('── DOSAGES ───────────────────────');
+  lines.push('-- DOSAGES --');
   if(lastDoses.length){
     lastDoses.forEach(function(dose){
-      var icon=dose.shock?'🚨':dose.ok?'✓':'→';
+      var icon=dose.shock?'[SHOCK]':dose.ok?'OK':'->';
       lines.push(icon+' '+dose.chem+': '+dose.amount);
-      if(!dose.ok) lines.push('   '+dose.note);
+      if(!dose.ok)lines.push('   '+dose.note);
     });
   }else{
     lines.push('No dosages calculated yet.');
   }
   lines.push('');
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  lines.push('Generated by OSLU Aquatic Chemical Calculator');
+  lines.push('================================');
+  lines.push('Generated by OSLU Aquatic Chemical Calculator v19');
   return lines.join('\n');
 }
 
@@ -819,17 +758,12 @@ function copyReading(){
     showCopyFallback(text);
   }
 }
-
 function showCopyFallback(text){
   var ta=document.createElement('textarea');
   ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
   document.body.appendChild(ta);ta.focus();ta.select();
-  try{
-    document.execCommand('copy');
-    alert('Copied! Paste into Teams or email.');
-  }catch(e){
-    alert('Auto-copy not available here. The reading is shown in the preview below — select all and copy manually.');
-  }
+  try{document.execCommand('copy');alert('Copied! Paste into Teams or email.');}
+  catch(e){alert('Auto-copy not available here. The reading is shown in the preview below -- select all and copy manually.');}
   document.body.removeChild(ta);
 }
 
@@ -842,18 +776,13 @@ function saveToHistory(){
     body:b.name,volume:b.vol,
     when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
     lsi:lastLSI,
-    readings:{
-      pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,
-      ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,
-      cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,
-      orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null
-    },
+    readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},
     doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
   };
   st.history.unshift(entry);
   saveLocal();
   setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
-  alert('Saved — '+b.name+' ('+LEVELS[st.level].name+')');
+  alert('Saved - '+b.name+' ('+LEVELS[st.level].name+')');
   renderHistory();
 }
 
@@ -869,9 +798,7 @@ function setHistFilter(f){
   renderHistory();
 }
 function renderHistory(){
-  setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
-  var badge2=document.getElementById('hist-status-badge');
-  if(badge2){badge2.textContent='✓ Saved locally';badge2.style.cssText='font-size:11px;color:var(--success-text);';}
+  document.getElementById('storage-badge').textContent=st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device';
   var html='<button class="filt-btn'+(st.histFilter==='all'?' active':'')+'" data-f="all" onclick="setHistFilter(\'all\')">All</button>';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var fk=li+'-'+bi;html+='<button class="filt-btn'+(st.histFilter===fk?' active':'')+'" data-f="'+fk+'" onclick="setHistFilter(\''+fk+'\')">'+b.name+' ('+l.short+')</button>';});});
   document.getElementById('hist-filters').innerHTML=html;
@@ -880,9 +807,9 @@ function renderHistory(){
   var list=document.getElementById('hist-list');
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
-    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' <span style="font-weight:400;color:var(--text2)">&#8212; '+e.level+'</span></div><div class="hist-when">'+e.when+(e.volume?' &middot; '+(e.volume).toLocaleString()+' gal':'')+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'—')+'</span>'
-      +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">✕</button></div></div>'
+    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div></div>'
+      +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
+      +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div>'
       +'<div class="hist-params">'
       +(e.readings.orp!=null?'<div class="hist-param">ORP <span>'+e.readings.orp+' mV</span></div>':'')
       +(e.readings.orpSetpoint!=null?'<div class="hist-param">SP <span>'+e.readings.orpSetpoint+' mV</span></div>':'')
@@ -891,17 +818,18 @@ function renderHistory(){
       +(e.readings.cc!=null?'<div class="hist-param">CC <span>'+e.readings.cc+' ppm</span></div>':'')
       +(e.readings.ta!=null?'<div class="hist-param">TA <span>'+e.readings.ta+' ppm</span></div>':'')
       +(e.readings.ch!=null?'<div class="hist-param">CH <span>'+e.readings.ch+' ppm</span></div>':'')
-      +(e.readings.temp!=null?'<div class="hist-param">Temp <span>'+e.readings.temp+'°F</span></div>':'')
+      +(e.readings.temp!=null?'<div class="hist-param">Temp <span>'+e.readings.temp+' F</span></div>':'')
+      +(e.readings.volume!=null?'<div class="hist-param">Vol <span>'+e.readings.volume.toLocaleString()+' gal</span></div>':'')
       +'</div>'
-      +'<div class="hist-doses">'+e.doses.filter(function(d){return!d.ok;}).map(function(d){return'<div class="hist-dose-row'+(d.shock?' style="color:var(--danger-text)"':'')+'"><b>'+d.chem+':</b> '+d.amount+'</div>';}).join('')
-      +e.doses.filter(function(d){return d.ok;}).map(function(d){return'<div class="hist-dose-row" style="color:var(--success-text)">✓ '+d.chem+'</div>';}).join('')+'</div></div>';
+      +'<div class="hist-doses">'+e.doses.filter(function(d){return!d.ok;}).map(function(d){return'<div class="hist-dose-row"'+(d.shock?' style="color:var(--danger-text)"':'')+'>'+d.chem+': '+d.amount+'</div>';}).join('')
+      +e.doses.filter(function(d){return d.ok;}).map(function(d){return'<div class="hist-dose-row" style="color:var(--success-text)">OK '+d.chem+'</div>';}).join('')
+      +'</div></div>';
   }).join('');
 }
 function deleteEntry(id){
   if(!confirm('Delete this reading? This cannot be undone.'))return;
   st.history=st.history.filter(function(e){return e.id!==id;});
-  saveLocal();
-  renderHistory();
+  saveLocal();renderHistory();
 }
 
 function exportCSV(){
@@ -920,9 +848,9 @@ function exportCSV(){
 
 function populateTrendSelect(){
   var sel=document.getElementById('trend-body');sel.innerHTML='';
-  LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var o=document.createElement('option');o.value=li+'-'+bi;o.textContent=b.name+' — '+l.name;sel.appendChild(o);});});
+  LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var o=document.createElement('option');o.value=li+'-'+bi;o.textContent=b.name+' - '+l.name;sel.appendChild(o);});});
 }
-function getLabel(p){return{lsi:'LSI',orp:'ORP (mV)',orpSetpoint:'ORP setpoint (mV)',pH:'pH',fc:'Free chlorine (ppm)',cc:'Combined chlorine (ppm)',ta:'Total alkalinity (ppm)',ch:'Calcium hardness (ppm)',cya:'Cyanuric acid (ppm)',temp:'Temperature (°F)'}[p]||p;}
+function getLabel(p){return{lsi:'LSI',orp:'ORP (mV)',orpSetpoint:'ORP Setpoint (mV)',pH:'pH',fc:'Free chlorine (ppm)',cc:'Combined chlorine (ppm)',ta:'Total alkalinity (ppm)',ch:'Calcium hardness (ppm)',cya:'Cyanuric acid (ppm)',temp:'Temperature (F)'}[p]||p;}
 function renderTrends(){
   var bodyVal=document.getElementById('trend-body').value;
   var param=document.getElementById('trend-param').value;
@@ -945,7 +873,7 @@ function renderTrends(){
   var mn=Math.min.apply(null,valid),mx=Math.max.apply(null,valid),pad=(mx-mn)*0.2||1;
   if(trendChart){trendChart.destroy();trendChart=null;}
   var canvas=document.getElementById('trend-chart');
-  trendChart=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{label:pLabel,data:data,borderColor:'#378ADD',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#378ADD',tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return pLabel+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'—');}}}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}}}});
+  trendChart=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{label:pLabel,data:data,borderColor:'#378ADD',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#378ADD',tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return pLabel+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'--');}}}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}}}});
   var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
   var trend=valid[valid.length-1]-valid[0];
   statsDiv.innerHTML='<div class="stat-card"><div class="stat-label">Latest</div><div class="stat-val">'+valid[valid.length-1].toFixed(2)+'</div></div>'
@@ -961,6 +889,5 @@ window.onload=function(){
   loadInputs();
 };
 </script>
-</div><!-- end wrap -->
 </body>
 </html>
