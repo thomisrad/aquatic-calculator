@@ -1,5 +1,47 @@
 [
   {
+    "id": 1781193668871,
+    "ts": 1781193668871,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 11, 2026 at 9:01 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 16.5,
+      "cc": 3.5,
+      "ta": 30,
+      "ch": null,
+      "cya": null,
+      "temp": 52,
+      "orp": 888,
+      "orpSetpoint": 880
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "17.0 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.12 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781193640020,
     "ts": 1781193640020,
     "level": "Level 1 - Indoor",
