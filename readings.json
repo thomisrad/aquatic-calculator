@@ -1,5 +1,41 @@
 [
   {
+    "id": 1781217254640,
+    "ts": 1781217254640,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 11, 2026 at 3:34 PM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 12.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 757,
+      "orpSetpoint": 755
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Hold -- FC high",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781217166259,
     "ts": 1781217166259,
     "level": "Level 13 - Outdoor",
