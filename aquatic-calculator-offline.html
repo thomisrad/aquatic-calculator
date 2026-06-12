@@ -127,6 +127,10 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .del-btn{background:none;border:none;color:var(--text3);font-size:13px;padding:4px 8px;border-radius:4px;min-height:32px;min-width:32px;cursor:pointer;}
 .trend-selects{display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;}
 .trend-selects select{width:auto;flex:1;}
+.param-checks{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;}
+.param-check{display:flex;align-items:center;gap:6px;padding:6px 12px;border:0.5px solid var(--border);border-radius:20px;background:var(--bg);font-size:12px;color:var(--text2);cursor:pointer;user-select:none;}
+.param-check input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--info-text);}
+.param-check:has(input:checked){background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
 .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:10px;font-size:12px;color:var(--text2);}
 .chart-wrap{position:relative;width:100%;margin-bottom:1.5rem;}
 .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:0.5rem;}
@@ -155,7 +159,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="offline-badge">Saves to this device</span>
-    <span class="version-label">v19 (offline) - Jun 11, 2026</span>
+    <span class="version-label">v20 (offline) - Jun 11, 2026</span>
   </div>
 </div>
 
@@ -310,19 +314,21 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   <p class="slabel">Select body of water</p>
   <div class="trend-selects">
     <select id="trend-body" onchange="renderTrends()"></select>
-    <select id="trend-param" onchange="renderTrends()">
-      <option value="lsi">LSI</option>
-      <option value="orp">ORP (mV)</option>
-      <option value="orpSetpoint">ORP Setpoint (mV)</option>
-      <option value="pH">pH</option>
-      <option value="fc">Free chlorine (ppm)</option>
-      <option value="cc">Combined chlorine (ppm)</option>
-      <option value="ta">Total alkalinity (ppm)</option>
-      <option value="ch">Calcium hardness (ppm)</option>
-      <option value="cya">Cyanuric acid (ppm)</option>
-      <option value="temp">Temperature (F)</option>
-    </select>
   </div>
+  <p class="slabel">Select parameters to chart</p>
+  <div class="param-checks" id="param-checks">
+    <label class="param-check"><input type="checkbox" value="orp" onchange="renderTrends()"/> ORP (mV)</label>
+    <label class="param-check"><input type="checkbox" value="orpSetpoint" onchange="renderTrends()"/> ORP Setpoint</label>
+    <label class="param-check active"><input type="checkbox" value="pH" checked onchange="renderTrends()"/> pH</label>
+    <label class="param-check"><input type="checkbox" value="fc" onchange="renderTrends()"/> Free chlorine</label>
+    <label class="param-check"><input type="checkbox" value="cc" onchange="renderTrends()"/> Combined chlorine</label>
+    <label class="param-check"><input type="checkbox" value="ta" onchange="renderTrends()"/> Total alkalinity</label>
+    <label class="param-check"><input type="checkbox" value="ch" onchange="renderTrends()"/> Calcium hardness</label>
+    <label class="param-check"><input type="checkbox" value="cya" onchange="renderTrends()"/> Cyanuric acid</label>
+    <label class="param-check"><input type="checkbox" value="temp" onchange="renderTrends()"/> Temperature (F)</label>
+    <label class="param-check"><input type="checkbox" value="lsi" onchange="renderTrends()"/> LSI</label>
+  </div>
+  <p style="font-size:11px;color:var(--text3);margin-bottom:1rem;">Note: parameters with very different scales (e.g. ORP in mV vs pH) will share the same axis. Select similar-range parameters for the clearest chart.</p>
   <div id="trend-legend" class="legend-row"></div>
   <div class="chart-wrap" style="height:280px;"><canvas id="trend-chart" role="img" aria-label="Parameter trend chart">No data yet.</canvas></div>
   <div class="stat-grid" id="trend-stats"></div>
@@ -851,36 +857,103 @@ function populateTrendSelect(){
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var o=document.createElement('option');o.value=li+'-'+bi;o.textContent=b.name+' - '+l.name;sel.appendChild(o);});});
 }
 function getLabel(p){return{lsi:'LSI',orp:'ORP (mV)',orpSetpoint:'ORP Setpoint (mV)',pH:'pH',fc:'Free chlorine (ppm)',cc:'Combined chlorine (ppm)',ta:'Total alkalinity (ppm)',ch:'Calcium hardness (ppm)',cya:'Cyanuric acid (ppm)',temp:'Temperature (F)'}[p]||p;}
+
 function renderTrends(){
   var bodyVal=document.getElementById('trend-body').value;
-  var param=document.getElementById('trend-param').value;
   if(!bodyVal)return;
   var parts=bodyVal.split('-');var li=parseInt(parts[0]),bi=parseInt(parts[1]);
   var entries=st.history.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}).slice().reverse();
   var statsDiv=document.getElementById('trend-stats');
-  if(entries.length<2){statsDiv.innerHTML='<div class="empty-state" style="padding:2rem 1rem;">Save at least 2 readings for this body of water to see trends.</div>';if(trendChart){trendChart.destroy();trendChart=null;}return;}
+  var legendDiv=document.getElementById('trend-legend');
+
+  // Get selected params from checkboxes
+  var selected=[];
+  document.querySelectorAll('#param-checks input[type=checkbox]:checked').forEach(function(cb){selected.push(cb.value);});
+
+  if(entries.length<2){
+    statsDiv.innerHTML='<div class="empty-state" style="padding:2rem 1rem;">Save at least 2 readings for this body of water to see trends.</div>';
+    legendDiv.innerHTML='';
+    if(trendChart){trendChart.destroy();trendChart=null;}
+    return;
+  }
+  if(selected.length===0){
+    statsDiv.innerHTML='<div class="empty-state" style="padding:1rem;">Select at least one parameter above to chart.</div>';
+    legendDiv.innerHTML='';
+    if(trendChart){trendChart.destroy();trendChart=null;}
+    return;
+  }
+
   var labels=entries.map(function(e){return new Date(e.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});});
-  var data=entries.map(function(e){
-    if(param==='lsi')return e.lsi!=null?parseFloat(parseFloat(e.lsi).toFixed(2)):null;
-    if(param==='orp')return e.readings.orp;
-    if(param==='orpSetpoint')return e.readings.orpSetpoint;
-    return e.readings[param]!=null?e.readings[param]:null;
+
+  var datasets=selected.map(function(param,idx){
+    var data=entries.map(function(e){
+      if(param==='lsi')return e.lsi!=null?parseFloat(parseFloat(e.lsi).toFixed(2)):null;
+      if(param==='orp')return e.readings.orp;
+      if(param==='orpSetpoint')return e.readings.orpSetpoint;
+      return e.readings[param]!=null?e.readings[param]:null;
+    });
+    return {label:getLabel(param),data:data,borderColor:TREND_COLORS[idx%TREND_COLORS.length],backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:TREND_COLORS[idx%TREND_COLORS.length],tension:0.3,spanGaps:true};
   });
-  var pLabel=getLabel(param);
-  document.getElementById('trend-legend').innerHTML='<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:#378ADD;display:inline-block;"></span>'+pLabel+'</span>';
-  var valid=data.filter(function(v){return v!=null;});
-  if(!valid.length){statsDiv.innerHTML='<div class="empty-state">No data for this parameter.</div>';return;}
-  var mn=Math.min.apply(null,valid),mx=Math.max.apply(null,valid),pad=(mx-mn)*0.2||1;
+
+  // Legend
+  legendDiv.innerHTML=datasets.map(function(ds){
+    return '<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:'+ds.borderColor+';display:inline-block;"></span><span style="font-size:12px;color:var(--text2);">'+ds.label+'</span></span>';
+  }).join('');
+
+  // Y axis range across all selected series
+  var allValid=[];
+  datasets.forEach(function(ds){ds.data.forEach(function(v){if(v!=null)allValid.push(v);});});
+  var mn=allValid.length?Math.min.apply(null,allValid):0;
+  var mx=allValid.length?Math.max.apply(null,allValid):1;
+  var pad=(mx-mn)*0.2||1;
+
   if(trendChart){trendChart.destroy();trendChart=null;}
   var canvas=document.getElementById('trend-chart');
-  trendChart=new Chart(canvas,{type:'line',data:{labels:labels,datasets:[{label:pLabel,data:data,borderColor:'#378ADD',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#378ADD',tension:0.3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return pLabel+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'--');}}}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}}}});
-  var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
-  var trend=valid[valid.length-1]-valid[0];
-  statsDiv.innerHTML='<div class="stat-card"><div class="stat-label">Latest</div><div class="stat-val">'+valid[valid.length-1].toFixed(2)+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Average</div><div class="stat-val">'+avg.toFixed(2)+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Min</div><div class="stat-val">'+mn.toFixed(2)+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Max</div><div class="stat-val">'+mx.toFixed(2)+'</div></div>'
-    +'<div class="stat-card"><div class="stat-label">Trend</div><div class="stat-val" style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</div></div>';
+  trendChart=new Chart(canvas,{
+    type:'line',
+    data:{labels:labels,datasets:datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:selected.length>1,position:'bottom',labels:{font:{size:11},color:'rgba(128,128,128,0.9)',boxWidth:12}},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'--');}}}
+      },
+      scales:{
+        x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},
+        y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}
+      }
+    }
+  });
+
+  // Stats for each selected series
+  if(selected.length===1){
+    var valid=datasets[0].data.filter(function(v){return v!=null;});
+    if(!valid.length){statsDiv.innerHTML='<div class="empty-state">No data for this parameter.</div>';return;}
+    var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
+    var trend=valid[valid.length-1]-valid[0];
+    statsDiv.style.display='grid';
+    statsDiv.innerHTML='<div class="stat-card"><div class="stat-label">Latest</div><div class="stat-val">'+valid[valid.length-1].toFixed(2)+'</div></div>'
+      +'<div class="stat-card"><div class="stat-label">Average</div><div class="stat-val">'+avg.toFixed(2)+'</div></div>'
+      +'<div class="stat-card"><div class="stat-label">Min</div><div class="stat-val">'+Math.min.apply(null,valid).toFixed(2)+'</div></div>'
+      +'<div class="stat-card"><div class="stat-label">Max</div><div class="stat-val">'+Math.max.apply(null,valid).toFixed(2)+'</div></div>'
+      +'<div class="stat-card"><div class="stat-label">Trend</div><div class="stat-val" style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</div></div>';
+  } else {
+    // Multi-series: show a summary row per param
+    statsDiv.style.display='block';
+    statsDiv.innerHTML=datasets.map(function(ds,idx){
+      var valid=ds.data.filter(function(v){return v!=null;});
+      if(!valid.length) return '';
+      var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
+      var trend=valid[valid.length-1]-valid[0];
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;flex-wrap:wrap;">'
+        +'<span style="width:10px;height:10px;border-radius:2px;background:'+TREND_COLORS[idx%TREND_COLORS.length]+';flex-shrink:0;display:inline-block;"></span>'
+        +'<span style="font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:120px;">'+ds.label+'</span>'
+        +'<span style="font-size:12px;color:var(--text2);">Latest: <b style="color:var(--text);">'+valid[valid.length-1].toFixed(2)+'</b></span>'
+        +'<span style="font-size:12px;color:var(--text2);">Avg: <b style="color:var(--text);">'+avg.toFixed(2)+'</b></span>'
+        +'<span style="font-size:12px;color:var(--text2);">Trend: <b style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</b></span>'
+        +'</div>';
+    }).join('');
+  }
 }
 
 window.onload=function(){
