@@ -186,7 +186,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v20 (synced) - Jun 11, 2026</span>
+    <span class="version-label">v21 (synced) - Jun 12, 2026</span>
   </div>
 </div>
 
@@ -225,12 +225,12 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <p class="slabel">Water chemistry readings</p>
   <div class="grid">
-    <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">Target: 7.4 - 7.6</div></div>
-    <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="20" step="0.1" inputmode="decimal"/><div class="hint">ppm -- verify against ORP</div></div>
-    <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm -- TC minus FC</div></div>
-    <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 80-120</div></div>
+    <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">City req: 7.2 - 8.0</div></div>
+    <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm -- City req: 1.5-10.0 ppm</div></div>
+    <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="5" step="0.1" inputmode="decimal"/><div class="hint">ppm -- must be less than 50% of FC</div></div>
+    <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- City req: 60-160 ppm</div></div>
     <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 200-400</div></div>
-    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm (outdoor pools)</div></div>
+    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="90" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm, max 90 ppm (city req)</div></div>
     <div class="icard"><label>Temperature (F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
   </div>
   <div class="calc-select-wrap">
@@ -369,12 +369,12 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <div class="guide-body">Fill in your test kit results. Only pH and free chlorine are required. Total alkalinity, calcium hardness, and temperature are also needed for the LSI calculation.</div>
     <div class="guide-table">
       <div class="guide-row guide-row-head"><span>Parameter</span><span>Target range</span></div>
-      <div class="guide-row"><span>pH</span><span>7.4 - 7.6 (pools), 7.5 (spas)</span></div>
-      <div class="guide-row"><span>Free chlorine</span><span>1 - 5 ppm (pools), 4 ppm (spas)</span></div>
-      <div class="guide-row"><span>Combined chlorine</span><span>Below 0.2 ppm</span></div>
-      <div class="guide-row"><span>Total alkalinity</span><span>80 - 120 ppm</span></div>
+      <div class="guide-row"><span>pH</span><span>7.2 - 8.0 (city req)</span></div>
+      <div class="guide-row"><span>Free chlorine</span><span>1.5 - 10.0 ppm (city req)</span></div>
+      <div class="guide-row"><span>Combined chlorine</span><span>Less than 50% of FC (city req)</span></div>
+      <div class="guide-row"><span>Total alkalinity</span><span>60 - 160 ppm (city req)</span></div>
       <div class="guide-row"><span>Calcium hardness</span><span>200 - 400 ppm (pools), 150 ppm (spas)</span></div>
-      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm (outdoor pools only)</span></div>
+      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm target, max 90 ppm (city req)</span></div>
       <div class="guide-row"><span>Temperature</span><span>Current water temp in F</span></div>
     </div>
   </div>
@@ -617,14 +617,14 @@ function renderCC(cc,fc,vol){
   document.getElementById('cc-shock-thresh').textContent=shockTarget.toFixed(1)+' ppm FC';
   var noteEl=document.getElementById('cc-note');
   var statusEl=document.getElementById('cc-status-text');
-  if(cc<0.2){statusEl.textContent='No action needed';statusEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='Combined chlorine below 0.2 ppm is acceptable. No shock required.';}
-  else if(cc<0.5){statusEl.textContent='Monitor - approaching threshold';statusEl.style.color='var(--warn-text)';inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';noteEl.textContent='CC at '+cc.toFixed(1)+' ppm. Watch for chloramine odour. Consider shocking soon if CC rises further.';}
-  else{
-    statusEl.textContent='Shock recommended';statusEl.style.color='var(--danger-text)';inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
+  var ccLimit=fc*0.5;
+  if(cc<ccLimit&&cc<0.5){statusEl.textContent='No action needed';statusEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='Combined chlorine '+cc.toFixed(1)+' ppm is below 50% of FC ('+ccLimit.toFixed(1)+' ppm limit). No shock required.';}
+  else if(cc>=ccLimit||cc>=0.5){if(cc<0.5){statusEl.textContent='Monitor - approaching 50% of FC';statusEl.style.color='var(--warn-text)';inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';noteEl.textContent='CC at '+cc.toFixed(1)+' ppm has reached 50% of FC (city requirement: CC must be less than 50% of FC = '+ccLimit.toFixed(1)+' ppm). Shock recommended.';}
+  else{statusEl.textContent='Shock required';statusEl.style.color='var(--danger-text)';inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
     var fcNeeded=shockTarget-(fc||0);
-    if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';noteEl.textContent='CC is '+cc.toFixed(1)+' ppm -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC. Retest after 4 hours of circulation.';}
+    if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';noteEl.textContent='CC is '+cc.toFixed(1)+' ppm (city limit: less than 50% of FC = '+ccLimit.toFixed(1)+' ppm) -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC. Retest after 4 hours of circulation.';}
     else{noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient -- retest after 4 hours of circulation.';}
-  }
+  }}
 }
 
 function calculate(){
@@ -662,28 +662,28 @@ function calculate(){
 
   var doses=[];
   var fcTarget=spa?4.0:3.0;
-  var shockNeeded=!isNaN(cc)&&cc>=0.5;
+  var shockNeeded=!isNaN(cc)&&!isNaN(fc)&&(cc>=fc*0.5||cc>=0.5);
   if(!isNaN(fc)){
     var diff=fcTarget-fc;
     var orpOk=!isNaN(orpSP)?Math.abs(orp-orpSP)<=20:(!isNaN(orp)&&orp>=650&&orp<=850);
     if(shockNeeded){
       var shockTarget=cc*10;var fcNeeded=shockTarget-fc;
       if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var shockAmt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';doses.push({chem:'[SHOCK] Sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10x CC of '+cc.toFixed(1)+' ppm)',shock:true});}
-    }else if(!isNaN(orp)&&orpOk&&fc>=1&&fc<=6){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});}
+    }else if(!isNaN(orp)&&orpOk&&fc>=1.5&&fc<=10){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});}
     else if(diff>0.2){var floz2=((diff*vol/10000)*10.24).toFixed(1);doses.push({chem:'Sodium hypochlorite (12.5%)',amount:(parseFloat(floz2)<128?floz2+' fl oz':(floz2/128).toFixed(2)+' gal'),note:'Raise FC from '+fc+' to ~'+fcTarget+' ppm'});}
-    else if(diff<-0.5){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop. Target: '+fcTarget+' ppm.'});}
-    else{doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within range',ok:true});}
+    else if(diff<-0.5){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop naturally. City max: 10.0 ppm.'});}
+    else{doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within city range (1.5-10.0 ppm)',ok:true});}
   }
-  var phTarget=spa?7.5:7.4,phDiff=phTarget-pH;
+  var phTarget=spa?7.6:7.6,phDiff=phTarget-pH;
   if(Math.abs(phDiff)>0.1){
-    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+(!isNaN(orp)?' -- will also improve ORP':'')});}
-    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget});}
-  }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within range',ok:true});}
-  var taDiff=100-ta;
-  if(!isNaN(ta)&&Math.abs(taDiff)>10){
-    if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~100 ppm'});}
-    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~100 ppm'});}
-  }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within range',ok:true});}
+    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+' (city max 8.0)'+(!isNaN(orp)?' -- correcting pH will also improve ORP':'')});}
+    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget+' (city min 7.2)'});}
+  }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within city range (7.2-8.0)',ok:true});}
+  var taTarget=110;var taDiff=taTarget-ta;
+  if(!isNaN(ta)&&(ta<60||ta>160)){
+    if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
+    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
+  }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within city range (60-160 ppm)',ok:true});}
   var chTarget=spa?150:300,chDiff=chTarget-ch;
   if(!isNaN(ch)&&Math.abs(chDiff)>25){
     if(chDiff>0){doses.push({chem:'Calcium chloride',amount:(chDiff*vol*0.0000112).toFixed(2)+' lbs',note:'Raise CH from '+ch+' to ~'+chTarget+' ppm'});}
@@ -692,8 +692,8 @@ function calculate(){
   if(outdoor&&!spa&&!isNaN(cya)){
     var cyaDiff=50-cya;
     if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~50 ppm'});}
-    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill. Target: 40-60 ppm.'});}
-    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within range (target 40-60 ppm)',ok:true});}
+    else if(cya>90){doses.push({chem:'Cyanuric acid',amount:'Dilute required - city max exceeded',note:'CYA '+cya+' ppm exceeds city maximum of 90 ppm. Partial drain/refill required immediately.'});}
+    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within city limits (max 90 ppm)',ok:true});}
   }
 
   lastDoses=doses;

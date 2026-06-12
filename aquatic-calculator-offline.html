@@ -35,7 +35,10 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .app-header{margin-bottom:1.5rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .app-header h1{font-size:20px;font-weight:500;}
 .app-header p{font-size:13px;color:var(--text2);margin-top:4px;}
-.offline-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);white-space:nowrap;}
+.sync-badge{font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);white-space:nowrap;}
+.sync-badge.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.sync-badge.err{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.sync-badge.syncing{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
 .version-label{font-size:10px;color:var(--text3);text-align:right;}
 button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-select:none;pointer-events:all;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
 .page-btns{display:flex;gap:8px;margin-bottom:1.25rem;}
@@ -148,18 +151,42 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .guide-row-head{background:var(--bg2);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;}
 .guide-row-head span{color:var(--text3) !important;font-weight:400 !important;}
 .guide-tip{background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--info-text);line-height:1.6;margin-top:10px;}
+.token-screen{max-width:480px;margin:4rem auto;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;}
+.token-screen h2{font-size:18px;font-weight:500;margin-bottom:8px;}
+.token-screen p{font-size:13px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6;}
+.token-screen label{display:block;font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.token-screen input{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);margin-bottom:1rem;font-family:var(--font);}
+.token-screen .note{font-size:11px;color:var(--text3);line-height:1.6;margin-top:1rem;}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+<!-- TOKEN SETUP SCREEN -->
+<div id="token-setup" style="display:none;">
+  <div class="token-screen">
+    <h2>Connect to GitHub</h2>
+    <p>To sync readings across all staff devices, enter your GitHub personal access token. It will be saved to this device only and never uploaded anywhere.</p>
+    <label>GitHub personal access token</label>
+    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+    <select style="width:100%;padding:10px;font-size:14px;border:0.5px solid var(--info-border);border-radius:var(--radius);background:var(--info-bg);color:var(--info-text);font-weight:500;font-family:var(--font);" onchange="if(this.value==='save'){submitToken();this.value='';}">
+      <option value="">-- Tap to save token and connect --</option>
+      <option value="save">Save token and connect</option>
+    </select>
+    <p class="note">Your token is stored only in this browser. It is never sent to anyone except GitHub to sync your readings. This is a stand-in for Microsoft Azure AD authentication -- your IT team can replace it with your existing Microsoft 365 login.</p>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" style="display:none;">
 <div class="app-header">
   <div>
     <h1>OSLU Aquatic Chemical Calculator</h1>
     <p>Level 1 Indoor | Level 2 Outdoor | Level 13 Outdoor</p>
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
-    <span class="offline-badge">Saves to this device</span>
-    <span class="version-label">v20 (offline) - Jun 11, 2026</span>
+    <span class="offline-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);">Saves to this device</span>
+    <span class="version-label">v21 (offline) - Jun 12, 2026</span>
   </div>
 </div>
 
@@ -185,39 +212,27 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
       <option value="2-1">Level 13 Outdoor - Hot tub - 3,500 gal</option>
     </select>
   </div>
-
   <div class="vol-display" id="vol-display" style="display:none;">
     <span class="vol-text" id="vol-label">Volume</span>
     <span class="vol-num" id="vol-num">--</span>
   </div>
-
   <div class="orp-section">
     <p class="slabel">ORP Controller</p>
     <div class="orp-grid">
-      <div class="orp-icard">
-        <label>ORP Reading</label>
-        <input type="number" id="orp" placeholder="680" min="0" max="900" step="1" inputmode="decimal"/>
-        <div class="hint">mV -- current probe reading</div>
-      </div>
-      <div class="orp-icard">
-        <label>ORP Setpoint</label>
-        <input type="number" id="orp-setpoint" placeholder="750" min="0" max="900" step="1" inputmode="decimal"/>
-        <div class="hint">mV -- controller target</div>
-      </div>
+      <div class="orp-icard"><label>ORP Reading</label><input type="number" id="orp" placeholder="680" min="0" max="900" step="1" inputmode="decimal"/><div class="hint">mV -- current probe reading</div></div>
+      <div class="orp-icard"><label>ORP Setpoint</label><input type="number" id="orp-setpoint" placeholder="750" min="0" max="900" step="1" inputmode="decimal"/><div class="hint">mV -- controller target</div></div>
     </div>
   </div>
-
   <p class="slabel">Water chemistry readings</p>
   <div class="grid">
-    <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">Target: 7.4 - 7.6</div></div>
-    <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="20" step="0.1" inputmode="decimal"/><div class="hint">ppm -- verify against ORP</div></div>
-    <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm -- TC minus FC</div></div>
-    <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 80-120</div></div>
+    <div class="icard"><label>pH</label><input type="number" id="pH" placeholder="7.4" min="6" max="9" step="0.1" inputmode="decimal"/><div class="hint">City req: 7.2 - 8.0</div></div>
+    <div class="icard"><label>Free Chlorine</label><input type="number" id="fc" placeholder="3.0" min="0" max="10" step="0.1" inputmode="decimal"/><div class="hint">ppm -- City req: 1.5-10.0 ppm</div></div>
+    <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="5" step="0.1" inputmode="decimal"/><div class="hint">ppm -- must be less than 50% of FC</div></div>
+    <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- City req: 60-160 ppm</div></div>
     <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 200-400</div></div>
-    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="100" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm (outdoor pools)</div></div>
+    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="90" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm, max 90 ppm (city req)</div></div>
     <div class="icard"><label>Temperature (F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
   </div>
-
   <div class="calc-select-wrap">
     <label class="slabel" for="calc-trigger">Calculate dosages</label>
     <select id="calc-trigger" onchange="if(this.value==='go'){calculate();this.value='';}">
@@ -225,14 +240,10 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
       <option value="go">Calculate now</option>
     </select>
   </div>
-
   <div class="results" id="results">
     <p class="slabel">ORP Status</p>
     <div class="status-card" id="orp-result-card" style="display:none;">
-      <div>
-        <div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Reading</div>
-        <div class="status-num" id="orp-result-val">--</div>
-      </div>
+      <div><div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Reading</div><div class="status-num" id="orp-result-val">--</div></div>
       <div class="orp-bar-wrap">
         <div style="font-size:13px;font-weight:500;margin-bottom:8px;" id="orp-status-title">--</div>
         <div class="orp-bar-track"><div class="orp-bar-fill" id="orp-bar" style="width:0%;background:#378ADD;"></div></div>
@@ -240,7 +251,6 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
         <div style="font-size:12px;color:var(--text2);margin-top:6px;" id="orp-status-sub"></div>
       </div>
     </div>
-
     <div id="cya-orp-card" style="display:none;margin-bottom:1rem;">
       <p class="slabel">CYA Correction for ORP</p>
       <div class="cc-result" id="cya-orp-inner">
@@ -252,7 +262,6 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
         <div class="cc-note" id="cya-orp-note"></div>
       </div>
     </div>
-
     <div id="cc-result-card" style="display:none;">
       <p class="slabel">Combined Chlorine</p>
       <div class="cc-result" id="cc-result-inner">
@@ -264,33 +273,25 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
         <div class="cc-note" id="cc-note"></div>
       </div>
     </div>
-
     <p class="slabel" id="lsi-slabel" style="margin-top:1rem;">Langelier Saturation Index</p>
     <div class="status-card" id="lsi-card">
       <div class="status-num" id="lsi-val">--</div>
       <div><div class="status-title" id="lsi-title">--</div><div class="status-sub" id="lsi-sub"></div></div>
     </div>
-
     <hr class="divider"/>
     <p class="slabel">Chemical Dosages</p>
     <div class="dgrid" id="dose-grid"></div>
-
     <div class="action-select-wrap">
       <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}">
         <option value="">-- Save or share this reading --</option>
-        <option value="save">Save reading to history</option>
+        <option value="save">Save reading to shared history</option>
         <option value="copy">Copy reading to clipboard</option>
       </select>
     </div>
-
     <div id="copy-preview" class="copy-preview" style="display:none;">
-      <div class="copy-preview-head">
-        <span class="copy-preview-label">Preview -- paste into Teams or email</span>
-        <button class="copy-preview-close" onclick="document.getElementById('copy-preview').style.display='none'">X</button>
-      </div>
+      <div class="copy-preview-head"><span class="copy-preview-label">Preview -- paste into Teams or email</span><button class="copy-preview-close" onclick="document.getElementById('copy-preview').style.display='none'">X</button></div>
       <pre id="copy-preview-text" class="copy-preview-text"></pre>
     </div>
-
     <p class="disclaimer">[!] Estimates based on standard water chemistry formulas. ORP is influenced by pH -- high pH suppresses ORP even when FC is adequate. Always cross-reference ORP with manual FC tests. Breakpoint shock doses calculated at 10x combined chlorine -- retest after 4 hours. Sodium hypochlorite degrades over time -- verify concentration. Consult a licensed pool professional for critical decisions.</p>
   </div>
 </div>
@@ -366,12 +367,12 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <div class="guide-body">Fill in your test kit results. Only pH and free chlorine are required. Total alkalinity, calcium hardness, and temperature are also needed for the LSI calculation.</div>
     <div class="guide-table">
       <div class="guide-row guide-row-head"><span>Parameter</span><span>Target range</span></div>
-      <div class="guide-row"><span>pH</span><span>7.4 - 7.6 (pools), 7.5 (spas)</span></div>
-      <div class="guide-row"><span>Free chlorine</span><span>1 - 5 ppm (pools), 4 ppm (spas)</span></div>
-      <div class="guide-row"><span>Combined chlorine</span><span>Below 0.2 ppm</span></div>
-      <div class="guide-row"><span>Total alkalinity</span><span>80 - 120 ppm</span></div>
+      <div class="guide-row"><span>pH</span><span>7.2 - 8.0 (city req)</span></div>
+      <div class="guide-row"><span>Free chlorine</span><span>1.5 - 10.0 ppm (city req)</span></div>
+      <div class="guide-row"><span>Combined chlorine</span><span>Less than 50% of FC (city req)</span></div>
+      <div class="guide-row"><span>Total alkalinity</span><span>60 - 160 ppm (city req)</span></div>
       <div class="guide-row"><span>Calcium hardness</span><span>200 - 400 ppm (pools), 150 ppm (spas)</span></div>
-      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm (outdoor pools only)</span></div>
+      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm target, max 90 ppm (city req)</span></div>
       <div class="guide-row"><span>Temperature</span><span>Current water temp in F</span></div>
     </div>
   </div>
@@ -391,7 +392,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section">
     <div class="guide-title">History and Trends tabs</div>
-    <div class="guide-body">History shows all saved readings, filterable by body of water. Trends charts any parameter over time. Use Export CSV in History to share data with your team.</div>
+    <div class="guide-body">History shows all shared readings from all staff, filterable by body of water. Trends charts any parameter over time. Use Refresh in History Actions to pull the latest data from GitHub.</div>
   </div>
   <div class="guide-section">
     <div class="guide-title">Important reminders</div>
@@ -399,7 +400,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v19 (offline)<br>
+      OSLU Aquatic Chemical Calculator v20 (offline)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -436,6 +437,15 @@ function loadLocal(){
 function saveLocal(){
   try{localStorage.setItem(HKEY,JSON.stringify(st.history));localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}
 }
+
+function setSyncStatus(type,text){
+  var b=document.getElementById('storage-badge');
+  if(!b)return;
+  b.textContent=text;
+}
+
+
+
 function currentBody(){return LEVELS[st.level].bodies[st.body];}
 function currentVol(){return currentBody().vol;}
 function isSpa(){return currentBody().spa;}
@@ -465,10 +475,8 @@ function onLocationChange(val){
   if(!val)return;
   saveInputs();
   var parts=val.split('-');
-  st.level=parseInt(parts[0]);
-  st.body=parseInt(parts[1]);
-  updateVolDisplay();
-  loadInputs();
+  st.level=parseInt(parts[0]);st.body=parseInt(parts[1]);
+  updateVolDisplay();loadInputs();
   document.getElementById('results').classList.remove('on');
 }
 
@@ -481,22 +489,13 @@ function showPage(p){
   if(p==='trend'){populateTrendSelect();renderTrends();}
 }
 
-function setSyncStatus(type,text){
-  var b=document.getElementById('storage-badge');
-  if(!b)return;
-  b.textContent=text;
-}
-
 function tempFactor(f){return parseFloat((Math.log10((f-32)*5/9+273)*10-22.66).toFixed(2));}
 function calcLSI(pH,ta,ch,temp){return parseFloat((pH-(12.1-tempFactor(temp)-(Math.log10(ta)-1)-(Math.log10(ch/2)-0.4))).toFixed(2));}
-
 function calcFAC(fc,cya,pH){
   if(!fc||!cya||!pH)return null;
-  var pKaHOCl=7.54;
-  var hoClFraction=1/(1+Math.pow(10,pH-pKaHOCl));
+  var hoClFraction=1/(1+Math.pow(10,pH-7.54));
   var K=5*Math.pow(10,7.5-pH);
-  var fac=fc*hoClFraction/(1+cya/K);
-  return parseFloat(fac.toFixed(3));
+  return parseFloat((fc*hoClFraction/(1+cya/K)).toFixed(3));
 }
 
 function renderORP(orp,sp){
@@ -512,10 +511,10 @@ function renderORP(orp,sp){
   card.className='status-card';valEl.style.color='var(--text)';
   if(sp!=null){
     var diff=orp-sp;
-    if(Math.abs(diff)<=20){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='At setpoint - controller satisfied';subEl.textContent='ORP '+orp+' mV is within 20 mV of setpoint ('+sp+' mV). Dosing is off or minimal.';bar.style.background='#1D9E75';}
+    if(Math.abs(diff)<=20){card.classList.add('s-ok');valEl.style.color='var(--success-text)';titleEl.textContent='At setpoint - controller satisfied';subEl.textContent='ORP '+orp+' mV is within 20 mV of setpoint ('+sp+' mV).';bar.style.background='#1D9E75';}
     else if(diff<-20&&diff>=-80){card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Below setpoint by '+Math.abs(diff)+' mV - controller dosing';subEl.textContent='Controller is actively feeding sodium hypochlorite. Check chemical supply level.';bar.style.background='#BA7517';}
     else if(diff<-80){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Well below setpoint by '+Math.abs(diff)+' mV - verify system';subEl.textContent='Check: chemical supply empty, probe fouled, pH too high, or controller fault.';bar.style.background='#E24B4A';}
-    else if(diff>20&&diff<=80){titleEl.textContent='Above setpoint by '+diff+' mV - dosing paused';subEl.textContent='ORP exceeds setpoint. Controller has stopped dosing - normal operation.';bar.style.background='#378ADD';}
+    else if(diff>20&&diff<=80){titleEl.textContent='Above setpoint by '+diff+' mV - dosing paused';subEl.textContent='ORP exceeds setpoint. Controller has stopped dosing.';bar.style.background='#378ADD';}
     else{card.classList.add('s-warn');valEl.style.color='var(--warn-text)';titleEl.textContent='Well above setpoint by '+diff+' mV - check controller';subEl.textContent='ORP significantly exceeds setpoint. Verify controller is not over-feeding.';bar.style.background='#D85A30';}
   }else{
     if(orp<650){card.classList.add('s-danger');valEl.style.color='var(--danger-text)';titleEl.textContent='Low ORP - sanitiser may be insufficient';subEl.textContent='ORP below 650 mV suggests inadequate disinfection. Check FC and pH.';bar.style.background='#E24B4A';}
@@ -528,8 +527,7 @@ function renderORP(orp,sp){
 function renderCYACorrection(fc,cya,pH,orp,orpSP){
   var card=document.getElementById('cya-orp-card');
   var inner=document.getElementById('cya-orp-inner');
-  card.style.display='block';
-  inner.style.borderColor='';inner.style.background='';
+  card.style.display='block';inner.style.borderColor='';inner.style.background='';
   var fac=calcFAC(fc,cya,pH);
   document.getElementById('cya-level-val').textContent=cya+' ppm';
   document.getElementById('fac-val').textContent=fac!=null?fac.toFixed(3)+' ppm':'--';
@@ -537,55 +535,29 @@ function renderCYACorrection(fc,cya,pH,orp,orpSP){
   var noteEl=document.getElementById('cya-orp-note');
   var orpSuppression=Math.round(cya*0.6);
   var suggestedSP=orpSP?Math.round(orpSP+orpSuppression):null;
-  if(cya<=20){
-    relEl.textContent='High reliability';relEl.style.color='var(--success-text)';
-    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) -- ORP is highly reliable but stabiliser should be raised. Est. ORP suppression: ~'+orpSuppression+' mV.';
-  }else if(cya<=60){
-    relEl.textContent='Normal - within target range';relEl.style.color='var(--success-text)';
-    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Est. ORP suppression: ~'+orpSuppression+' mV. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');
-  }else if(cya<=80){
-    relEl.textContent='Elevated - some suppression';relEl.style.color='var(--warn-text)';
-    inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is above target. ORP suppressed by ~'+orpSuppression+' mV -- cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');
-  }else{
-    relEl.textContent='Unreliable - CYA too high';relEl.style.color='var(--danger-text)';
-    inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
-    noteEl.textContent='CYA at '+cya+' ppm is excessive -- ORP suppressed by ~'+orpSuppression+' mV and is not a reliable indicator. FAC is only ~'+fac.toFixed(3)+' ppm. Partial drain/refill recommended to bring CYA back to 50 ppm target.';
-  }
+  if(cya<=20){relEl.textContent='High reliability';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) -- ORP is highly reliable but stabiliser should be raised. Est. ORP suppression: ~'+orpSuppression+' mV.';}
+  else if(cya<=60){relEl.textContent='Normal - within target range';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Est. ORP suppression: ~'+orpSuppression+' mV. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');}
+  else if(cya<=80){relEl.textContent='Elevated - some suppression';relEl.style.color='var(--warn-text)';inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';noteEl.textContent='CYA at '+cya+' ppm is above target. ORP suppressed by ~'+orpSuppression+' mV -- cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');}
+  else{relEl.textContent='Unreliable - CYA too high';relEl.style.color='var(--danger-text)';inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';noteEl.textContent='CYA at '+cya+' ppm is excessive -- ORP suppressed by ~'+orpSuppression+' mV. FAC is only ~'+fac.toFixed(3)+' ppm. Partial drain/refill recommended.';}
 }
 
 function renderCC(cc,fc,vol){
   var card=document.getElementById('cc-result-card');
   var inner=document.getElementById('cc-result-inner');
-  card.style.display='block';
-  inner.style.borderColor='';inner.style.background='';
+  card.style.display='block';inner.style.borderColor='';inner.style.background='';
   document.getElementById('cc-val').textContent=cc.toFixed(1)+' ppm';
   var shockTarget=cc*10;
   document.getElementById('cc-shock-thresh').textContent=shockTarget.toFixed(1)+' ppm FC';
   var noteEl=document.getElementById('cc-note');
   var statusEl=document.getElementById('cc-status-text');
-  if(cc<0.2){
-    statusEl.textContent='No action needed';statusEl.style.color='var(--success-text)';
-    inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';
-    noteEl.textContent='Combined chlorine below 0.2 ppm is acceptable. No shock required.';
-  }else if(cc<0.5){
-    statusEl.textContent='Monitor - approaching threshold';statusEl.style.color='var(--warn-text)';
-    inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';
-    noteEl.textContent='CC at '+cc.toFixed(1)+' ppm. Watch for chloramine odour. Consider shocking soon if CC rises further.';
-  }else{
-    statusEl.textContent='Shock recommended';statusEl.style.color='var(--danger-text)';
-    inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
+  var ccLimit=fc*0.5;
+  if(cc<ccLimit&&cc<0.5){statusEl.textContent='No action needed';statusEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='Combined chlorine '+cc.toFixed(1)+' ppm is below 50% of FC ('+ccLimit.toFixed(1)+' ppm limit). No shock required.';}
+  else if(cc>=ccLimit||cc>=0.5){if(cc<0.5){statusEl.textContent='Monitor - approaching 50% of FC';statusEl.style.color='var(--warn-text)';inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';noteEl.textContent='CC at '+cc.toFixed(1)+' ppm has reached 50% of FC (city requirement: CC must be less than 50% of FC = '+ccLimit.toFixed(1)+' ppm). Shock recommended.';}
+  else{statusEl.textContent='Shock required';statusEl.style.color='var(--danger-text)';inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';
     var fcNeeded=shockTarget-(fc||0);
-    if(fcNeeded>0){
-      var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);
-      var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';
-      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC (10x CC). Retest after 4 hours of circulation with pump running.';
-    }else{
-      noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient -- retest after 4 hours of circulation.';
-    }
-  }
+    if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';noteEl.textContent='CC is '+cc.toFixed(1)+' ppm (city limit: less than 50% of FC = '+ccLimit.toFixed(1)+' ppm) -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC. Retest after 4 hours of circulation.';}
+    else{noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient -- retest after 4 hours of circulation.';}
+  }}
 }
 
 function calculate(){
@@ -604,13 +576,8 @@ function calculate(){
 
   if(!isNaN(orp)){renderORP(orp,isNaN(orpSP)?null:orpSP);}
   else{document.getElementById('orp-result-card').style.display='none';}
-
-  if(outdoor&&!spa&&!isNaN(orp)&&!isNaN(fc)&&!isNaN(cya)&&cya>0){
-    renderCYACorrection(fc,cya,pH,orp,isNaN(orpSP)?null:orpSP);
-  }else{
-    document.getElementById('cya-orp-card').style.display='none';
-  }
-
+  if(outdoor&&!spa&&!isNaN(orp)&&!isNaN(fc)&&!isNaN(cya)&&cya>0){renderCYACorrection(fc,cya,pH,orp,isNaN(orpSP)?null:orpSP);}
+  else{document.getElementById('cya-orp-card').style.display='none';}
   if(!isNaN(cc)&&!isNaN(fc)){renderCC(cc,fc,vol);}
   else{document.getElementById('cc-result-card').style.display='none';}
 
@@ -618,70 +585,48 @@ function calculate(){
   var lc=document.getElementById('lsi-card');
   if(lsiReady){
     var lsi=calcLSI(pH,ta,ch,temp);lastLSI=lsi;
-    lc.style.display='flex';
-    if(lsiLabel)lsiLabel.style.display='block';
+    lc.style.display='flex';if(lsiLabel)lsiLabel.style.display='block';
     document.getElementById('lsi-val').textContent=lsi.toFixed(2);
     lc.className='status-card';
     if(lsi<-0.5){lc.classList.add('s-danger');document.getElementById('lsi-title').textContent='Corrosive - water is aggressive';document.getElementById('lsi-sub').textContent='Raise alkalinity or calcium hardness to protect surfaces and equipment.';}
     else if(lsi>0.5){lc.classList.add('s-warn');document.getElementById('lsi-title').textContent='Scaling - calcium deposits likely';document.getElementById('lsi-sub').textContent='Lower pH or alkalinity to prevent cloudy water and scale buildup.';}
     else{lc.classList.add('s-ok');document.getElementById('lsi-title').textContent='Balanced - properly saturated';document.getElementById('lsi-sub').textContent='LSI of '+lsi.toFixed(2)+' is within the ideal range of -0.3 to +0.3.';}
-  }else{
-    lc.style.display='none';
-    if(lsiLabel)lsiLabel.style.display='none';
-    lastLSI=null;
-  }
+  }else{lc.style.display='none';if(lsiLabel)lsiLabel.style.display='none';lastLSI=null;}
 
   var doses=[];
   var fcTarget=spa?4.0:3.0;
-  var shockNeeded=!isNaN(cc)&&cc>=0.5;
-
+  var shockNeeded=!isNaN(cc)&&!isNaN(fc)&&(cc>=fc*0.5||cc>=0.5);
   if(!isNaN(fc)){
     var diff=fcTarget-fc;
     var orpOk=!isNaN(orpSP)?Math.abs(orp-orpSP)<=20:(!isNaN(orp)&&orp>=650&&orp<=850);
     if(shockNeeded){
-      var shockTarget=cc*10;
-      var fcNeeded=shockTarget-fc;
-      if(fcNeeded>0){
-        var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);
-        var shockAmt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';
-        doses.push({chem:'[SHOCK] Sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10x CC of '+cc.toFixed(1)+' ppm)',shock:true});
-      }
-    }else if(!isNaN(orp)&&orpOk&&fc>=1&&fc<=6){
-      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});
-    }else if(diff>0.2){
-      var floz2=((diff*vol/10000)*10.24).toFixed(1);
-      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:(parseFloat(floz2)<128?floz2+' fl oz':(floz2/128).toFixed(2)+' gal'),note:'Raise FC from '+fc+' to ~'+fcTarget+' ppm'});
-    }else if(diff<-0.5){
-      doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop. Target: '+fcTarget+' ppm.'});
-    }else{
-      doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within range',ok:true});
-    }
+      var shockTarget=cc*10;var fcNeeded=shockTarget-fc;
+      if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var shockAmt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';doses.push({chem:'[SHOCK] Sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10x CC of '+cc.toFixed(1)+' ppm)',shock:true});}
+    }else if(!isNaN(orp)&&orpOk&&fc>=1.5&&fc<=10){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});}
+    else if(diff>0.2){var floz2=((diff*vol/10000)*10.24).toFixed(1);doses.push({chem:'Sodium hypochlorite (12.5%)',amount:(parseFloat(floz2)<128?floz2+' fl oz':(floz2/128).toFixed(2)+' gal'),note:'Raise FC from '+fc+' to ~'+fcTarget+' ppm'});}
+    else if(diff<-0.5){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop naturally. City max: 10.0 ppm.'});}
+    else{doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within city range (1.5-10.0 ppm)',ok:true});}
   }
-
-  var phTarget=spa?7.5:7.4,phDiff=phTarget-pH;
+  var phTarget=spa?7.6:7.6,phDiff=phTarget-pH;
   if(Math.abs(phDiff)>0.1){
-    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+(!isNaN(orp)?' -- will also improve ORP':'')});}
-    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget});}
-  }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within range',ok:true});}
-
-  var taDiff=100-ta;
-  if(!isNaN(ta)&&Math.abs(taDiff)>10){
-    if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~100 ppm'});}
-    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~100 ppm'});}
-  }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within range',ok:true});}
-
-  var chTarget=spa?150:300;
-  var chDiff=chTarget-ch;
+    if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+' (city max 8.0)'+(!isNaN(orp)?' -- correcting pH will also improve ORP':'')});}
+    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget+' (city min 7.2)'});}
+  }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within city range (7.2-8.0)',ok:true});}
+  var taTarget=110;var taDiff=taTarget-ta;
+  if(!isNaN(ta)&&(ta<60||ta>160)){
+    if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
+    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
+  }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within city range (60-160 ppm)',ok:true});}
+  var chTarget=spa?150:300,chDiff=chTarget-ch;
   if(!isNaN(ch)&&Math.abs(chDiff)>25){
     if(chDiff>0){doses.push({chem:'Calcium chloride',amount:(chDiff*vol*0.0000112).toFixed(2)+' lbs',note:'Raise CH from '+ch+' to ~'+chTarget+' ppm'});}
     else{doses.push({chem:'Calcium hardness',amount:'Dilute required',note:'CH '+ch+' ppm too high. Partial drain/refill. Target: '+chTarget+' ppm.'});}
   }else if(!isNaN(ch)){doses.push({chem:'Calcium hardness',amount:'OK - in range',note:ch+' ppm -- within range',ok:true});}
-
   if(outdoor&&!spa&&!isNaN(cya)){
     var cyaDiff=50-cya;
     if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~50 ppm'});}
-    else if(cyaDiff<-10){doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm too high. Partial drain/refill. Target: 40-60 ppm.'});}
-    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within range (target 40-60 ppm)',ok:true});}
+    else if(cya>90){doses.push({chem:'Cyanuric acid',amount:'Dilute required - city max exceeded',note:'CYA '+cya+' ppm exceeds city maximum of 90 ppm. Partial drain/refill required immediately.'});}
+    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within city limits (max 90 ppm)',ok:true});}
   }
 
   lastDoses=doses;
@@ -714,39 +659,17 @@ function buildReadingText(){
   if(d.temp)lines.push('Temperature:       '+d.temp+' F');
   lines.push('');
   lines.push('-- LSI --');
-  if(lastLSI!=null){
-    var lsiStatus=lastLSI<-0.5?'[!] Corrosive':lastLSI>0.5?'[!] Scaling':'OK Balanced';
-    lines.push('LSI: '+lastLSI.toFixed(2)+'  '+lsiStatus);
-  }else{
-    lines.push('LSI: Not calculated (TA, CH, Temp needed)');
-  }
-  var d2=st.inputs[bkey()]||{};
-  var fc2=parseFloat(d2.fc),cya2=parseFloat(d2['cya']),pH2=parseFloat(d2.pH);
+  if(lastLSI!=null){var lsiStatus=lastLSI<-0.5?'[!] Corrosive':lastLSI>0.5?'[!] Scaling':'OK Balanced';lines.push('LSI: '+lastLSI.toFixed(2)+'  '+lsiStatus);}
+  else{lines.push('LSI: Not calculated (TA, CH, Temp needed)');}
+  var fc2=parseFloat(d.fc),cya2=parseFloat(d['cya']),pH2=parseFloat(d.pH);
   if(isOutdoor()&&!isSpa()&&!isNaN(fc2)&&!isNaN(cya2)&&cya2>0&&!isNaN(pH2)){
     var fac2=calcFAC(fc2,cya2,pH2);
-    if(fac2!=null){
-      lines.push('');
-      lines.push('-- CYA CORRECTION --');
-      lines.push('CYA:               '+cya2+' ppm');
-      lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');
-      var supp=Math.round(cya2*0.6);
-      lines.push('Est. ORP suppression: ~'+supp+' mV from CYA');
-      lines.push(cya2>80?'[!] ORP unreliable at this CYA level':cya2>60?'[!] CYA above target -- cross-check with manual FC test':'OK CYA within target range (50 ppm)');
-    }
+    if(fac2!=null){lines.push('');lines.push('-- CYA CORRECTION --');lines.push('CYA:               '+cya2+' ppm');lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');lines.push('Est. ORP suppression: ~'+Math.round(cya2*0.6)+' mV from CYA');lines.push(cya2>80?'[!] ORP unreliable at this CYA level':cya2>60?'[!] CYA above target -- cross-check with manual FC test':'OK CYA within target range (50 ppm)');}
   }
-  lines.push('');
-  lines.push('-- DOSAGES --');
-  if(lastDoses.length){
-    lastDoses.forEach(function(dose){
-      var icon=dose.shock?'[SHOCK]':dose.ok?'OK':'->';
-      lines.push(icon+' '+dose.chem+': '+dose.amount);
-      if(!dose.ok)lines.push('   '+dose.note);
-    });
-  }else{
-    lines.push('No dosages calculated yet.');
-  }
-  lines.push('');
-  lines.push('================================');
+  lines.push('');lines.push('-- DOSAGES --');
+  if(lastDoses.length){lastDoses.forEach(function(dose){var icon=dose.shock?'[SHOCK]':dose.ok?'OK':'->';lines.push(icon+' '+dose.chem+': '+dose.amount);if(!dose.ok)lines.push('   '+dose.note);});}
+  else{lines.push('No dosages calculated yet.');}
+  lines.push('');lines.push('================================');
   lines.push('Generated by OSLU Aquatic Chemical Calculator v19');
   return lines.join('\n');
 }
@@ -756,13 +679,8 @@ function copyReading(){
   var text=buildReadingText();
   document.getElementById('copy-preview-text').textContent=text;
   document.getElementById('copy-preview').style.display='block';
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(function(){
-      alert('Copied! Paste into Teams or email.');
-    }).catch(function(){showCopyFallback(text);});
-  }else{
-    showCopyFallback(text);
-  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){alert('Copied! Paste into Teams or email.');}).catch(function(){showCopyFallback(text);});}
+  else{showCopyFallback(text);}
 }
 function showCopyFallback(text){
   var ta=document.createElement('textarea');
@@ -776,19 +694,18 @@ function showCopyFallback(text){
 function saveToHistory(){
   var d=st.inputs[bkey()]||{};
   var b=currentBody();
-  var entry={
-    id:Date.now(),ts:Date.now(),
-    level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
-    body:b.name,volume:b.vol,
-    when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
-    lsi:lastLSI,
-    readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},
-    doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
-  };
+  var entry={id:Date.now(),ts:Date.now(),level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,body:b.name,volume:b.vol,when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),lsi:lastLSI,readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})};
   st.history.unshift(entry);
   saveLocal();
   setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
   alert('Saved - '+b.name+' ('+LEVELS[st.level].name+')');
+  renderHistory();
+}
+
+function deleteEntry(id){
+  if(!confirm('Delete this reading? This cannot be undone.'))return;
+  st.history=st.history.filter(function(e){return e.id!==id;});
+  saveLocal();
   renderHistory();
 }
 
@@ -804,7 +721,8 @@ function setHistFilter(f){
   renderHistory();
 }
 function renderHistory(){
-  document.getElementById('storage-badge').textContent=st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device';
+  var badge=document.getElementById('storage-badge');
+  if(badge){badge.textContent=st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device';}
   var html='<button class="filt-btn'+(st.histFilter==='all'?' active':'')+'" data-f="all" onclick="setHistFilter(\'all\')">All</button>';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var fk=li+'-'+bi;html+='<button class="filt-btn'+(st.histFilter===fk?' active':'')+'" data-f="'+fk+'" onclick="setHistFilter(\''+fk+'\')">'+b.name+' ('+l.short+')</button>';});});
   document.getElementById('hist-filters').innerHTML=html;
@@ -815,7 +733,7 @@ function renderHistory(){
   list.innerHTML=entries.map(function(e){
     return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
-      +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div>'
+      +(ghSynced?'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button>':'')+'</div></div>'
       +'<div class="hist-params">'
       +(e.readings.orp!=null?'<div class="hist-param">ORP <span>'+e.readings.orp+' mV</span></div>':'')
       +(e.readings.orpSetpoint!=null?'<div class="hist-param">SP <span>'+e.readings.orpSetpoint+' mV</span></div>':'')
@@ -832,31 +750,23 @@ function renderHistory(){
       +'</div></div>';
   }).join('');
 }
-function deleteEntry(id){
-  if(!confirm('Delete this reading? This cannot be undone.'))return;
-  st.history=st.history.filter(function(e){return e.id!==id;});
-  saveLocal();renderHistory();
-}
 
 function exportCSV(){
   if(!st.history.length){alert('No readings to export.');return;}
   var rows=[['Date','Level','Body','Volume (gal)','LSI','ORP (mV)','ORP Setpoint (mV)','pH','Free Chlorine (ppm)','Combined Chlorine (ppm)','Total Alkalinity (ppm)','Calcium Hardness (ppm)','Cyanuric Acid (ppm)','Temperature (F)']];
-  st.history.forEach(function(e){
-    rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'']);
-  });
+  st.history.forEach(function(e){rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'']);});
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='aquatic-readings-'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='aquatic-readings-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
 }
+
+var TREND_COLORS=['#378ADD','#1D9E75','#D85A30','#D4537E','#BA7517','#7F77DD','#E24B4A','#2BA87A','#C97416','#5B8FCC'];
+function getLabel(p){return{lsi:'LSI',orp:'ORP (mV)',orpSetpoint:'ORP Setpoint (mV)',pH:'pH',fc:'Free chlorine (ppm)',cc:'Combined chlorine (ppm)',ta:'Total alkalinity (ppm)',ch:'Calcium hardness (ppm)',cya:'Cyanuric acid (ppm)',temp:'Temperature (F)'}[p]||p;}
 
 function populateTrendSelect(){
   var sel=document.getElementById('trend-body');sel.innerHTML='';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var o=document.createElement('option');o.value=li+'-'+bi;o.textContent=b.name+' - '+l.name;sel.appendChild(o);});});
 }
-function getLabel(p){return{lsi:'LSI',orp:'ORP (mV)',orpSetpoint:'ORP Setpoint (mV)',pH:'pH',fc:'Free chlorine (ppm)',cc:'Combined chlorine (ppm)',ta:'Total alkalinity (ppm)',ch:'Calcium hardness (ppm)',cya:'Cyanuric acid (ppm)',temp:'Temperature (F)'}[p]||p;}
 
 function renderTrends(){
   var bodyVal=document.getElementById('trend-body').value;
@@ -865,26 +775,11 @@ function renderTrends(){
   var entries=st.history.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}).slice().reverse();
   var statsDiv=document.getElementById('trend-stats');
   var legendDiv=document.getElementById('trend-legend');
-
-  // Get selected params from checkboxes
   var selected=[];
   document.querySelectorAll('#param-checks input[type=checkbox]:checked').forEach(function(cb){selected.push(cb.value);});
-
-  if(entries.length<2){
-    statsDiv.innerHTML='<div class="empty-state" style="padding:2rem 1rem;">Save at least 2 readings for this body of water to see trends.</div>';
-    legendDiv.innerHTML='';
-    if(trendChart){trendChart.destroy();trendChart=null;}
-    return;
-  }
-  if(selected.length===0){
-    statsDiv.innerHTML='<div class="empty-state" style="padding:1rem;">Select at least one parameter above to chart.</div>';
-    legendDiv.innerHTML='';
-    if(trendChart){trendChart.destroy();trendChart=null;}
-    return;
-  }
-
+  if(entries.length<2){statsDiv.innerHTML='<div class="empty-state" style="padding:2rem 1rem;">Save at least 2 readings for this body of water to see trends.</div>';legendDiv.innerHTML='';if(trendChart){trendChart.destroy();trendChart=null;}return;}
+  if(selected.length===0){statsDiv.innerHTML='<div class="empty-state" style="padding:1rem;">Select at least one parameter above to chart.</div>';legendDiv.innerHTML='';if(trendChart){trendChart.destroy();trendChart=null;}return;}
   var labels=entries.map(function(e){return new Date(e.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});});
-
   var datasets=selected.map(function(param,idx){
     var data=entries.map(function(e){
       if(param==='lsi')return e.lsi!=null?parseFloat(parseFloat(e.lsi).toFixed(2)):null;
@@ -892,67 +787,23 @@ function renderTrends(){
       if(param==='orpSetpoint')return e.readings.orpSetpoint;
       return e.readings[param]!=null?e.readings[param]:null;
     });
-    return {label:getLabel(param),data:data,borderColor:TREND_COLORS[idx%TREND_COLORS.length],backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:TREND_COLORS[idx%TREND_COLORS.length],tension:0.3,spanGaps:true};
+    return{label:getLabel(param),data:data,borderColor:TREND_COLORS[idx%TREND_COLORS.length],backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:TREND_COLORS[idx%TREND_COLORS.length],tension:0.3,spanGaps:true};
   });
-
-  // Legend
-  legendDiv.innerHTML=datasets.map(function(ds){
-    return '<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:'+ds.borderColor+';display:inline-block;"></span><span style="font-size:12px;color:var(--text2);">'+ds.label+'</span></span>';
-  }).join('');
-
-  // Y axis range across all selected series
-  var allValid=[];
-  datasets.forEach(function(ds){ds.data.forEach(function(v){if(v!=null)allValid.push(v);});});
-  var mn=allValid.length?Math.min.apply(null,allValid):0;
-  var mx=allValid.length?Math.max.apply(null,allValid):1;
-  var pad=(mx-mn)*0.2||1;
-
+  legendDiv.innerHTML=datasets.map(function(ds){return'<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:'+ds.borderColor+';display:inline-block;"></span><span style="font-size:12px;color:var(--text2);">'+ds.label+'</span></span>';}).join('');
+  var allValid=[];datasets.forEach(function(ds){ds.data.forEach(function(v){if(v!=null)allValid.push(v);});});
+  var mn=allValid.length?Math.min.apply(null,allValid):0;var mx=allValid.length?Math.max.apply(null,allValid):1;var pad=(mx-mn)*0.2||1;
   if(trendChart){trendChart.destroy();trendChart=null;}
   var canvas=document.getElementById('trend-chart');
-  trendChart=new Chart(canvas,{
-    type:'line',
-    data:{labels:labels,datasets:datasets},
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:selected.length>1,position:'bottom',labels:{font:{size:11},color:'rgba(128,128,128,0.9)',boxWidth:12}},
-        tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'--');}}}
-      },
-      scales:{
-        x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},
-        y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}
-      }
-    }
-  });
-
-  // Stats for each selected series
+  trendChart=new Chart(canvas,{type:'line',data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:selected.length>1,position:'bottom',labels:{font:{size:11},color:'rgba(128,128,128,0.9)',boxWidth:12}},tooltip:{mode:'index',intersect:false,callbacks:{label:function(ctx){return ctx.dataset.label+': '+(ctx.parsed.y!=null?ctx.parsed.y.toFixed(2):'--');}}}},scales:{x:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',maxRotation:45,autoSkip:entries.length>12}},y:{min:parseFloat((mn-pad).toFixed(2)),max:parseFloat((mx+pad).toFixed(2)),grid:{color:'rgba(128,128,128,0.1)'},ticks:{font:{size:11},color:'rgba(128,128,128,0.8)',callback:function(v){return parseFloat(v.toFixed(2));}}}}}}); 
   if(selected.length===1){
     var valid=datasets[0].data.filter(function(v){return v!=null;});
     if(!valid.length){statsDiv.innerHTML='<div class="empty-state">No data for this parameter.</div>';return;}
-    var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
-    var trend=valid[valid.length-1]-valid[0];
+    var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;var trend=valid[valid.length-1]-valid[0];
     statsDiv.style.display='grid';
-    statsDiv.innerHTML='<div class="stat-card"><div class="stat-label">Latest</div><div class="stat-val">'+valid[valid.length-1].toFixed(2)+'</div></div>'
-      +'<div class="stat-card"><div class="stat-label">Average</div><div class="stat-val">'+avg.toFixed(2)+'</div></div>'
-      +'<div class="stat-card"><div class="stat-label">Min</div><div class="stat-val">'+Math.min.apply(null,valid).toFixed(2)+'</div></div>'
-      +'<div class="stat-card"><div class="stat-label">Max</div><div class="stat-val">'+Math.max.apply(null,valid).toFixed(2)+'</div></div>'
-      +'<div class="stat-card"><div class="stat-label">Trend</div><div class="stat-val" style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</div></div>';
-  } else {
-    // Multi-series: show a summary row per param
+    statsDiv.innerHTML='<div class="stat-card"><div class="stat-label">Latest</div><div class="stat-val">'+valid[valid.length-1].toFixed(2)+'</div></div>'+'<div class="stat-card"><div class="stat-label">Average</div><div class="stat-val">'+avg.toFixed(2)+'</div></div>'+'<div class="stat-card"><div class="stat-label">Min</div><div class="stat-val">'+Math.min.apply(null,valid).toFixed(2)+'</div></div>'+'<div class="stat-card"><div class="stat-label">Max</div><div class="stat-val">'+Math.max.apply(null,valid).toFixed(2)+'</div></div>'+'<div class="stat-card"><div class="stat-label">Trend</div><div class="stat-val" style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</div></div>';
+  }else{
     statsDiv.style.display='block';
-    statsDiv.innerHTML=datasets.map(function(ds,idx){
-      var valid=ds.data.filter(function(v){return v!=null;});
-      if(!valid.length) return '';
-      var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;
-      var trend=valid[valid.length-1]-valid[0];
-      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;flex-wrap:wrap;">'
-        +'<span style="width:10px;height:10px;border-radius:2px;background:'+TREND_COLORS[idx%TREND_COLORS.length]+';flex-shrink:0;display:inline-block;"></span>'
-        +'<span style="font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:120px;">'+ds.label+'</span>'
-        +'<span style="font-size:12px;color:var(--text2);">Latest: <b style="color:var(--text);">'+valid[valid.length-1].toFixed(2)+'</b></span>'
-        +'<span style="font-size:12px;color:var(--text2);">Avg: <b style="color:var(--text);">'+avg.toFixed(2)+'</b></span>'
-        +'<span style="font-size:12px;color:var(--text2);">Trend: <b style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</b></span>'
-        +'</div>';
-    }).join('');
+    statsDiv.innerHTML=datasets.map(function(ds,idx){var valid=ds.data.filter(function(v){return v!=null;});if(!valid.length)return'';var avg=valid.reduce(function(a,b){return a+b;},0)/valid.length;var trend=valid[valid.length-1]-valid[0];return'<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;flex-wrap:wrap;"><span style="width:10px;height:10px;border-radius:2px;background:'+TREND_COLORS[idx%TREND_COLORS.length]+';flex-shrink:0;display:inline-block;"></span><span style="font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:120px;">'+ds.label+'</span><span style="font-size:12px;color:var(--text2);">Latest: <b style="color:var(--text);">'+valid[valid.length-1].toFixed(2)+'</b></span><span style="font-size:12px;color:var(--text2);">Avg: <b style="color:var(--text);">'+avg.toFixed(2)+'</b></span><span style="font-size:12px;color:var(--text2);">Trend: <b style="color:'+(Math.abs(trend)<0.1?'var(--success-text)':trend>0?'var(--warn-text)':'var(--info-text)')+';">'+(trend>=0?'+':'')+trend.toFixed(2)+'</b></span></div>';}).join('');
   }
 }
 
