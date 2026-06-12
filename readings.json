@@ -1,5 +1,47 @@
 [
   {
+    "id": 1781281644711,
+    "ts": 1781281644711,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jun 12, 2026 at 9:27 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 5.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": 30,
+      "temp": 82,
+      "orp": 705,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "17.2 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "87.6 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781281582759,
     "ts": 1781281582759,
     "level": "Level 13 - Outdoor",
