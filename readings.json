@@ -1,5 +1,77 @@
 [
   {
+    "id": 1781283195947,
+    "ts": 1781283195947,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 12, 2026 at 9:53 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 5,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": 70,
+      "temp": 82,
+      "orp": 646,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "Dilute required",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781282983690,
+    "ts": 1781282983690,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 12, 2026 at 9:49 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 844,
+      "orpSetpoint": 840
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "95.2 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781282968878,
     "ts": 1781282968878,
     "level": "Level 1 - Indoor",
