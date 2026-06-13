@@ -1,5 +1,35 @@
 [
   {
+    "id": 1781366644900,
+    "ts": 1781366644900,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jun 13, 2026 at 9:04 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 6,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 704,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781365763191,
     "ts": 1781365763191,
     "level": "Level 1 - Indoor",
