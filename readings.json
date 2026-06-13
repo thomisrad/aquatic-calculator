@@ -108,42 +108,6 @@
     ]
   },
   {
-    "id": 1781365476639,
-    "ts": 1781365476639,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 1,
-    "body": "Hot spa",
-    "volume": 2000,
-    "when": "Jun 13, 2026 at 8:44 AM",
-    "lsi": null,
-    "readings": {
-      "pH": 7.4,
-      "fc": 1,
-      "cc": 2,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 103,
-      "orp": 769,
-      "orpSetpoint": 810
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "38.9 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "2.4 oz",
-        "ok": false,
-        "shock": false
-      }
-    ]
-  },
-  {
     "id": 1781365372954,
     "ts": 1781365372954,
     "level": "Level 1 - Indoor",
