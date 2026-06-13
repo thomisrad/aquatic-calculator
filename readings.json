@@ -72,42 +72,6 @@
     ]
   },
   {
-    "id": 1781365590879,
-    "ts": 1781365590879,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jun 13, 2026 at 8:46 AM",
-    "lsi": null,
-    "readings": {
-      "pH": 7.6,
-      "fc": 13,
-      "cc": 3.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 52,
-      "orp": 879,
-      "orpSetpoint": 880
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "20.3 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
     "id": 1781365372954,
     "ts": 1781365372954,
     "level": "Level 1 - Indoor",
