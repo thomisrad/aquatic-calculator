@@ -151,7 +151,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.4 - Jun 13, 2026</span>
+      <span class="version">v1.5 - Jun 13, 2026</span>
     </div>
   </div>
 
@@ -351,8 +351,15 @@ function getActions(reading){
 
   // FC check
   if(fc!=null){
-    if(fc<1.5)actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)',urgent:true});
-    else if(fc>10)actions.push({text:'Free chlorine '+fc+' ppm above city maximum (10.0 ppm)',urgent:true});
+    if(fc<1.5){
+      actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)',urgent:true});
+    }else if(fc>10){
+      var fcExcess=parseFloat((fc-10).toFixed(1));
+      var vol=reading.volume||0;
+      var stsOz=vol>0?parseFloat((fcExcess*vol/10000).toFixed(1)):null;
+      var stsAmt=stsOz!=null?(stsOz<128?stsOz+' oz':(stsOz/16).toFixed(2)+' lbs'):'calculate dose';
+      actions.push({text:'FC '+fc+' ppm exceeds city max (10.0 ppm) -- add sodium thiosulfate: '+stsAmt+'. Retest after 1 hour.',urgent:true});
+    }
   }
 
   // pH check
