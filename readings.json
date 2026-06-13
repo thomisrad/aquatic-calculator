@@ -1,5 +1,41 @@
 [
   {
+    "id": 1781367265163,
+    "ts": 1781367265163,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 13, 2026 at 9:14 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 4.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 647,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781367229840,
     "ts": 1781367229840,
     "level": "Level 2 - Outdoor",
