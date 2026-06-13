@@ -98,6 +98,9 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:1.25rem;}
 .dcard{background:var(--bg2);border-radius:var(--radius);padding:12px;border:0.5px solid var(--border);}
 .shock-card{background:var(--danger-bg);border-color:var(--danger-border);}
+.urgent-card{background:var(--warn-bg);border-color:var(--warn-border);}
+.urgent-card .dchem{color:var(--warn-text);}
+.urgent-card .damt{color:var(--warn-text);}
 .shock-card .dchem{color:var(--danger-text);}
 .shock-card .damt{color:var(--danger-text);}
 .dchem{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
@@ -186,7 +189,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="offline-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);">Saves to this device</span>
-    <span class="version-label">v21 (offline) - Jun 12, 2026</span>
+    <span class="version-label">v22 (offline) - Jun 13, 2026</span>
   </div>
 </div>
 
@@ -292,7 +295,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
       <div class="copy-preview-head"><span class="copy-preview-label">Preview -- paste into Teams or email</span><button class="copy-preview-close" onclick="document.getElementById('copy-preview').style.display='none'">X</button></div>
       <pre id="copy-preview-text" class="copy-preview-text"></pre>
     </div>
-    <p class="disclaimer">[!] Estimates based on standard water chemistry formulas. ORP is influenced by pH -- high pH suppresses ORP even when FC is adequate. Always cross-reference ORP with manual FC tests. Breakpoint shock doses calculated at 10x combined chlorine -- retest after 4 hours. Sodium hypochlorite degrades over time -- verify concentration. Consult a licensed pool professional for critical decisions.</p>
+    <p class="disclaimer">[!] Estimates based on standard water chemistry formulas. ORP is influenced by pH -- high pH suppresses ORP even when FC is adequate. Always cross-reference ORP with manual FC tests. Breakpoint shock doses calculated at 10x combined chlorine -- retest after 4 hours. Sodium hypochlorite degrades over time -- verify concentration. Sodium thiosulfate will temporarily suppress ORP -- retest FC manually after 1 hour before resuming normal operation. Consult a licensed pool professional for critical decisions.</p>
   </div>
 </div>
 
@@ -604,7 +607,7 @@ function calculate(){
       if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var shockAmt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';doses.push({chem:'[SHOCK] Sodium hypochlorite (12.5%)',amount:shockAmt,note:'Raise FC to '+shockTarget.toFixed(1)+' ppm for breakpoint chlorination (10x CC of '+cc.toFixed(1)+' ppm)',shock:true});}
     }else if(!isNaN(orp)&&orpOk&&fc>=1.5&&fc<=10){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Controller managing',note:'ORP '+orp+' mV -- controller is maintaining chlorine. Manual dosing not needed.',ok:true});}
     else if(diff>0.2){var floz2=((diff*vol/10000)*10.24).toFixed(1);doses.push({chem:'Sodium hypochlorite (12.5%)',amount:(parseFloat(floz2)<128?floz2+' fl oz':(floz2/128).toFixed(2)+' gal'),note:'Raise FC from '+fc+' to ~'+fcTarget+' ppm'});}
-    else if(diff<-0.5){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop naturally. City max: 10.0 ppm.'});}
+    else if(fc>10){var fcExcess=parseFloat((fc-10).toFixed(1));var stsOz=parseFloat((fcExcess*vol/10000).toFixed(1));var stsAmt=stsOz<128?stsOz+' oz':(stsOz/16).toFixed(2)+' lbs';doses.push({chem:'Sodium thiosulfate',amount:stsAmt,note:'Reduce FC from '+fc+' to ~10.0 ppm (city max). Add slowly with pump running and retest FC after 1 hour.',urgent:true});}else if(diff<-0.5){doses.push({chem:'Sodium hypochlorite (12.5%)',amount:'Hold -- FC high',note:'FC is '+fc+' ppm. Allow to drop naturally. City max: 10.0 ppm.'});}
     else{doses.push({chem:'Free chlorine',amount:'OK - in range',note:fc+' ppm -- within city range (1.5-10.0 ppm)',ok:true});}
   }
   var phTarget=spa?7.6:7.6,phDiff=phTarget-pH;
@@ -631,7 +634,7 @@ function calculate(){
 
   lastDoses=doses;
   document.getElementById('dose-grid').innerHTML=doses.map(function(d){
-    return '<div class="'+(d.shock?'dcard shock-card':'dcard')+'"><div class="dchem">'+d.chem+'</div><div class="damt">'+d.amount+'</div><div class="dnote">'+d.note+'</div>'+(d.ok?'<span class="ok-pill">in range</span>':'')+'</div>';
+    return '<div class="'+(d.shock?'dcard shock-card':d.urgent?'dcard urgent-card':'dcard')+'"><div class="dchem">'+d.chem+'</div><div class="damt">'+d.amount+'</div><div class="dnote">'+d.note+'</div>'+(d.ok?'<span class="ok-pill">in range</span>':'')+'</div>';
   }).join('');
   document.getElementById('results').classList.add('on');
 }
