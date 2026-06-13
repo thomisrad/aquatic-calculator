@@ -1,5 +1,35 @@
 [
   {
+    "id": 1781366694405,
+    "ts": 1781366694405,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 13, 2026 at 9:04 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.4,
+      "fc": 9,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 755,
+      "orpSetpoint": 750
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "4.2 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781366644900,
     "ts": 1781366644900,
     "level": "Level 13 - Outdoor",
