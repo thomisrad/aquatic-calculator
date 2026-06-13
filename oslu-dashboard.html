@@ -151,7 +151,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.2 - Jun 12, 2026</span>
+      <span class="version">v1.3 - Jun 13, 2026</span>
     </div>
   </div>
 
@@ -315,11 +315,12 @@ function orpStatus(reading){
 }
 
 function ccStatus(reading){
-  if(!reading||reading.readings.cc==null||reading.readings.fc==null)return null;
+  if(!reading||reading.readings.cc==null||reading.readings.fc==null||reading.readings.fc<=0)return null;
   var cc=reading.readings.cc;
+  if(cc<=0)return'ok';
   var fc=reading.readings.fc;
   var limit=fc*0.5;
-  if(cc>=0.5||cc>=limit)return'alert';
+  if(cc>=limit)return'alert';
   if(cc>=limit*0.8)return'warn';
   return'ok';
 }
@@ -366,7 +367,7 @@ function renderDashboard(){
   filtered.forEach(function(r){bodiesTested.add(r.levelIdx+'-'+r.bodyIdx);});
   document.getElementById('s-bodies').textContent=bodiesTested.size;
 
-  var shockCount=filtered.filter(function(r){return r.readings&&r.readings.cc!=null&&r.readings.fc!=null&&(r.readings.cc>=r.readings.fc*0.5||r.readings.cc>=0.5);}).length;
+  var shockCount=filtered.filter(function(r){return r.readings&&r.readings.cc!=null&&r.readings.cc>0&&r.readings.fc!=null&&r.readings.fc>0&&r.readings.cc>=r.readings.fc*0.5;}).length;
   document.getElementById('s-shocks').textContent=shockCount;
   document.getElementById('s-shocks').style.color=shockCount>0?'var(--danger-text)':'var(--success-text)';
 
@@ -388,7 +389,7 @@ function renderDashboard(){
         var urgentActions=actions.filter(function(a){return a.urgent;});
         urgentActions.forEach(function(a){alerts.push(b.name+' ('+l.short+'): '+a.text);});
         if(orpStatus(latest)==='alert')alerts.push(b.name+' ('+l.short+'): ORP well below setpoint - verify system');
-        if(ccStatus(latest)==='alert')alerts.push(b.name+' ('+l.short+'): Combined chlorine '+latest.readings.cc.toFixed(1)+' ppm - shock required');
+        if(ccStatus(latest)==='alert'&&latest.readings.fc>0)alerts.push(b.name+' ('+l.short+'): Combined chlorine '+latest.readings.cc.toFixed(1)+' ppm exceeds 50% of FC ('+latest.readings.fc.toFixed(1)+' ppm) - shock required');
       }
     });
   });
@@ -452,7 +453,7 @@ function renderDashboard(){
         // CC row
         if(r.cc!=null){
           var ccColor=r.cc>=0.5?'var(--danger-text)':r.cc>=0.2?'var(--warn-text)':'var(--success-text)';
-          var ccLimit2=r.fc?r.fc*0.5:0.5;var ccPct=Math.min(100,(r.cc/Math.max(ccLimit2,0.5))*100);
+          var ccLimit2=(r.fc&&r.fc>0)?r.fc*0.5:null;var ccPct=ccLimit2?Math.min(100,(r.cc/ccLimit2)*100):0;
           html+='<div class="metric-row"><span class="metric-label">Combined Cl</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+ccPct.toFixed(1)+'%;background:'+ccColor+';"></div></div><span class="metric-val" style="color:'+ccColor+';">'+r.cc.toFixed(1)+' ppm</span></div>';
         }
 
