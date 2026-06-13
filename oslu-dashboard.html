@@ -151,7 +151,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.3 - Jun 13, 2026</span>
+      <span class="version">v1.4 - Jun 13, 2026</span>
     </div>
   </div>
 
@@ -328,23 +328,48 @@ function ccStatus(reading){
 function getActions(reading){
   if(!reading)return[];
   var actions=[];
-  reading.doses&&reading.doses.forEach(function(d){
-    if(!d.ok){
-      var urgent=d.shock||false;
-      actions.push({text:d.chem+': '+d.amount,urgent:urgent});
+  var r=reading.readings;
+  var isSpa=reading.body.toLowerCase().indexOf('spa')>-1||reading.body.toLowerCase().indexOf('hot')>-1;
+  var fcTarget=isSpa?4.0:3.0;
+  var fc=r.fc,cc=r.cc,pH=r.pH,orp=r.orp,orpSP=r.orpSetpoint;
+
+  // CC / shock check using current city rule: CC must be < 50% of FC
+  if(cc!=null&&cc>0&&fc!=null&&fc>0){
+    var ccLimit=fc*0.5;
+    if(cc>=ccLimit){
+      actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)',urgent:true});
     }
-  });
+  }
+
+  // ORP check
+  var os=orpStatus(reading);
+  if(os==='alert'){
+    actions.push({text:'ORP well below setpoint - check chemical supply and probe',urgent:true});
+  }else if(os==='warn'){
+    actions.push({text:'ORP below setpoint - controller dosing',urgent:false});
+  }
+
+  // FC check
+  if(fc!=null){
+    if(fc<1.5)actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)',urgent:true});
+    else if(fc>10)actions.push({text:'Free chlorine '+fc+' ppm above city maximum (10.0 ppm)',urgent:true});
+  }
+
+  // pH check
+  if(pH!=null){
+    if(pH<7.2)actions.push({text:'pH '+pH+' below city minimum (7.2)',urgent:false});
+    else if(pH>8.0)actions.push({text:'pH '+pH+' above city maximum (8.0)',urgent:false});
+  }
+
   return actions;
 }
 
 function overallStatus(reading){
   if(!reading)return'none';
-  var orp=orpStatus(reading);
-  var cc=ccStatus(reading);
   var actions=getActions(reading);
   var hasUrgent=actions.some(function(a){return a.urgent;});
-  if(orp==='alert'||cc==='alert'||hasUrgent)return'alert';
-  if(orp==='warn'||cc==='warn'||actions.length>0)return'warn';
+  if(hasUrgent)return'alert';
+  if(actions.length>0)return'warn';
   return'ok';
 }
 
@@ -386,10 +411,8 @@ function renderDashboard(){
       if(actions.length)actionCount+=actions.length;
       var status=overallStatus(latest);
       if(status==='alert'){
-        var urgentActions=actions.filter(function(a){return a.urgent;});
+        var urgentActions=getActions(latest).filter(function(a){return a.urgent;});
         urgentActions.forEach(function(a){alerts.push(b.name+' ('+l.short+'): '+a.text);});
-        if(orpStatus(latest)==='alert')alerts.push(b.name+' ('+l.short+'): ORP well below setpoint - verify system');
-        if(ccStatus(latest)==='alert'&&latest.readings.fc>0)alerts.push(b.name+' ('+l.short+'): Combined chlorine '+latest.readings.cc.toFixed(1)+' ppm exceeds 50% of FC ('+latest.readings.fc.toFixed(1)+' ppm) - shock required');
       }
     });
   });
@@ -468,7 +491,7 @@ function renderDashboard(){
         if(r.fc!=null){
           var fcTarget=b.spa?4.0:3.0;
           var fcPct=Math.min(100,(r.fc/10)*100);
-          var fcColor=r.fc<1.5?'var(--danger-text)':r.fc>10?'var(--warn-text)':'var(--success-text)';
+          var fcColor=r.fc<1.5||r.fc>10?'var(--danger-text)':'var(--success-text)';
           html+='<div class="metric-row"><span class="metric-label">Free Chlorine</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+fcPct.toFixed(1)+'%;background:'+fcColor+';"></div></div><span class="metric-val" style="color:'+fcColor+';">'+r.fc+' ppm</span></div>';
         }
 
