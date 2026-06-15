@@ -1,5 +1,47 @@
 [
   {
+    "id": 1781532357685,
+    "ts": 1781532357685,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 15, 2026 at 7:05 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.8,
+      "fc": 5,
+      "cc": 0.5,
+      "ta": 70,
+      "ch": null,
+      "cya": 40,
+      "temp": 82,
+      "orp": 647,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "24.4 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "62.4 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781531151845,
     "ts": 1781531151845,
     "level": "Level 13 - Outdoor",
