@@ -1,5 +1,41 @@
 [
   {
+    "id": 1781531013619,
+    "ts": 1781531013619,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 15, 2026 at 6:43 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 10.5,
+      "cc": 0.5,
+      "ta": 60,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 756,
+      "orpSetpoint": 750
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781390607313,
     "ts": 1781390607313,
     "level": "Level 1 - Indoor",
