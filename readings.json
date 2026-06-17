@@ -1,5 +1,35 @@
 [
   {
+    "id": 1781717204675,
+    "ts": 1781717204675,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Jun 17, 2026 at 10:26 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 10.5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": 10,
+      "temp": 103,
+      "orp": 729,
+      "orpSetpoint": 730
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781717096999,
     "ts": 1781717096999,
     "level": "Level 2 - Outdoor",
