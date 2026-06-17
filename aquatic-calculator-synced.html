@@ -189,7 +189,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v22 (synced) - Jun 13, 2026</span>
+    <span class="version-label">v23 (synced) - Jun 13, 2026</span>
   </div>
 </div>
 
@@ -303,8 +303,9 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 <div id="hist-page" style="display:none;">
   <div class="storage-row">
     <span id="hist-status-badge" style="font-size:11px;color:var(--text3);">Loading...</span>
-    <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}else if(this.value==='refresh'){ghLoad(false).then(function(){renderHistory();});this.value='';}else if(this.value==='reset'){resetToken();this.value='';}">
+    <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}else if(this.value==='refresh'){ghLoad(false);this.value='';}else if(this.value==='sync'){autoSync();this.value='';}else if(this.value==='reset'){resetToken();this.value='';}">
       <option value="">Actions</option>
+      <option value="sync">Sync offline readings now</option>
       <option value="refresh">Refresh from GitHub</option>
       <option value="csv">Export CSV</option>
       <option value="reset">Change token</option>
@@ -479,9 +480,24 @@ async function ghLoad(isRetry){
     if(!r.ok)throw new Error('HTTP '+r.status);
     var j=await r.json();
     var content=atob(j.content.replace(/\n/g,''));
-    st.history=JSON.parse(content);
+    var remoteHistory=JSON.parse(content);
+    // Merge: keep local unsynced readings, replace rest with remote
+    var localUnsynced=st.history.filter(function(e){return e.synced===false;});
+    // Mark all remote readings as synced
+    remoteHistory.forEach(function(e){e.synced=true;});
+    // Merge: remote readings + any local unsynced not already in remote
+    var remoteIds=new Set(remoteHistory.map(function(e){return e.id;}));
+    var newUnsynced=localUnsynced.filter(function(e){return!remoteIds.has(e.id);});
+    st.history=remoteHistory.concat(newUnsynced).sort(function(a,b){return b.ts-a.ts;});
+    saveLocal();
     ghSynced=true;
-    setSyncBadge('ok','Shared - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
+    var pending=pendingCount();
+    if(pending>0){
+      setSyncBadge('syncing',pending+' offline reading'+(pending!==1?'s':'')+' pending sync...');
+      setTimeout(function(){autoSync();},500);
+    }else{
+      setSyncBadge('ok','Shared - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
+    }
     if(document.getElementById('hist-page').style.display!=='none')renderHistory();
   }catch(e){
     if(!isRetry){setTimeout(function(){ghLoad(true);},3000);setSyncBadge('syncing','Retrying...');}
@@ -514,6 +530,39 @@ async function ghDelete(id){
     if(!w.ok)throw new Error();
     st.history=newHistory;saveLocal();return true;
   }catch(e){return false;}
+}
+
+// ---- Auto-sync unsynced local readings ----
+async function autoSync(){
+  var pending=st.history.filter(function(e){return e.synced===false;});
+  if(!pending.length)return;
+  setSyncBadge('syncing','Syncing '+pending.length+' offline reading'+(pending.length!==1?'s':'')+'...');
+  var successCount=0;
+  // Push each unsynced reading in chronological order (oldest first)
+  var sorted=pending.slice().sort(function(a,b){return a.ts-b.ts;});
+  for(var i=0;i<sorted.length;i++){
+    var entry=sorted[i];
+    var ok=await ghSave(entry);
+    if(ok){
+      // Mark as synced in local history
+      for(var j=0;j<st.history.length;j++){
+        if(st.history[j].id===entry.id){st.history[j].synced=true;break;}
+      }
+      successCount++;
+    }
+  }
+  saveLocal();
+  var stillPending=st.history.filter(function(e){return e.synced===false;}).length;
+  if(stillPending===0){
+    setSyncBadge('ok','Auto-synced '+successCount+' reading'+(successCount!==1?'s':'')+' -- all up to date');
+  }else{
+    setSyncBadge('err',stillPending+' reading'+(stillPending!==1?'s':'')+' still pending sync');
+  }
+  renderHistory();
+}
+
+function pendingCount(){
+  return st.history.filter(function(e){return e.synced===false;}).length;
 }
 
 function currentBody(){return LEVELS[st.level].bodies[st.body];}
@@ -764,11 +813,29 @@ function showCopyFallback(text){
 async function saveToHistory(){
   var d=st.inputs[bkey()]||{};
   var b=currentBody();
-  var entry={id:Date.now(),ts:Date.now(),level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,body:b.name,volume:b.vol,when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),lsi:lastLSI,readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})};
+  var now=new Date();
+  var entry={
+    id:Date.now(),ts:now.getTime(),
+    level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
+    body:b.name,volume:b.vol,
+    when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    lsi:lastLSI,synced:false,
+    readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},
+    doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
+  };
   setSyncBadge('syncing','Saving...');
   var ok=await ghSave(entry);
-  if(ok){setSyncBadge('ok','Saved - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');alert('Saved and synced -- visible to all staff.');}
-  else{st.history.unshift(entry);saveLocal();setSyncBadge('err','GitHub offline -- saved locally');alert('GitHub unavailable. Saved locally as backup.');}
+  if(ok){
+    entry.synced=true;
+    setSyncBadge('ok','Saved - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
+    alert('Saved and synced -- visible to all staff.');
+  }else{
+    // Save locally with synced=false so auto-sync picks it up later
+    st.history.unshift(entry);
+    saveLocal();
+    setSyncBadge('err','Saved locally -- will auto-sync when online');
+    alert('No connection. Saved locally with timestamp '+entry.when+'. Will auto-sync when back in range.');
+  }
   renderHistory();
 }
 
@@ -793,8 +860,20 @@ function setHistFilter(f){
   renderHistory();
 }
 function renderHistory(){
+  var pending=pendingCount();
   var badge=document.getElementById('hist-status-badge');
-  if(badge){badge.textContent=ghSynced?'Shared - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)':'Local only - GitHub offline';badge.style.color=ghSynced?'var(--success-text)':'var(--danger-text)';}
+  if(badge){
+    if(pending>0){
+      badge.textContent=pending+' reading'+(pending!==1?'s':'')+' pending sync | '+st.history.length+' total';
+      badge.style.color='var(--warn-text)';
+    }else if(ghSynced){
+      badge.textContent='Synced - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)';
+      badge.style.color='var(--success-text)';
+    }else{
+      badge.textContent='Local only - '+st.history.length+' reading'+(st.history.length!==1?'s':'');
+      badge.style.color='var(--danger-text)';
+    }
+  }
   var html='<button class="filt-btn'+(st.histFilter==='all'?' active':'')+'" data-f="all" onclick="setHistFilter(\'all\')">All</button>';
   LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){var fk=li+'-'+bi;html+='<button class="filt-btn'+(st.histFilter===fk?' active':'')+'" data-f="'+fk+'" onclick="setHistFilter(\''+fk+'\')">'+b.name+' ('+l.short+')</button>';});});
   document.getElementById('hist-filters').innerHTML=html;
@@ -804,7 +883,7 @@ function renderHistory(){
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
     return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div></div>'
-      +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
+      +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')+'<span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
       +(ghSynced?'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button>':'')+'</div></div>'
       +'<div class="hist-params">'
       +(e.readings.orp!=null?'<div class="hist-param">ORP <span>'+e.readings.orp+' mV</span></div>':'')
@@ -883,7 +962,17 @@ window.onload=function(){
   try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
   loadToken();
   if(!GH_TOKEN){showTokenSetup();}
-  else{hideTokenSetup();updateVolDisplay();loadInputs();setTimeout(function(){ghLoad(false);},800);}
+  else{
+    hideTokenSetup();updateVolDisplay();loadInputs();
+    setTimeout(function(){ghLoad(false);},800);
+  }
+  // Auto-sync when device comes back online
+  window.addEventListener('online',function(){
+    if(GH_TOKEN&&pendingCount()>0){
+      setSyncBadge('syncing','Back online -- syncing offline readings...');
+      setTimeout(function(){ghLoad(false);},1000);
+    }
+  });
 };
 </script>
 </body>
