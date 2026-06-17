@@ -1,5 +1,42 @@
 [
   {
+    "id": 1781733059450,
+    "ts": 1781733059449,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 17, 2026 at 2:50 PM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 4,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 841,
+      "orpSetpoint": 840
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "114.3 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781717204675,
     "ts": 1781717204675,
     "level": "Level 2 - Outdoor",
@@ -27,7 +64,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781717096999,
@@ -63,7 +101,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781711773250,
@@ -105,7 +144,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781711685983,
@@ -135,7 +175,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781707924508,
@@ -171,7 +212,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781707907960,
@@ -207,7 +249,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781707881932,
@@ -243,7 +286,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781533252332,
@@ -279,7 +323,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781532357685,
@@ -321,7 +366,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781531151845,
@@ -369,7 +415,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781531013619,
@@ -405,7 +452,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781390607313,
@@ -441,7 +489,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781390368567,
@@ -477,7 +526,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781386742948,
@@ -507,7 +557,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781386699497,
@@ -537,7 +588,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781386144518,
@@ -573,7 +625,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781386100553,
@@ -609,7 +662,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781385793763,
@@ -645,7 +699,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781385780325,
@@ -681,7 +736,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781372062567,
@@ -717,7 +773,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781367265163,
@@ -753,7 +810,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781367229840,
@@ -783,7 +841,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781366694405,
@@ -813,7 +872,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781366644900,
@@ -843,7 +903,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781365763191,
@@ -879,7 +940,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781365744756,
@@ -915,7 +977,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781365372954,
@@ -951,7 +1014,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781301847721,
@@ -981,7 +1045,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781301002122,
@@ -1011,7 +1076,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781283566074,
@@ -1047,7 +1113,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781283195947,
@@ -1083,7 +1150,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781282983690,
@@ -1119,7 +1187,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781282968878,
@@ -1155,7 +1224,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781282949665,
@@ -1191,7 +1261,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781281644711,
@@ -1233,7 +1304,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781281582759,
@@ -1263,7 +1335,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781219194277,
@@ -1299,7 +1372,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781217834319,
@@ -1335,7 +1409,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781217785850,
@@ -1371,7 +1446,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781217254640,
@@ -1407,7 +1483,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781217166259,
@@ -1443,7 +1520,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781216710339,
@@ -1479,7 +1557,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781216692349,
@@ -1515,7 +1594,8 @@
         "ok": true,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781193668871,
@@ -1557,7 +1637,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781193640020,
@@ -1599,7 +1680,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781193582269,
@@ -1641,7 +1723,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781192064800,
@@ -1677,7 +1760,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781191894853,
@@ -1719,7 +1803,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781191137365,
@@ -1755,7 +1840,8 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   },
   {
     "id": 1781191047390,
@@ -1797,6 +1883,7 @@
         "ok": false,
         "shock": false
       }
-    ]
+    ],
+    "synced": true
   }
 ]
