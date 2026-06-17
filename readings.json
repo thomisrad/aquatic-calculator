@@ -1,5 +1,35 @@
 [
   {
+    "id": 1781711685983,
+    "ts": 1781711685983,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 17, 2026 at 8:54 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 9.5,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 749,
+      "orpSetpoint": 750
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781707924508,
     "ts": 1781707924508,
     "level": "Level 1 - Indoor",
