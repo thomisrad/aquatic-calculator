@@ -1,5 +1,41 @@
 [
   {
+    "id": 1781717096999,
+    "ts": 1781717096999,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 17, 2026 at 10:24 AM",
+    "lsi": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 5.5,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": 45,
+      "temp": 82,
+      "orp": 646,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781711773250,
     "ts": 1781711773250,
     "level": "Level 13 - Outdoor",
