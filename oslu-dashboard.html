@@ -114,7 +114,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dot-ok{background:var(--success-text);}
 
 /* ORP chart mini */
-.mini-chart-wrap{height:80px;margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;}
+.mini-chart-wrap{margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;}
 
 /* No data */
 .no-data-msg{font-size:12px;color:var(--text3);text-align:center;padding:1rem 0;}
@@ -151,7 +151,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.5 - Jun 13, 2026</span>
+      <span class="version">v1.6 - Jun 13, 2026</span>
     </div>
   </div>
 
@@ -521,7 +521,13 @@ function renderDashboard(){
         // Mini ORP trend chart if enough data
         if(bodyRecs.length>=2){
           var chartId='mini-'+li+'-'+bi;
-          html+='<div class="mini-chart-wrap"><canvas id="'+chartId+'" height="70"></canvas></div>';
+          html+='<div class="mini-chart-wrap" style="height:110px;">'
+  +'<div style="font-size:10px;color:var(--text3);margin-bottom:3px;">Chlorine trend'
+  +'<span style="margin-left:8px;color:#1D9E75;">-- Free Cl</span>'
+  +'<span style="margin-left:6px;color:#D85A30;">-- Combined Cl</span>'
+  +'</div>'
+  +'<canvas id="'+chartId+'" style="max-height:90px;"></canvas>'
+  +'</div>';
         }
 
       }else{
