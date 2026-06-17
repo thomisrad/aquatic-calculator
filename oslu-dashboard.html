@@ -151,7 +151,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.6 - Jun 13, 2026</span>
+      <span class="version">v1.7 - Jun 17, 2026</span>
     </div>
   </div>
 
@@ -521,12 +521,13 @@ function renderDashboard(){
         // Mini ORP trend chart if enough data
         if(bodyRecs.length>=2){
           var chartId='mini-'+li+'-'+bi;
-          html+='<div class="mini-chart-wrap" style="height:110px;">'
-  +'<div style="font-size:10px;color:var(--text3);margin-bottom:3px;">Chlorine trend'
-  +'<span style="margin-left:8px;color:#1D9E75;">-- Free Cl</span>'
-  +'<span style="margin-left:6px;color:#D85A30;">-- Combined Cl</span>'
+          html+='<div class="mini-chart-wrap" style="height:120px;">'
+  +'<div style="font-size:10px;color:var(--text3);margin-bottom:4px;display:flex;gap:12px;align-items:center;">'
+  +'<span style="font-weight:500;color:var(--text2);">Chlorine trend (7 day)</span>'
+  +'<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:2.5px;background:#22c55e;border-radius:2px;"></span><span style="color:#22c55e;">Free Cl</span></span>'
+  +'<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:0px;border-top:2.5px dashed #f97316;vertical-align:middle;"></span><span style="color:#f97316;">Combined Cl</span></span>'
   +'</div>'
-  +'<canvas id="'+chartId+'" style="max-height:90px;"></canvas>'
+  +'<canvas id="'+chartId+'" style="max-height:96px;"></canvas>'
   +'</div>';
         }
 
@@ -551,14 +552,14 @@ function renderDashboard(){
         var canvas=document.getElementById(chartId);
         if(!canvas)return;
         var labels=bodyRecs.map(function(r){return new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});});
-        var orpData=bodyRecs.map(function(r){return r.readings.orp!=null?r.readings.orp:null;});
-        var spData=bodyRecs.map(function(r){return r.readings.orpSetpoint!=null?r.readings.orpSetpoint:null;});
+        var fcData=bodyRecs.map(function(r){return r.readings.fc!=null?r.readings.fc:null;});
+        var ccData=bodyRecs.map(function(r){return r.readings.cc!=null?r.readings.cc:null;});
         var datasets=[];
-        if(orpData.some(function(v){return v!=null;})){
-          datasets.push({label:'ORP',data:orpData,borderColor:'#378ADD',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,tension:0.3,spanGaps:true});
+        if(fcData.some(function(v){return v!=null;})){
+          datasets.push({label:'Free Cl',data:fcData,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#22c55e',tension:0.3,spanGaps:true,fill:false});
         }
-        if(spData.some(function(v){return v!=null;})){
-          datasets.push({label:'Setpoint',data:spData,borderColor:'rgba(163,45,45,0.5)',backgroundColor:'transparent',borderWidth:1,borderDash:[4,3],pointRadius:0,tension:0,spanGaps:true});
+        if(ccData.some(function(v){return v!=null;})){
+          datasets.push({label:'Combined Cl',data:ccData,borderColor:'#f97316',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#f97316',tension:0.3,spanGaps:true,borderDash:[5,3]});
         }
         if(!datasets.length)return;
         miniCharts[chartId]=new Chart(canvas,{
@@ -567,10 +568,33 @@ function renderDashboard(){
           options:{
             responsive:true,maintainAspectRatio:false,
             animation:false,
-            plugins:{legend:{display:false},tooltip:{enabled:false}},
+            interaction:{mode:'index',intersect:false},
+            plugins:{
+              legend:{display:false},
+              tooltip:{
+                enabled:true,
+                backgroundColor:'rgba(20,20,18,0.95)',
+                titleColor:'rgba(255,255,255,0.65)',
+                bodyColor:'rgba(255,255,255,0.9)',
+                titleFont:{size:10},
+                bodyFont:{size:11},
+                padding:8,
+                borderColor:'rgba(255,255,255,0.1)',
+                borderWidth:1,
+                callbacks:{
+                  title:function(items){return items[0].label;},
+                  label:function(ctx){return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' ppm';}
+                }
+              }
+            },
             scales:{
               x:{display:false},
-              y:{display:false,min:undefined,max:undefined}
+              y:{
+                display:true,
+                position:'right',
+                ticks:{font:{size:9},color:'rgba(160,160,156,0.8)',maxTicksLimit:4,callback:function(v){return v.toFixed(1);}},
+                grid:{color:'rgba(128,128,128,0.07)'}
+              }
             }
           }
         });
