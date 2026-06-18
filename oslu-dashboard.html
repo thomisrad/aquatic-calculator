@@ -183,7 +183,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.10 - Jun 18, 2026</span>
+      <span class="version">v1.11 - Jun 18, 2026</span>
     </div>
   </div>
 
@@ -251,11 +251,11 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div id="timeline-rows"></div>
     </div>
 
-    <!-- 3. Weekly testing frequency -->
+    <!-- 3. Readings per body -->
     <div class="visual-card" style="flex:2;min-width:280px;">
-      <div class="visual-title">Testing frequency</div>
-      <div class="visual-sub">Readings logged per day (last 7 days)</div>
-      <canvas id="freq-chart" height="140" role="img" aria-label="Weekly testing frequency chart"></canvas>
+      <div class="visual-title">Readings per body</div>
+      <div class="visual-sub">Total readings logged per body in selected window</div>
+      <div id="body-freq-rows" style="margin-top:4px;"></div>
     </div>
 
   </div>
@@ -673,7 +673,6 @@ function renderDashboard(){
 }
 
 var donutChart=null;
-var freqChart=null;
 
 function renderVisuals(filtered){
   var allLatest=[];
@@ -754,54 +753,32 @@ function renderTimeline(allLatest){
 }
 
 function renderFrequency(filtered){
-  // Build last 7 days regardless of selected window
-  var days=7;
-  var dayLabels=[];
-  var dayCounts=[];
-  for(var i=days-1;i>=0;i--){
-    var d=new Date();d.setDate(d.getDate()-i);d.setHours(0,0,0,0);
-    var label=d.toLocaleDateString('en-US',{weekday:'short',month:'numeric',day:'numeric'});
-    dayLabels.push(label);
-    var dayStart=d.getTime();
-    var dayEnd=dayStart+86400000;
-    var cutoff=Date.now()-(7*86400000);
-    var count=allReadings.filter(function(r){return r.ts>=dayStart&&r.ts<dayEnd;}).length;
-    dayCounts.push(count);
-  }
-
-  if(freqChart){freqChart.destroy();freqChart=null;}
-  var canvas=document.getElementById('freq-chart');
-  freqChart=new Chart(canvas,{
-    type:'bar',
-    data:{
-      labels:dayLabels,
-      datasets:[{
-        label:'Readings',
-        data:dayCounts,
-        backgroundColor:dayCounts.map(function(v){return v===0?'rgba(107,114,128,0.3)':v<3?'rgba(249,115,22,0.7)':'rgba(34,197,94,0.7)';}),
-        borderRadius:4,
-        borderSkipped:false
-      }]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{label:function(ctx){return ' '+ctx.parsed.y+' reading'+(ctx.parsed.y===1?'':'s');}}
-        }
-      },
-      scales:{
-        x:{grid:{display:false},ticks:{font:{size:10},color:'rgba(128,128,128,0.8)',maxRotation:30}},
-        y:{
-          beginAtZero:true,
-          max:Math.max(7,Math.max.apply(null,dayCounts)+1),
-          ticks:{stepSize:1,precision:0,font:{size:10},color:'rgba(128,128,128,0.8)'},
-          grid:{color:'rgba(128,128,128,0.08)'}
-        }
-      }
-    }
+  // Readings per body - simple horizontal bars, no Chart.js needed
+  var wrap=document.getElementById('body-freq-rows');
+  if(!wrap)return;
+  var maxCount=0;
+  var rows=[];
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var count=filtered.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi;}).length;
+      if(count>maxCount)maxCount=count;
+      rows.push({name:b.name,short:l.short,count:count,li:li,bi:bi});
+    });
   });
+  if(maxCount===0)maxCount=1;
+  var html='';
+  rows.forEach(function(row){
+    var pct=(row.count/maxCount)*100;
+    var color=row.count===0?'#6b7280':row.count<2?'#f97316':'#22c55e';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
+      +'<span style="font-size:11px;color:var(--text2);width:88px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+row.name+' ('+row.short+')">'+row.name+' ('+row.short+')</span>'
+      +'<div style="flex:1;height:10px;background:var(--bg2);border-radius:5px;overflow:hidden;">'
+      +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+color+';border-radius:5px;transition:width 0.4s;"></div>'
+      +'</div>'
+      +'<span style="font-size:12px;font-weight:500;color:var(--text);width:20px;text-align:right;flex-shrink:0;">'+row.count+'</span>'
+      +'</div>';
+  });
+  wrap.innerHTML=html;
 }
 
 function renderHeatmap(allLatest){
