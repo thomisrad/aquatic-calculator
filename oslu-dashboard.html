@@ -747,3 +747,88 @@ function renderTimeline(allLatest){
 }
 
 
+
+function renderHeatmap(allLatest){
+  var params=[
+    {key:'orp',label:'ORP',check:function(item){
+      var s=orpStatus(item.latest);
+      if(!s)return null;
+      var val=item.latest.readings.orp;
+      return{status:s,val:val!=null?val+' mV':'--'};
+    }},
+    {key:'fc',label:'Free Cl',check:function(item){
+      var r=item.latest.readings;
+      if(r.fc==null)return null;
+      var s=r.fc<1.5||r.fc>10?'alert':r.fc<2?'warn':'ok';
+      return{status:s,val:r.fc+' ppm'};
+    }},
+    {key:'cc',label:'Combined Cl',check:function(item){
+      var r=item.latest.readings;
+      if(r.cc==null||r.fc==null||r.fc<=0)return null;
+      var limit=r.fc*0.5;
+      var s=r.cc>=limit?'alert':r.cc>=limit*0.8?'warn':'ok';
+      return{status:s,val:r.cc.toFixed(1)+' ppm'};
+    }},
+    {key:'pH',label:'pH',check:function(item){
+      var r=item.latest.readings;
+      if(r.pH==null)return null;
+      var s=r.pH<7.2||r.pH>8.0?'alert':r.pH<7.4||r.pH>7.8?'warn':'ok';
+      return{status:s,val:r.pH.toFixed(1)};
+    }},
+    {key:'lsi',label:'LSI',check:function(item){
+      var lsi=item.latest.lsi;
+      if(lsi==null)return null;
+      var s=lsi<-0.5||lsi>0.5?'alert':lsi<-0.3||lsi>0.3?'warn':'ok';
+      return{status:s,val:parseFloat(lsi).toFixed(2)};
+    }},
+    {key:'temp',label:'Temp (F)',check:function(item){
+      var r=item.latest.readings;
+      if(r.temp==null)return null;
+      return{status:'ok',val:r.temp+'F'};
+    }}
+  ];
+
+  var html='<table class="hm-table"><thead><tr><th>Body</th>';
+  params.forEach(function(p){html+='<th>'+p.label+'</th>';});
+  html+='</tr></thead><tbody>';
+
+  allLatest.forEach(function(item){
+    html+='<tr><td>'+item.body.name+'<br><span style="font-size:10px;font-weight:400;color:var(--text3);">'+item.level.short+'</span></td>';
+    if(!item.latest){
+      params.forEach(function(){html+='<td><span class="hm-cell hm-none">No data</span></td>';});
+    }else{
+      params.forEach(function(p){
+        var result=p.check(item);
+        if(!result){html+='<td><span class="hm-cell hm-none">--</span></td>';return;}
+        var cls=result.status==='alert'?'hm-alert':result.status==='warn'?'hm-warn':'hm-ok';
+        html+='<td><span class="hm-cell '+cls+'">'+result.val+'</span></td>';
+      });
+    }
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  document.getElementById('heatmap-wrap').innerHTML=html;
+}
+
+function renderVisuals(filtered){
+  var allLatest=[];
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var latest=getLatestForBody(li,bi,filtered);
+      allLatest.push({level:l,body:b,li:li,bi:bi,latest:latest});
+    });
+  });
+  renderDonut(allLatest);
+  renderTimeline(allLatest);
+  renderHeatmap(allLatest);
+}
+
+window.onload=function(){
+  loadToken();
+  if(!GH_TOKEN){showTokenSetup();}
+  else{showDashboard();setTimeout(function(){loadData();},600);}
+};
+</script>
+</body>
+</html>
