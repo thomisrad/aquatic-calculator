@@ -865,6 +865,8 @@ function renderHeatmap(allLatest){
   html+='</tbody></table>';
   document.getElementById('heatmap-wrap').innerHTML=html;
 }
+
+window.onload=function(){
   loadToken();
   if(!GH_TOKEN){showTokenSetup();}
   else{showDashboard();setTimeout(function(){loadData();},600);}
