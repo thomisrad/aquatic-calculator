@@ -189,7 +189,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v23 (synced) - Jun 13, 2026</span>
+    <span class="version-label">v25 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -233,7 +233,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <div class="icard cc-card"><label>Combined Chlorine</label><input type="number" id="cc" placeholder="0.0" min="0" max="5" step="0.1" inputmode="decimal"/><div class="hint">ppm -- must be less than 50% of FC</div></div>
     <div class="icard"><label>Total Alkalinity</label><input type="number" id="ta" placeholder="100" min="0" max="400" step="1" inputmode="decimal"/><div class="hint">ppm -- City req: 60-160 ppm</div></div>
     <div class="icard"><label>Calcium Hardness</label><input type="number" id="ch" placeholder="250" min="0" max="1000" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 200-400</div></div>
-    <div class="icard"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="50" min="0" max="90" step="1" inputmode="decimal"/><div class="hint">ppm -- Target: 50 ppm, max 90 ppm (city req)</div></div>
+    <div class="icard" id="cya-card"><label>Cyanuric Acid</label><input type="number" id="cya" placeholder="75" min="0" max="90" step="1" inputmode="decimal"/><div class="hint" id="cya-hint">ppm -- Target: 75 ppm (outdoor pools), max 90 ppm</div></div>
     <div class="icard"><label>Temperature (F)</label><input type="number" id="temp" placeholder="78" min="32" max="110" step="1" inputmode="decimal"/><div class="hint">Current water temp</div></div>
   </div>
   <div class="calc-select-wrap">
@@ -378,7 +378,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
       <div class="guide-row"><span>Combined chlorine</span><span>Less than 50% of FC (city req)</span></div>
       <div class="guide-row"><span>Total alkalinity</span><span>60 - 160 ppm (city req)</span></div>
       <div class="guide-row"><span>Calcium hardness</span><span>200 - 400 ppm (pools), 150 ppm (spas)</span></div>
-      <div class="guide-row"><span>Cyanuric acid</span><span>50 ppm target, max 90 ppm (city req)</span></div>
+      <div class="guide-row"><span>Cyanuric acid</span><span>Outdoor pools: target 75 ppm (range 30-90) | Outdoor spas: target 30 ppm (max 90) | Indoor: not applicable</span></div>
       <div class="guide-row"><span>Temperature</span><span>Current water temp in F</span></div>
     </div>
   </div>
@@ -595,8 +595,34 @@ function onLocationChange(val){
   saveInputs();
   var parts=val.split('-');
   st.level=parseInt(parts[0]);st.body=parseInt(parts[1]);
-  updateVolDisplay();loadInputs();
+  updateVolDisplay();
+  updateCYAField();
+  loadInputs();
   document.getElementById('results').classList.remove('on');
+}
+
+function updateCYAField(){
+  var card=document.getElementById('cya-card');
+  var hint=document.getElementById('cya-hint');
+  var input=document.getElementById('cya');
+  if(!card)return;
+  var outdoor=isOutdoor();
+  var spa=isSpa();
+  if(!outdoor){
+    // Indoor - hide CYA entirely
+    card.style.display='none';
+    if(input)input.value='';
+  }else if(!spa){
+    // Outdoor pool - target 75 ppm, range 30-90
+    card.style.display='block';
+    if(input){input.placeholder='75';input.min='0';input.max='90';}
+    if(hint)hint.textContent='ppm -- Target: 75 ppm, range 30-90 ppm (city max 90)';
+  }else{
+    // Outdoor spa/hot tub - target 30 ppm, max 90
+    card.style.display='block';
+    if(input){input.placeholder='30';input.min='0';input.max='90';}
+    if(hint)hint.textContent='ppm -- Target: 30 ppm, range 25-40 ppm (city max 90 ppm)';
+  }
 }
 
 function showPage(p){
@@ -654,8 +680,8 @@ function renderCYACorrection(fc,cya,pH,orp,orpSP){
   var noteEl=document.getElementById('cya-orp-note');
   var orpSuppression=Math.round(cya*0.6);
   var suggestedSP=orpSP?Math.round(orpSP+orpSuppression):null;
-  if(cya<=20){relEl.textContent='High reliability';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is below target (50 ppm) -- ORP is highly reliable but stabiliser should be raised. Est. ORP suppression: ~'+orpSuppression+' mV.';}
-  else if(cya<=60){relEl.textContent='Normal - within target range';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is within your target range (50 ppm). Est. ORP suppression: ~'+orpSuppression+' mV. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');}
+  if(cya<=20){relEl.textContent='High reliability';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is below target (75 ppm for outdoor pools) -- ORP is highly reliable but stabiliser should be raised. Est. ORP suppression: ~'+orpSuppression+' mV.';}
+  else if(cya<=60){relEl.textContent='Normal - within target range';relEl.style.color='var(--success-text)';inner.style.borderColor='var(--success-border)';inner.style.background='var(--success-bg)';noteEl.textContent='CYA at '+cya+' ppm is within range (target 75 ppm for outdoor pools). Est. ORP suppression: ~'+orpSuppression+' mV. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' ORP setpoint of ~'+suggestedSP+' mV accounts for this CYA level.':'');}
   else if(cya<=80){relEl.textContent='Elevated - some suppression';relEl.style.color='var(--warn-text)';inner.style.borderColor='var(--warn-border)';inner.style.background='var(--warn-bg)';noteEl.textContent='CYA at '+cya+' ppm is above target. ORP suppressed by ~'+orpSuppression+' mV -- cross-check with manual FC test. FAC is ~'+fac.toFixed(3)+' ppm.'+(suggestedSP?' Consider raising ORP setpoint to ~'+suggestedSP+' mV.':'');}
   else{relEl.textContent='Unreliable - CYA too high';relEl.style.color='var(--danger-text)';inner.style.borderColor='var(--danger-border)';inner.style.background='var(--danger-bg)';noteEl.textContent='CYA at '+cya+' ppm is excessive -- ORP suppressed by ~'+orpSuppression+' mV. FAC is only ~'+fac.toFixed(3)+' ppm. Partial drain/refill recommended.';}
 }
@@ -741,11 +767,33 @@ function calculate(){
     if(chDiff>0){doses.push({chem:'Calcium chloride',amount:(chDiff*vol*0.0000112).toFixed(2)+' lbs',note:'Raise CH from '+ch+' to ~'+chTarget+' ppm'});}
     else{doses.push({chem:'Calcium hardness',amount:'Dilute required',note:'CH '+ch+' ppm too high. Partial drain/refill. Target: '+chTarget+' ppm.'});}
   }else if(!isNaN(ch)){doses.push({chem:'Calcium hardness',amount:'OK - in range',note:ch+' ppm -- within range',ok:true});}
-  if(outdoor&&!spa&&!isNaN(cya)){
-    var cyaDiff=50-cya;
-    if(cyaDiff>5){doses.push({chem:'Cyanuric acid',amount:(cyaDiff*vol*0.0000083*16).toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~50 ppm'});}
-    else if(cya>90){doses.push({chem:'Cyanuric acid',amount:'Dilute required - city max exceeded',note:'CYA '+cya+' ppm exceeds city maximum of 90 ppm. Partial drain/refill required immediately.'});}
-    else{doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within city limits (max 90 ppm)',ok:true});}
+  if(outdoor&&!isNaN(cya)&&cya!==null){
+    if(cya>90){
+      doses.push({chem:'Cyanuric acid',amount:'Dilute required - city max exceeded',note:'CYA '+cya+' ppm exceeds city maximum of 90 ppm. Partial drain/refill required immediately.'});
+    }else if(!spa){
+      // Outdoor pool: target 75 ppm, range 30-90
+      var cyaTarget=75;
+      var cyaDiff=cyaTarget-cya;
+      if(cya<30){
+        var oz=(30-cya)*vol*0.0000083*16;
+        doses.push({chem:'Cyanuric acid',amount:oz.toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~30 ppm minimum (target 75 ppm, range 30-90 ppm)'});
+      }else if(cyaDiff>10){
+        var oz2=(cyaDiff*vol*0.0000083*16);
+        doses.push({chem:'Cyanuric acid',amount:oz2.toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~'+cyaTarget+' ppm (outdoor pool target)'});
+      }else{
+        doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within range (target 75 ppm, city max 90 ppm)',ok:true});
+      }
+    }else{
+      // Outdoor spa/hot tub: target 30 ppm, range 25-40 ppm, max 90 ppm city
+      if(cya<25){
+        var ozSpa=((30-cya)*vol*0.0000083*16);
+        doses.push({chem:'Cyanuric acid',amount:ozSpa.toFixed(1)+' oz',note:'Raise CYA from '+cya+' to ~30 ppm (outdoor spa target, range 25-40 ppm)'});
+      }else if(cya<=40){
+        doses.push({chem:'Cyanuric acid',amount:'OK - in range',note:cya+' ppm -- within range (target 30 ppm, range 25-40 ppm)',ok:true});
+      }else{
+        doses.push({chem:'Cyanuric acid',amount:'Dilute required',note:'CYA '+cya+' ppm above spa range (25-40 ppm). Partial drain/refill to reduce toward 30 ppm target.'});
+      }
+    }
   }
 
   lastDoses=doses;
@@ -783,7 +831,7 @@ function buildReadingText(){
   var fc2=parseFloat(d.fc),cya2=parseFloat(d['cya']),pH2=parseFloat(d.pH);
   if(isOutdoor()&&!isSpa()&&!isNaN(fc2)&&!isNaN(cya2)&&cya2>0&&!isNaN(pH2)){
     var fac2=calcFAC(fc2,cya2,pH2);
-    if(fac2!=null){lines.push('');lines.push('-- CYA CORRECTION --');lines.push('CYA:               '+cya2+' ppm');lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');lines.push('Est. ORP suppression: ~'+Math.round(cya2*0.6)+' mV from CYA');lines.push(cya2>80?'[!] ORP unreliable at this CYA level':cya2>60?'[!] CYA above target -- cross-check with manual FC test':'OK CYA within target range (50 ppm)');}
+    if(fac2!=null){lines.push('');lines.push('-- CYA CORRECTION --');lines.push('CYA:               '+cya2+' ppm');lines.push('Free active chlorine: '+fac2.toFixed(3)+' ppm');lines.push('Est. ORP suppression: ~'+Math.round(cya2*0.6)+' mV from CYA');lines.push(cya2>80?'[!] ORP unreliable at this CYA level':cya2>60?'[!] CYA above target -- cross-check with manual FC test':'OK CYA within target range');}
   }
   lines.push('');lines.push('-- DOSAGES --');
   if(lastDoses.length){lastDoses.forEach(function(dose){var icon=dose.shock?'[SHOCK]':dose.ok?'OK':'->';lines.push(icon+' '+dose.chem+': '+dose.amount);if(!dose.ok)lines.push('   '+dose.note);});}
