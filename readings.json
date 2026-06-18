@@ -1,5 +1,48 @@
 [
   {
+    "id": 1781791246025,
+    "ts": 1781791246025,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jun 18, 2026 at 7:00 AM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 5.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": 60,
+      "temp": 82,
+      "orp": 646,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781790455529,
     "ts": 1781790455529,
     "level": "Level 13 - Outdoor",
@@ -9,7 +52,7 @@
     "volume": 33000,
     "when": "Jun 18, 2026 at 6:47 AM",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.3,
       "fc": 8,
