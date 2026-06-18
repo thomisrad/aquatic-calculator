@@ -183,7 +183,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.11 - Jun 18, 2026</span>
+      <span class="version">v1.12 - Jun 18, 2026</span>
     </div>
   </div>
 
@@ -251,12 +251,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div id="timeline-rows"></div>
     </div>
 
-    <!-- 3. Readings per body -->
-    <div class="visual-card" style="flex:2;min-width:280px;">
-      <div class="visual-title">Readings per body</div>
-      <div class="visual-sub">Total readings logged per body in selected window</div>
-      <div id="body-freq-rows" style="margin-top:4px;"></div>
-    </div>
+
 
   </div>
 
@@ -685,7 +680,6 @@ function renderVisuals(filtered){
 
   renderDonut(allLatest);
   renderTimeline(allLatest);
-  renderFrequency(filtered);
   renderHeatmap(allLatest);
 }
 
@@ -752,103 +746,4 @@ function renderTimeline(allLatest){
   document.getElementById('timeline-rows').innerHTML=html;
 }
 
-function renderFrequency(filtered){
-  // Readings per body - simple horizontal bars, no Chart.js needed
-  var wrap=document.getElementById('body-freq-rows');
-  if(!wrap)return;
-  var maxCount=0;
-  var rows=[];
-  LEVELS.forEach(function(l,li){
-    l.bodies.forEach(function(b,bi){
-      var count=filtered.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi;}).length;
-      if(count>maxCount)maxCount=count;
-      rows.push({name:b.name,short:l.short,count:count,li:li,bi:bi});
-    });
-  });
-  if(maxCount===0)maxCount=1;
-  var html='';
-  rows.forEach(function(row){
-    var pct=(row.count/maxCount)*100;
-    var color=row.count===0?'#6b7280':row.count<2?'#f97316':'#22c55e';
-    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;">'
-      +'<span style="font-size:11px;color:var(--text2);width:88px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+row.name+' ('+row.short+')">'+row.name+' ('+row.short+')</span>'
-      +'<div style="flex:1;height:10px;background:var(--bg2);border-radius:5px;overflow:hidden;">'
-      +'<div style="height:100%;width:'+pct.toFixed(1)+'%;background:'+color+';border-radius:5px;transition:width 0.4s;"></div>'
-      +'</div>'
-      +'<span style="font-size:12px;font-weight:500;color:var(--text);width:20px;text-align:right;flex-shrink:0;">'+row.count+'</span>'
-      +'</div>';
-  });
-  wrap.innerHTML=html;
-}
 
-function renderHeatmap(allLatest){
-  var params=[
-    {key:'orp',label:'ORP',check:function(item){
-      var s=orpStatus(item.latest);
-      if(!s)return null;
-      var val=item.latest.readings.orp;
-      return{status:s,val:val!=null?val+' mV':'--'};
-    }},
-    {key:'fc',label:'Free Cl',check:function(item){
-      var r=item.latest.readings;
-      if(r.fc==null)return null;
-      var s=r.fc<1.5||r.fc>10?'alert':r.fc<2?'warn':'ok';
-      return{status:s,val:r.fc+' ppm'};
-    }},
-    {key:'cc',label:'Combined Cl',check:function(item){
-      var r=item.latest.readings;
-      if(r.cc==null||r.fc==null||r.fc<=0)return null;
-      var limit=r.fc*0.5;
-      var s=r.cc>=limit?'alert':r.cc>=limit*0.8?'warn':'ok';
-      return{status:s,val:r.cc.toFixed(1)+' ppm'};
-    }},
-    {key:'pH',label:'pH',check:function(item){
-      var r=item.latest.readings;
-      if(r.pH==null)return null;
-      var s=r.pH<7.2||r.pH>8.0?'alert':r.pH<7.4||r.pH>7.8?'warn':'ok';
-      return{status:s,val:r.pH.toFixed(1)};
-    }},
-    {key:'lsi',label:'LSI',check:function(item){
-      var lsi=item.latest.lsi;
-      if(lsi==null)return null;
-      var s=lsi<-0.5||lsi>0.5?'alert':lsi<-0.3||lsi>0.3?'warn':'ok';
-      return{status:s,val:parseFloat(lsi).toFixed(2)};
-    }},
-    {key:'temp',label:'Temp (F)',check:function(item){
-      var r=item.latest.readings;
-      if(r.temp==null)return null;
-      return{status:'ok',val:r.temp+'F'};
-    }}
-  ];
-
-  var html='<table class="hm-table"><thead><tr><th>Body</th>';
-  params.forEach(function(p){html+='<th>'+p.label+'</th>';});
-  html+='</tr></thead><tbody>';
-
-  allLatest.forEach(function(item){
-    html+='<tr><td>'+item.body.name+'<br><span style="font-size:10px;font-weight:400;color:var(--text3);">'+item.level.short+'</span></td>';
-    if(!item.latest){
-      params.forEach(function(){html+='<td><span class="hm-cell hm-none">No data</span></td>';});
-    }else{
-      params.forEach(function(p){
-        var result=p.check(item);
-        if(!result){html+='<td><span class="hm-cell hm-none">--</span></td>';return;}
-        var cls=result.status==='alert'?'hm-alert':result.status==='warn'?'hm-warn':'hm-ok';
-        html+='<td><span class="hm-cell '+cls+'">'+result.val+'</span></td>';
-      });
-    }
-    html+='</tr>';
-  });
-
-  html+='</tbody></table>';
-  document.getElementById('heatmap-wrap').innerHTML=html;
-}
-
-window.onload=function(){
-  loadToken();
-  if(!GH_TOKEN){showTokenSetup();}
-  else{showDashboard();setTimeout(function(){loadData();},600);}
-};
-</script>
-</body>
-</html>
