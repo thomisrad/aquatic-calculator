@@ -1,5 +1,116 @@
 [
   {
+    "id": 1781901936271,
+    "ts": 1781901936271,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 19, 2026 at 1:45 PM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 16.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": null,
+      "orp": 879,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "12.1 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781902123720,
+    "ts": 1781902123720,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Jun 19, 2026 at 1:48 PM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 8.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": null,
+      "orp": 811,
+      "orpSetpoint": 810
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "2.4 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781901936271,
+    "ts": 1781901936271,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 19, 2026 at 1:45 PM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 16.5,
+      "cc": null,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": null,
+      "orp": 879,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "12.1 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781889777764,
     "ts": 1781889777763,
     "level": "Level 13 - Outdoor",
@@ -9,7 +120,7 @@
     "volume": 3500,
     "when": "Jun 19, 2026 at 10:22 AM",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.6,
       "fc": 12,
@@ -319,6 +430,86 @@
     ]
   },
   {
+    "id": 1781882497453,
+    "ts": 1781882497453,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 19, 2026 at 8:21 AM",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 6,
+      "cc": 5.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 52,
+      "orp": 874,
+      "orpSetpoint": 865
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "45.2 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781882254295,
+    "ts": 1781882254295,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 19, 2026 at 8:17 AM",
+    "lsi": -0.37,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 19.5,
+      "cc": 1,
+      "ta": 60,
+      "ch": 110,
+      "cya": null,
+      "temp": 80,
+      "orp": 880,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "39.58 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781882254295,
     "ts": 1781882254295,
     "level": "Level 1 - Indoor",
@@ -405,86 +596,6 @@
       {
         "chem": "Calcium chloride",
         "amount": "1.34 lbs",
-        "ok": false,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1781882497453,
-    "ts": 1781882497453,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jun 19, 2026 at 8:21 AM",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.5,
-      "fc": 6,
-      "cc": 5.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 52,
-      "orp": 874,
-      "orpSetpoint": 865
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "45.2 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1781882254295,
-    "ts": 1781882254295,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 18600,
-    "when": "Jun 19, 2026 at 8:17 AM",
-    "lsi": -0.37,
-    "synced": true,
-    "readings": {
-      "pH": 7.5,
-      "fc": 19.5,
-      "cc": 1,
-      "ta": 60,
-      "ch": 110,
-      "cya": null,
-      "temp": 80,
-      "orp": 880,
-      "orpSetpoint": 860
-    },
-    "doses": [
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "Total alkalinity",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "Calcium chloride",
-        "amount": "39.58 lbs",
         "ok": false,
         "shock": false
       }
