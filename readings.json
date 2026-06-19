@@ -37,55 +37,6 @@
     ]
   },
   {
-    "id": 1781903627695,
-    "ts": 1781903627695,
-    "level": "Level 2 - Outdoor",
-    "levelIdx": 1,
-    "bodyIdx": 1,
-    "body": "Hot spa",
-    "volume": 900,
-    "when": "Jun 19, 2026 at 2:13 PM",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.3,
-      "fc": 9,
-      "cc": null,
-      "ta": 50,
-      "ch": null,
-      "cya": 30,
-      "temp": null,
-      "orp": 697,
-      "orpSetpoint": 700
-    },
-    "doses": [
-      {
-        "chem": "Sodium hypochlorite (12.5%)",
-        "amount": "Controller managing",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "1.6 oz",
-        "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Sodium bicarbonate",
-        "amount": "0.96 lbs",
-        "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Cyanuric acid",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
     "id": 1781902123720,
     "ts": 1781902123720,
     "level": "Level 1 - Indoor",
