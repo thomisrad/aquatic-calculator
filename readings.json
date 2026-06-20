@@ -1,5 +1,48 @@
 [
   {
+    "id": 1781970926125,
+    "ts": 1781970926125,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 20, 2026 at 8:55 AM",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 10,
+      "cc": 0.5,
+      "ta": 50,
+      "ch": null,
+      "cya": 30,
+      "temp": 103,
+      "orp": 701,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "3.74 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781970722887,
     "ts": 1781970722887,
     "level": "Level 13 - Outdoor",
@@ -9,7 +52,7 @@
     "volume": 33000,
     "when": "Jun 20, 2026 at 8:52 AM",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
