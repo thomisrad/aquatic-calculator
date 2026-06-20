@@ -1,5 +1,49 @@
 [
   {
+    "id": 1781993955191,
+    "ts": 1781993955190,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 20, 2026 at 3:19 PM",
+    "tester": "Tom T.",
+    "lsi": -0.37,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 14,
+      "cc": 1,
+      "ta": 60,
+      "ch": 110,
+      "cya": null,
+      "temp": 80,
+      "orp": 872,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "39.58 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781988063423,
     "ts": 1781988063423,
     "level": "Level 1 - Indoor",
@@ -9,7 +53,7 @@
     "volume": 900,
     "when": "Jun 20, 2026 at 1:41 PM",
     "lsi": -1.35,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 5,
