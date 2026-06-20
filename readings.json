@@ -9,7 +9,7 @@
     "volume": 3500,
     "when": "Jun 20, 2026 at 8:55 AM",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 10,
@@ -32,55 +32,6 @@
         "chem": "Sodium bicarbonate",
         "amount": "3.74 lbs",
         "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Cyanuric acid",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1781970722887,
-    "ts": 1781970722887,
-    "level": "Level 13 - Outdoor",
-    "levelIdx": 2,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 33000,
-    "when": "Jun 20, 2026 at 8:52 AM",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.5,
-      "fc": 7.5,
-      "cc": null,
-      "ta": 70,
-      "ch": null,
-      "cya": 70,
-      "temp": 82,
-      "orp": 699,
-      "orpSetpoint": 705
-    },
-    "doses": [
-      {
-        "chem": "Sodium hypochlorite (12.5%)",
-        "amount": "Controller managing",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "Total alkalinity",
-        "amount": "OK - in range",
-        "ok": true,
         "shock": false
       },
       {
