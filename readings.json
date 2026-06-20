@@ -1,5 +1,54 @@
 [
   {
+    "id": 1781978325794,
+    "ts": 1781978325794,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 20, 2026 at 10:58 AM",
+    "lsi": -1.31,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 3,
+      "cc": 0,
+      "ta": 30,
+      "ch": 40,
+      "cya": null,
+      "temp": 56,
+      "orp": 836,
+      "orpSetpoint": 845
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.28 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "1.11 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781978314407,
     "ts": 1781978314407,
     "level": "Level 1 - Indoor",
