@@ -1,15 +1,28 @@
 [
   {
-    "id": 1781976306333,
-    "ts": 1781976306333,
+    "id": 1781978314407,
+    "ts": 1781978314407,
     "level": "Level 1 - Indoor",
     "levelIdx": 0,
     "bodyIdx": 2,
     "body": "Cold spa",
     "volume": 900,
-    "when": "Jun 20, 2026, 10:25 AM",
-    "outOfService": true,
-    "reason": "Water replacement",
+    "when": "Jun 20, 2026 at 10:58 AM",
+    "returnedToService": true,
+    "synced": false,
+    "readings": {},
+    "doses": []
+  },
+  {
+    "id": 1781978314407,
+    "ts": 1781978314407,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 20, 2026 at 10:58 AM",
+    "returnedToService": true,
     "synced": false,
     "readings": {},
     "doses": []
@@ -25,7 +38,7 @@
     "when": "Jun 20, 2026, 10:25 AM",
     "outOfService": true,
     "reason": "Water replacement",
-    "synced": false,
+    "synced": true,
     "readings": {},
     "doses": []
   },
