@@ -189,7 +189,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="offline-badge" style="font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);">Saves to this device</span>
-    <span class="version-label">v24 (offline) - Jun 18, 2026</span>
+    <span class="version-label">v25 (offline) - Jun 20, 2026</span>
   </div>
 </div>
 
@@ -285,10 +285,12 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <p class="slabel">Chemical Dosages</p>
     <div class="dgrid" id="dose-grid"></div>
     <div class="action-select-wrap">
-      <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}">
+      <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}else if(this.value==='oos'){markOutOfService();this.value='';}else if(this.value==='return'){returnToService();this.value='';}">
         <option value="">-- Save or share this reading --</option>
-        <option value="save">Save reading to shared history</option>
+        <option value="save">Save reading to history</option>
         <option value="copy">Copy reading to clipboard</option>
+        <option value="oos">Mark body as out of service</option>
+        <option value="return">Return body to service</option>
       </select>
     </div>
     <div id="copy-preview" class="copy-preview" style="display:none;">
@@ -466,6 +468,7 @@ function loadInputs(){
   var sel=document.getElementById('location-select');
   if(sel)sel.value=st.level+'-'+st.body;
   document.getElementById('results').classList.remove('on');
+  updateOOSBanner();
 }
 function updateVolDisplay(){
   var b=currentBody();
@@ -587,6 +590,90 @@ function renderCC(cc,fc,vol){
     if(fcNeeded>0){var floz=((fcNeeded*vol/10000)*10.24).toFixed(1);var amt=parseFloat(floz)<128?floz+' fl oz':(floz/128).toFixed(2)+' gal';noteEl.textContent='CC is '+cc.toFixed(1)+' ppm (city limit: less than 50% of FC = '+ccLimit.toFixed(1)+' ppm) -- breakpoint chlorination required. Add '+amt+' of sodium hypochlorite (12.5%) to reach '+shockTarget.toFixed(1)+' ppm FC. Retest after 4 hours of circulation.';}
     else{noteEl.textContent='CC is '+cc.toFixed(1)+' ppm. Current FC may already be sufficient -- retest after 4 hours of circulation.';}
   }}
+}
+
+function getOOSKey(){return 'oos_'+bkey();}
+
+function markOutOfService(){
+  var b=currentBody();
+  var reasons=['Equipment repair','Equipment failure','Water replacement','Scheduled maintenance','Health/safety closure','Other'];
+  var reasonList=reasons.map(function(r,i){return (i+1)+'. '+r;}).join('\n');
+  var input=prompt('Mark '+b.name+' ('+LEVELS[st.level].name+') as OUT OF SERVICE?\n\nSelect reason:\n'+reasonList+'\n\nEnter number (1-'+reasons.length+') or type custom reason:');
+  if(!input)return;
+  var idx=parseInt(input)-1;
+  var reason=(idx>=0&&idx<reasons.length)?reasons[idx]:input.trim();
+  if(!reason)return;
+  var now=new Date();
+  var oosEntry={
+    id:Date.now(),ts:now.getTime(),
+    level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
+    body:b.name,volume:b.vol,
+    when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    outOfService:true,reason:reason,
+    readings:{},doses:[]
+  };
+  try{
+    var stored=JSON.parse(localStorage.getItem('aquatic_oos')||'{}');
+    stored[bkey()]={reason:reason,since:oosEntry.when,ts:now.getTime()};
+    localStorage.setItem('aquatic_oos',JSON.stringify(stored));
+  }catch(e){}
+  st.history.unshift(oosEntry);
+  saveLocal();
+  updateOOSBanner();
+  renderHistory();
+  alert(b.name+' marked as OUT OF SERVICE: '+reason);
+}
+
+function returnToService(){
+  var b=currentBody();
+  if(!confirm('Return '+b.name+' ('+LEVELS[st.level].name+') to service?'))return;
+  try{
+    var stored=JSON.parse(localStorage.getItem('aquatic_oos')||'{}');
+    delete stored[bkey()];
+    localStorage.setItem('aquatic_oos',JSON.stringify(stored));
+  }catch(e){}
+  var now=new Date();
+  var returnEntry={
+    id:Date.now(),ts:now.getTime(),
+    level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
+    body:b.name,volume:b.vol,
+    when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    returnedToService:true,
+    readings:{},doses:[]
+  };
+  st.history.unshift(returnEntry);
+  saveLocal();
+  updateOOSBanner();
+  renderHistory();
+  alert(b.name+' returned to service.');
+}
+
+function isBodyOOS(li,bi){
+  try{
+    var stored=JSON.parse(localStorage.getItem('aquatic_oos')||'{}');
+    return stored[li+'-'+bi]||null;
+  }catch(e){return null;}
+}
+
+function updateOOSBanner(){
+  var oos=isBodyOOS(st.level,st.body);
+  var existing=document.getElementById('oos-banner');
+  if(oos){
+    if(!existing){
+      var banner=document.createElement('div');
+      banner.id='oos-banner';
+      banner.style.cssText='background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;font-size:13px;color:var(--warn-text);font-weight:500;';
+      banner.innerHTML='OUT OF SERVICE: '+oos.reason+' (since '+oos.since+') -- To return to service, use the Save or Share dropdown.';
+      var calcPage=document.getElementById('calc-page');
+      var volDisplay=document.getElementById('vol-display');
+      if(volDisplay&&volDisplay.nextSibling){calcPage.insertBefore(banner,volDisplay.nextSibling);}
+      else{calcPage.appendChild(banner);}
+    }else{
+      existing.innerHTML='OUT OF SERVICE: '+oos.reason+' (since '+oos.since+') -- To return to service, use the Save or Share dropdown.';
+    }
+  }else{
+    if(existing)existing.remove();
+  }
 }
 
 function calculate(){
@@ -745,7 +832,7 @@ function showCopyFallback(text){
 function saveToHistory(){
   var d=st.inputs[bkey()]||{};
   var b=currentBody();
-  var entry={id:Date.now(),ts:Date.now(),level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,body:b.name,volume:b.vol,when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),lsi:lastLSI,readings:{pH:parseFloat(d.pH)||null,fc:parseFloat(d.fc)||null,cc:parseFloat(d['cc'])||null,ta:parseFloat(d.ta)||null,ch:parseFloat(d.ch)||null,cya:parseFloat(d.cya)||null,temp:parseFloat(d.temp)||null,orp:parseFloat(d['orp'])||null,orpSetpoint:parseFloat(d['orp-setpoint'])||null},doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})};
+  var entry={id:Date.now(),ts:Date.now(),level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,body:b.name,volume:b.vol,when:new Date().toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),lsi:lastLSI,readings:{pH:(d.pH!==''&&d.pH!=null)?parseFloat(d.pH):null,fc:(d.fc!==''&&d.fc!=null)?parseFloat(d.fc):null,cc:(d['cc']!==''&&d['cc']!=null)?parseFloat(d['cc']):null,ta:(d.ta!==''&&d.ta!=null)?parseFloat(d.ta):null,ch:(d.ch!==''&&d.ch!=null)?parseFloat(d.ch):null,cya:(d.cya!==''&&d.cya!=null)?parseFloat(d.cya):null,temp:(d.temp!==''&&d.temp!=null)?parseFloat(d.temp):null,orp:(d['orp']!==''&&d['orp']!=null)?parseFloat(d['orp']):null,orpSetpoint:(d['orp-setpoint']!==''&&d['orp-setpoint']!=null)?parseFloat(d['orp-setpoint']):null},doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})};
   st.history.unshift(entry);
   saveLocal();
   setSyncStatus('ok',st.history.length+' reading'+(st.history.length!==1?'s':'')+' on this device');
@@ -782,6 +869,19 @@ function renderHistory(){
   var list=document.getElementById('hist-list');
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
+    if(e.outOfService){
+      return '<div class="hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+e.body+' - '+e.level+'</div>'
+        +'<div class="hist-when">'+e.when+'</div>'
+        +'<div style="font-size:12px;color:var(--warn-text);margin-top:3px;">Reason: '+e.reason+'</div></div>'
+        +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div>';
+    }
+    if(e.returnedToService){
+      return '<div class="hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+e.body+' - '+e.level+'</div>'
+        +'<div class="hist-when">'+e.when+'</div></div>'
+        +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div>';
+    }
     return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div></div>'
       +'<div style="display:flex;align-items:center;gap:8px;"><span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
       +(ghSynced?'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button>':'')+'</div></div>'
@@ -863,6 +963,7 @@ window.onload=function(){
   updateVolDisplay();
   updateCYAField();
   loadInputs();
+  updateOOSBanner();
 };
 </script>
 </body>

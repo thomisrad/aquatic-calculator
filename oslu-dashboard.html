@@ -153,6 +153,12 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
 /* Frequency chart */
 .freq-label-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;}
+.oos-overlay{position:absolute;inset:0;background:rgba(133,79,11,0.15);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;}
+.oos-badge{background:var(--warn-bg);border:1.5px solid var(--warn-border);border-radius:var(--radius);padding:12px 16px;text-align:center;max-width:200px;}
+.oos-badge-title{font-size:13px;font-weight:600;color:var(--warn-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+.oos-badge-reason{font-size:11px;color:var(--warn-text);opacity:0.9;line-height:1.5;}
+.oos-badge-since{font-size:10px;color:var(--warn-text);opacity:0.65;margin-top:3px;}
+.body-card{position:relative;}
 </style>
 </head>
 <body>
@@ -183,7 +189,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.12 - Jun 18, 2026</span>
+      <span class="version">v1.13 - Jun 20, 2026</span>
     </div>
   </div>
 
@@ -351,6 +357,17 @@ function getFilteredReadings(){
   return allReadings.filter(function(r){return r.ts>=cutoff;});
 }
 
+function getOOSStatus(li,bi,readings){
+  // Find the most recent OOS or return-to-service event for this body
+  var events=readings.filter(function(r){
+    return r.levelIdx===li&&r.bodyIdx===bi&&(r.outOfService||r.returnedToService);
+  }).sort(function(a,b){return b.ts-a.ts;});
+  if(!events.length)return null;
+  var latest=events[0];
+  if(latest.outOfService)return{oos:true,reason:latest.reason||'Maintenance',since:latest.when};
+  return null; // most recent event is a return-to-service
+}
+
 function getLatestForBody(li,bi,readings){
   var bodyReadings=readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi;});
   if(!bodyReadings.length)return null;
@@ -433,6 +450,8 @@ function getActions(reading){
 
   return actions;
 }
+
+function isOOS(li,bi,filtered){return getOOSStatus(li,bi,filtered)!=null;}
 
 function overallStatus(reading){
   if(!reading)return'none';
@@ -517,7 +536,17 @@ function renderDashboard(){
       var status=overallStatus(latest);
       var cardClass='body-card '+(latest?status:'no-data');
       var cardId='card-'+li+'-'+bi;
+      var oosStatus=getOOSStatus(li,bi,filtered);
+      if(oosStatus){cardClass='body-card warn';}
       html+='<div class="'+cardClass+'" id="'+cardId+'">';
+      if(oosStatus){
+        html+='<div class="oos-overlay">'
+          +'<div class="oos-badge">'
+          +'<div class="oos-badge-title">Out of Service</div>'
+          +'<div class="oos-badge-reason">'+oosStatus.reason+'</div>'
+          +'<div class="oos-badge-since">Since '+oosStatus.since+'</div>'
+          +'</div></div>';
+      }
       html+='<div class="body-card-head">';
       html+='<div><div class="body-name">'+b.name+'</div><div class="body-vol">'+b.vol.toLocaleString()+' gal</div>';
       if(latest){
