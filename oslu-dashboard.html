@@ -189,7 +189,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.13 - Jun 20, 2026</span>
+      <span class="version">v1.14 - Jun 20, 2026</span>
     </div>
   </div>
 
@@ -556,7 +556,7 @@ function renderDashboard(){
       }
       html+='</div>';
       html+='<div style="text-align:right;">';
-      if(latest){html+='<div class="body-when">'+timeAgo(latest.ts)+'</div><div style="font-size:10px;color:var(--text3);">'+bodyRecs.length+' reading'+(bodyRecs.length!==1?'s':'')+' in window</div>';}
+      if(latest){html+='<div class="body-when">'+timeAgo(latest.ts)+(latest.tester?' by '+latest.tester:'')+'</div><div style="font-size:10px;color:var(--text3);">'+bodyRecs.length+' reading'+(bodyRecs.length!==1?'s':'')+' in window</div>';}
       else{html+='<div class="body-when">No readings</div>';}
       html+='</div></div>';
 
@@ -818,13 +818,16 @@ function renderHeatmap(allLatest){
   ];
 
   var html='<table class="hm-table"><thead><tr><th>Body</th>';
+  var showTester=allLatest.some(function(i){return i.latest&&i.latest.tester;});
   params.forEach(function(p){html+='<th>'+p.label+'</th>';});
+  if(showTester)html+='<th>Tested by</th>';
   html+='</tr></thead><tbody>';
 
   allLatest.forEach(function(item){
     html+='<tr><td>'+item.body.name+'<br><span style="font-size:10px;font-weight:400;color:var(--text3);">'+item.level.short+'</span></td>';
     if(!item.latest){
       params.forEach(function(){html+='<td><span class="hm-cell hm-none">No data</span></td>';});
+      if(showTester)html+='<td><span class="hm-cell hm-none">--</span></td>';
     }else{
       params.forEach(function(p){
         var result=p.check(item);
@@ -832,6 +835,7 @@ function renderHeatmap(allLatest){
         var cls=result.status==='alert'?'hm-alert':result.status==='warn'?'hm-warn':'hm-ok';
         html+='<td><span class="hm-cell '+cls+'">'+result.val+'</span></td>';
       });
+      if(showTester)html+='<td><span class="hm-cell hm-none" style="background:none;color:var(--text2);">'+(item.latest&&item.latest.tester?item.latest.tester:'--')+'</span></td>';
     }
     html+='</tr>';
   });

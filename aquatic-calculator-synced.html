@@ -180,6 +180,20 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
 </div>
 
+<!-- NAME SETUP SCREEN -->
+<div id="name-setup" style="display:none;">
+  <div class="token-screen">
+    <h2>One more step</h2>
+    <p>Enter your name so each reading is attributed correctly. This is saved to this device only and will not be asked again.</p>
+    <label for="name-first">First name</label>
+    <input type="text" id="name-first" placeholder="e.g. Tom" maxlength="30" autocomplete="given-name" oninput="checkNameInputs()" style="margin-bottom:0.75rem;"/>
+    <label for="name-last-initial" style="margin-top:0.5rem;">Last name initial</label>
+    <input type="text" id="name-last-initial" placeholder="e.g. T" maxlength="1" autocomplete="family-name" oninput="checkNameInputs()" style="text-transform:uppercase;margin-bottom:1rem;"/>
+    <button id="name-submit-btn" onclick="submitName()" style="width:100%;padding:12px;font-size:15px;font-weight:500;background:var(--info-bg);color:var(--info-text);border:0.5px solid var(--info-border);border-radius:var(--radius);font-family:var(--font);cursor:not-allowed;opacity:0.45;" disabled>Save and continue</button>
+    <p class="token-note">Your name appears on saved readings and the management dashboard. It is stored only on this device.</p>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div id="main-app" style="display:none;">
 <div class="app-header">
@@ -436,6 +450,7 @@ var LEVELS=[
 var HKEY='aquatic_history_v5';
 var IKEY='aquatic_inputs_v5';
 var TKEY='aquatic_gh_token';
+var NKEY='aquatic_user_name';
 var GH_TOKEN='';
 var GH_OWNER='thomisrad';
 var GH_REPO='aquatic-calculator';
@@ -445,6 +460,37 @@ var ghSynced=false;
 var st={level:0,body:0,inputs:{},history:[],histFilter:'all'};
 var trendChart=null;
 var lastDoses=[],lastLSI=null;
+
+function loadName(){try{var n=localStorage.getItem(NKEY);return n||null;}catch(e){return null;}}
+function saveName(n){try{localStorage.setItem(NKEY,n);}catch(e){}}
+function getUserName(){return loadName()||'Staff';}
+
+function showNameSetup(){
+  document.getElementById('token-setup').style.display='none';
+  document.getElementById('name-setup').style.display='block';
+  document.getElementById('main-app').style.display='none';
+}
+function hideNameSetup(){
+  document.getElementById('name-setup').style.display='none';
+}
+function checkNameInputs(){
+  var first=(document.getElementById('name-first').value||'').trim();
+  var last=(document.getElementById('name-last-initial').value||'').trim();
+  var btn=document.getElementById('name-submit-btn');
+  var ready=first.length>0&&last.length===1;
+  btn.disabled=!ready;
+  btn.style.opacity=ready?'1':'0.45';
+  btn.style.cursor=ready?'pointer':'not-allowed';
+}
+function submitName(){
+  var first=(document.getElementById('name-first').value||'').trim();
+  var last=(document.getElementById('name-last-initial').value||'').trim().toUpperCase();
+  if(!first||!last){return;}
+  saveName(first+' '+last+'.');
+  hideNameSetup();
+  updateVolDisplay();updateCYAField();loadInputs();updateOOSBanner();
+  setTimeout(function(){ghLoad(false);},400);
+}
 
 function loadToken(){try{var t=localStorage.getItem(TKEY);if(t)GH_TOKEN=t;}catch(e){}}
 function saveToken(t){GH_TOKEN=t;try{localStorage.setItem(TKEY,t);}catch(e){}}
@@ -462,8 +508,10 @@ function hideTokenSetup(){document.getElementById('token-setup').style.display='
 function submitToken(){
   var t=document.getElementById('token-input').value.trim();
   if(!t){alert('Please paste your GitHub token.');return;}
-  saveToken(t);hideTokenSetup();updateVolDisplay();loadInputs();
-  setTimeout(function(){ghLoad(false);},400);
+  saveToken(t);
+  hideTokenSetup();
+  if(!loadName()){showNameSetup();}
+  else{updateVolDisplay();updateCYAField();loadInputs();updateOOSBanner();setTimeout(function(){ghLoad(false);},400);}
 }
 function resetToken(){if(!confirm('Clear your saved token? You will need to enter it again.'))return;clearToken();showTokenSetup();}
 
@@ -730,7 +778,7 @@ function markOutOfService(){
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
-    outOfService:true,reason:reason,synced:false,
+    outOfService:true,reason:reason,tester:getUserName(),synced:false,
     readings:{},doses:[]
   };
   try{
@@ -762,7 +810,7 @@ function returnToService(){
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
-    returnedToService:true,synced:false,
+    returnedToService:true,tester:getUserName(),synced:false,
     readings:{},doses:[]
   };
   st.history.unshift(returnEntry);
@@ -912,6 +960,7 @@ function buildReadingText(){
   lines.push('Location:  '+b.name+' - '+level);
   lines.push('Volume:    '+b.vol.toLocaleString()+' gal');
   lines.push('Date/Time: '+now);
+  lines.push('Tested by:  '+getUserName());
   lines.push('');
   lines.push('-- READINGS --');
   if(d['orp'])lines.push('ORP:               '+d['orp']+' mV'+(d['orp-setpoint']?' (setpoint: '+d['orp-setpoint']+' mV)':''));
@@ -965,6 +1014,7 @@ async function saveToHistory(){
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    tester:getUserName(),
     lsi:lastLSI,synced:false,
     readings:{pH:(d.pH!==''&&d.pH!=null)?parseFloat(d.pH):null,fc:(d.fc!==''&&d.fc!=null)?parseFloat(d.fc):null,cc:(d['cc']!==''&&d['cc']!=null)?parseFloat(d['cc']):null,ta:(d.ta!==''&&d.ta!=null)?parseFloat(d.ta):null,ch:(d.ch!==''&&d.ch!=null)?parseFloat(d.ch):null,cya:(d.cya!==''&&d.cya!=null)?parseFloat(d.cya):null,temp:(d.temp!==''&&d.temp!=null)?parseFloat(d.temp):null,orp:(d['orp']!==''&&d['orp']!=null)?parseFloat(d['orp']):null,orpSetpoint:(d['orp-setpoint']!==''&&d['orp-setpoint']!=null)?parseFloat(d['orp-setpoint']):null},
     doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
@@ -1043,7 +1093,7 @@ function renderHistory(){
         +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')
         +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div></div>';
     }
-    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div></div>'
+    return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div>'+(e.tester?'<div style="font-size:11px;color:var(--text3);margin-top:1px;">Tested by '+e.tester+'</div>':'')+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')+'<span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
       +(ghSynced?'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button>':'')+'</div></div>'
       +'<div class="hist-params">'
@@ -1123,8 +1173,11 @@ window.onload=function(){
   try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
   loadToken();
   if(!GH_TOKEN){showTokenSetup();}
+  else if(!loadName()){hideTokenSetup();showNameSetup();}
   else{
-    hideTokenSetup();updateVolDisplay();updateCYAField();loadInputs();updateOOSBanner();
+    hideTokenSetup();
+    document.getElementById('name-setup').style.display='none';
+    updateVolDisplay();updateCYAField();loadInputs();updateOOSBanner();
     setTimeout(function(){ghLoad(false);},800);
   }
   // Auto-sync when device comes back online
