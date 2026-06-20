@@ -1,5 +1,103 @@
 [
   {
+    "id": 1781973220315,
+    "ts": 1781973220315,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 20, 2026 at 9:33 AM",
+    "lsi": -1.21,
+    "synced": false,
+    "readings": {
+      "pH": 7.6,
+      "fc": 3,
+      "cc": null,
+      "ta": 30,
+      "ch": 40,
+      "cya": null,
+      "temp": 56,
+      "orp": 831,
+      "orpSetpoint": 840
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.28 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "1.11 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1781973220315,
+    "ts": 1781973220315,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 20, 2026 at 9:33 AM",
+    "lsi": -1.21,
+    "synced": false,
+    "readings": {
+      "pH": 7.6,
+      "fc": 3,
+      "cc": null,
+      "ta": 30,
+      "ch": 40,
+      "cya": null,
+      "temp": 56,
+      "orp": 831,
+      "orpSetpoint": 840
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.28 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "1.11 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781971516484,
     "ts": 1781971516484,
     "level": "Level 2 - Outdoor",
@@ -9,7 +107,7 @@
     "volume": 900,
     "when": "Jun 20, 2026 at 9:05 AM",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7,
