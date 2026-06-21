@@ -1,21 +1,5 @@
 [
   {
-    "id": 1782055210002,
-    "ts": 1782055210002,
-    "level": "Level 2 - Outdoor",
-    "levelIdx": 1,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 47000,
-    "when": "Jun 21, 2026, 8:20 AM",
-    "outOfService": true,
-    "reason": "Water replacement",
-    "tester": "Tom T.",
-    "synced": true,
-    "readings": {},
-    "doses": []
-  },
-  {
     "id": 1781996316021,
     "ts": 1781996316021,
     "level": "Level 2 - Outdoor",
