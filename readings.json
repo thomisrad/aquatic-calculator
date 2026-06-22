@@ -1,5 +1,49 @@
 [
   {
+    "id": 1782154492652,
+    "ts": 1782154492652,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jun 22, 2026 at 11:54 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 8,
+      "cc": 0.5,
+      "ta": 70,
+      "ch": null,
+      "cya": 65,
+      "temp": 82,
+      "orp": 703,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "39.6 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1781996316021,
     "ts": 1781996316021,
     "level": "Level 2 - Outdoor",
