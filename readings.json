@@ -1,5 +1,37 @@
 [
   {
+    "id": 1782237912970,
+    "ts": 1782237912970,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jun 23, 2026 at 11:05 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 8,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 709,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "39.6 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1782237872752,
     "ts": 1782237872752,
     "level": "Level 13 - Outdoor",
@@ -10,7 +42,7 @@
     "when": "Jun 23, 2026 at 11:04 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 9.5,
