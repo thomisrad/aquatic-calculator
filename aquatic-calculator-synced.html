@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v25 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v26 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -786,13 +786,17 @@ function markOutOfService(){
     stored[bkey()]={reason:reason,since:oosEntry.when,ts:now.getTime()};
     localStorage.setItem('aquatic_oos',JSON.stringify(stored));
   }catch(e){}
-  st.history.unshift(oosEntry);
-  saveLocal();
-  ghSave(oosEntry).then(function(ok){
-    setSyncBadge(ok?'ok':'err',ok?'Out of service status synced':'Saved locally -- sync pending');
+  // Refresh from GitHub first to ensure we have full history before writing
+  setSyncBadge('syncing','Syncing before saving...');
+  ghLoad(false).then(function(){
+    st.history.unshift(oosEntry);
+    saveLocal();
+    ghSave(oosEntry).then(function(ok){
+      setSyncBadge(ok?'ok':'err',ok?'Out of service status synced':'Saved locally -- sync pending');
+      updateOOSBanner();
+      renderHistory();
+    });
   });
-  updateOOSBanner();
-  renderHistory();
   alert(b.name+' marked as OUT OF SERVICE: '+reason+'\nThis will appear on the management dashboard.');
 }
 
@@ -813,13 +817,16 @@ function returnToService(){
     returnedToService:true,tester:getUserName(),synced:false,
     readings:{},doses:[]
   };
-  st.history.unshift(returnEntry);
-  saveLocal();
-  ghSave(returnEntry).then(function(ok){
-    setSyncBadge(ok?'ok':'err',ok?'Return to service synced':'Saved locally -- sync pending');
+  setSyncBadge('syncing','Syncing before saving...');
+  ghLoad(false).then(function(){
+    st.history.unshift(returnEntry);
+    saveLocal();
+    ghSave(returnEntry).then(function(ok){
+      setSyncBadge(ok?'ok':'err',ok?'Return to service synced':'Saved locally -- sync pending');
+      updateOOSBanner();
+      renderHistory();
+    });
   });
-  updateOOSBanner();
-  renderHistory();
   alert(b.name+' returned to service.');
 }
 
