@@ -1,257 +1,35 @@
 [
   {
-    "id": 1782315664327,
-    "ts": 1782315664327,
-    "level": "Level 13 - Outdoor",
-    "levelIdx": 2,
-    "bodyIdx": 1,
-    "body": "Hot tub",
-    "volume": 3500,
-    "when": "Jun 24, 2026 at 8:41 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": false,
-    "readings": {
-      "pH": 7.4,
-      "fc": 11,
-      "cc": 0.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 103,
-      "orp": 679,
-      "orpSetpoint": 680
-    },
-    "doses": [
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "4.2 oz",
-        "ok": false,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1782315627309,
-    "ts": 1782315627309,
-    "level": "Level 13 - Outdoor",
-    "levelIdx": 2,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 33000,
-    "when": "Jun 24, 2026 at 8:40 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.6,
-      "fc": 7.5,
-      "cc": 0.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 82,
-      "orp": 700,
-      "orpSetpoint": 705
-    },
-    "doses": [
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1782314967840,
-    "ts": 1782314967840,
-    "level": "Level 2 - Outdoor",
-    "levelIdx": 1,
-    "bodyIdx": 1,
-    "body": "Hot spa",
-    "volume": 900,
-    "when": "Jun 24, 2026 at 8:29 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.5,
-      "fc": 8.5,
-      "cc": 0.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 103,
-      "orp": 648,
-      "orpSetpoint": 655
-    },
-    "doses": [
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1782314890765,
-    "ts": 1782314890765,
-    "level": "Level 2 - Outdoor",
-    "levelIdx": 1,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 47000,
-    "when": "Jun 24, 2026 at 8:28 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.4,
-      "fc": 7.5,
-      "cc": 0,
-      "ta": null,
-      "ch": null,
-      "cya": 90,
-      "temp": 82,
-      "orp": 666,
-      "orpSetpoint": 650
-    },
-    "doses": [
-      {
-        "chem": "Sodium hypochlorite (12.5%)",
-        "amount": "Controller managing",
-        "ok": true,
-        "shock": false
-      },
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "56.4 oz",
-        "ok": false,
-        "shock": false
-      },
-      {
-        "chem": "Cyanuric acid",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1782313987997,
-    "ts": 1782313987997,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jun 24, 2026 at 8:13 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.4,
-      "fc": 7.5,
-      "cc": 1.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 52,
-      "orp": 880,
-      "orpSetpoint": 880
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "6.9 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "1.1 oz",
-        "ok": false,
-        "shock": false
-      }
-    ]
-  },
-  {
-    "id": 1782313894966,
-    "ts": 1782313894966,
+    "id": 1782316079641,
+    "ts": 1782316079641,
     "level": "Level 1 - Indoor",
     "levelIdx": 0,
     "bodyIdx": 0,
     "body": "Pool",
     "volume": 18600,
-    "when": "Jun 24, 2026 at 8:11 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.5,
-      "fc": 8,
-      "cc": 1,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 80,
-      "orp": 856,
-      "orpSetpoint": 845
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "38.1 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "pH",
-        "amount": "OK - in range",
-        "ok": true,
-        "shock": false
-      }
-    ]
+    "when": "Jun 24, 2026 at 8:47 AM",
+    "outOfService": true,
+    "reason": "Water replacement",
+    "tester": "Tom T.",
+    "synced": false,
+    "readings": {},
+    "doses": []
   },
   {
-    "id": 1782313801801,
-    "ts": 1782313801801,
+    "id": 1782316079641,
+    "ts": 1782316079641,
     "level": "Level 1 - Indoor",
     "levelIdx": 0,
-    "bodyIdx": 1,
-    "body": "Hot spa",
-    "volume": 2000,
-    "when": "Jun 24, 2026 at 8:10 AM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.4,
-      "fc": 8,
-      "cc": 2,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 103,
-      "orp": 807,
-      "orpSetpoint": 805
-    },
-    "doses": [
-      {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "24.6 fl oz",
-        "ok": false,
-        "shock": true
-      },
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "2.4 oz",
-        "ok": false,
-        "shock": false
-      }
-    ]
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 24, 2026 at 8:47 AM",
+    "outOfService": true,
+    "reason": "Water replacement",
+    "tester": "Tom T.",
+    "synced": false,
+    "readings": {},
+    "doses": []
   },
   {
     "id": 1782313987997,
