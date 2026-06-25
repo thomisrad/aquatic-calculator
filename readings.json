@@ -1,37 +1,87 @@
 [
   {
-    "id": 1782406156797,
-    "ts": 1782406156797,
+    "id": 1782406889573,
+    "ts": 1782406889573,
     "level": "Level 1 - Indoor",
     "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jun 25, 2026 at 9:49 AM",
-    "tester": "Jason N.",
-    "lsi": null,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 25, 2026 at 10:01 AM",
+    "tester": "Tom T.",
+    "lsi": -0.37,
     "synced": false,
     "readings": {
-      "pH": 7.3,
-      "fc": 5,
-      "cc": 2,
-      "ta": null,
-      "ch": null,
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0.5,
+      "ta": 60,
+      "ch": 110,
       "cya": null,
-      "temp": 52,
-      "orp": 880,
-      "orpSetpoint": 880
+      "temp": 80,
+      "orp": 844,
+      "orpSetpoint": 845
     },
     "doses": [
       {
-        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "13.8 fl oz",
-        "ok": false,
-        "shock": true
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
       },
       {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "1.6 oz",
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "39.58 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1782406889573,
+    "ts": 1782406889573,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jun 25, 2026 at 10:01 AM",
+    "tester": "Tom T.",
+    "lsi": -0.37,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0.5,
+      "ta": 60,
+      "ch": 110,
+      "cya": null,
+      "temp": 80,
+      "orp": 844,
+      "orpSetpoint": 845
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "39.58 lbs",
         "ok": false,
         "shock": false
       }
@@ -48,7 +98,7 @@
     "when": "Jun 25, 2026 at 9:49 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.3,
       "fc": 5,
