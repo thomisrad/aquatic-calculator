@@ -30,6 +30,21 @@
     "doses": []
   },
   {
+    "id": 1782495889302,
+    "ts": 1782495889302,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Jun 26, 2026 at 10:44 AM",
+    "returnedToService": true,
+    "tester": "Tom T.",
+    "synced": false,
+    "readings": {},
+    "doses": []
+  },
+  {
     "id": 1782408410377,
     "ts": 1782408410377,
     "level": "Level 2 - Outdoor",
