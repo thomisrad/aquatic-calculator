@@ -1,5 +1,55 @@
 [
   {
+    "id": 1782514139849,
+    "ts": 1782514139849,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 26, 2026 at 3:48 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 9,
+      "cc": 0,
+      "ta": 50,
+      "ch": null,
+      "cya": 30,
+      "temp": 103,
+      "orp": 679,
+      "orpSetpoint": 680
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "4.2 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "3.74 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1782513977665,
     "ts": 1782513977665,
     "level": "Level 13 - Outdoor",
@@ -10,7 +60,7 @@
     "when": "Jun 26, 2026 at 3:46 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
