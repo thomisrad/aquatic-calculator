@@ -1,5 +1,55 @@
 [
   {
+    "id": 1782571511464,
+    "ts": 1782571511464,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jun 27, 2026 at 7:45 AM",
+    "tester": "Tom T.",
+    "lsi": -1.41,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 5.5,
+      "cc": 1.5,
+      "ta": 30,
+      "ch": 40,
+      "cya": null,
+      "temp": 56,
+      "orp": 875,
+      "orpSetpoint": 875
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "8.8 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "1.1 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.28 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "1.11 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1782571276205,
     "ts": 1782571276205,
     "level": "Level 1 - Indoor",
@@ -10,7 +60,7 @@
     "when": "Jun 27, 2026 at 7:41 AM",
     "tester": "Tom T.",
     "lsi": -0.31,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 5,
