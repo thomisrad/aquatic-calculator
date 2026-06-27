@@ -1,5 +1,55 @@
 [
   {
+    "id": 1782571276205,
+    "ts": 1782571276205,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Jun 27, 2026 at 7:41 AM",
+    "tester": "Tom T.",
+    "lsi": -0.31,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 5,
+      "cc": 2.5,
+      "ta": 70,
+      "ch": 90,
+      "cya": null,
+      "temp": 103,
+      "orp": 803,
+      "orpSetpoint": 805
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "41.0 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "2.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "1.34 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1782571046521,
     "ts": 1782571046521,
     "level": "Level 1 - Indoor",
@@ -10,7 +60,7 @@
     "when": "Jun 27, 2026 at 7:37 AM",
     "tester": "Tom T.",
     "lsi": -0.37,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 5.5,
