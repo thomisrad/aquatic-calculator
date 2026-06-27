@@ -1,5 +1,49 @@
 [
   {
+    "id": 1782600563821,
+    "ts": 1782600563821,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Jun 27, 2026 at 3:49 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.6,
+      "fc": 9,
+      "cc": 0.5,
+      "ta": 70,
+      "ch": null,
+      "cya": 35,
+      "temp": 103,
+      "orp": 659,
+      "orpSetpoint": 668
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1782600415753,
     "ts": 1782600415753,
     "level": "Level 2 - Outdoor",
@@ -10,7 +54,7 @@
     "when": "Jun 27, 2026 at 3:46 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 6.5,
