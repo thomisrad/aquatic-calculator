@@ -1,31 +1,31 @@
 [
   {
-    "id": 1782757587791,
-    "ts": 1782757587791,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 0,
-    "body": "Pool",
-    "volume": 18600,
-    "when": "Jun 29, 2026 at 11:26 AM",
+    "id": 1782847990920,
+    "ts": 1782847990920,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jun 30, 2026 at 12:33 PM",
     "tester": "Jason N.",
     "lsi": null,
     "synced": false,
     "readings": {
       "pH": 7.5,
-      "fc": 5.5,
+      "fc": 11.5,
       "cc": 1.5,
       "ta": 60,
       "ch": null,
-      "cya": null,
-      "temp": 80,
-      "orp": 849,
-      "orpSetpoint": 855
+      "cya": 0,
+      "temp": 103,
+      "orp": 679,
+      "orpSetpoint": 680
     },
     "doses": [
       {
         "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
-        "amount": "1.41 gal",
+        "amount": "12.5 fl oz",
         "ok": false,
         "shock": true
       },
@@ -39,6 +39,12 @@
         "chem": "Total alkalinity",
         "amount": "OK - in range",
         "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "13.9 oz",
+        "ok": false,
         "shock": false
       }
     ]
@@ -54,7 +60,7 @@
     "when": "Jun 29, 2026 at 11:28 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 7,
@@ -98,7 +104,7 @@
     "when": "Jun 29, 2026 at 11:27 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 10,
@@ -142,7 +148,7 @@
     "when": "Jun 29, 2026 at 11:26 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 5.5,
