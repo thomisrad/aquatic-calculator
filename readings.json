@@ -1,5 +1,43 @@
 [
   {
+    "id": 1783013582558,
+    "ts": 1783013582558,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jul 2, 2026 at 10:33 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 4.5,
+      "cc": 0,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 656,
+      "orpSetpoint": 665
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "56.4 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783010905981,
     "ts": 1783010905981,
     "level": "Level 1 - Indoor",
@@ -10,7 +48,7 @@
     "when": "Jul 2, 2026 at 9:48 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
@@ -200,7 +238,7 @@
     "when": "Jul 2, 2026 at 9:48 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
