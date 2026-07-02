@@ -1,5 +1,43 @@
 [
   {
+    "id": 1783010820560,
+    "ts": 1783010820560,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 2, 2026 at 9:47 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7.5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 854,
+      "orpSetpoint": 855
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "47.6 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783010787039,
     "ts": 1783010787039,
     "level": "Level 1 - Indoor",
@@ -10,7 +48,7 @@
     "when": "Jul 2, 2026 at 9:46 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
@@ -238,7 +276,7 @@
     "when": "Jul 2, 2026 at 9:46 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 7.5,
