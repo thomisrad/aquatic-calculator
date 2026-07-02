@@ -1,5 +1,37 @@
 [
   {
+    "id": 1783013639610,
+    "ts": 1783013639610,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Jul 2, 2026 at 10:33 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.1,
+      "fc": 12,
+      "cc": 0.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 689,
+      "orpSetpoint": 665
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "2.7 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783013582558,
     "ts": 1783013582558,
     "level": "Level 2 - Outdoor",
@@ -10,7 +42,7 @@
     "when": "Jul 2, 2026 at 10:33 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 4.5,
