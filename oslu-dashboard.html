@@ -200,7 +200,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.16 - Jul 3, 2026</span>
+      <span class="version">v1.17 - Jul 3, 2026</span>
     </div>
   </div>
 
@@ -257,13 +257,23 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   <!-- Visual panels -->
   <div class="visual-panels">
 
-    <!-- 1. Donut chart - property status -->
+    <!-- 1a. Pools donut -->
     <div class="visual-card">
-      <div class="visual-title">Property status</div>
-      <div class="visual-sub">Current status of all 7 bodies</div>
+      <div class="visual-title">Pools status</div>
+      <div class="visual-sub">L1 Pool, L2 Pool, L13 Pool</div>
       <div class="donut-wrap">
-        <canvas id="donut-chart" width="160" height="160" role="img" aria-label="Property status donut chart"></canvas>
-        <div class="donut-legend" id="donut-legend"></div>
+        <canvas id="donut-pools" width="140" height="140" role="img" aria-label="Pools status donut chart"></canvas>
+        <div class="donut-legend" id="donut-legend-pools"></div>
+      </div>
+    </div>
+
+    <!-- 1b. Spas donut -->
+    <div class="visual-card">
+      <div class="visual-title">Spas status</div>
+      <div class="visual-sub">L1 Hot spa, L1 Cold spa, L2 Hot spa, L13 Hot tub</div>
+      <div class="donut-wrap">
+        <canvas id="donut-spas" width="140" height="140" role="img" aria-label="Spas status donut chart"></canvas>
+        <div class="donut-legend" id="donut-legend-spas"></div>
       </div>
     </div>
 
@@ -749,9 +759,9 @@ function renderVisuals(filtered){
   renderHeatmap(allLatest);
 }
 
-function renderDonut(allLatest){
+function buildDonutChart(canvasId,legendId,items,chartRef){
   var counts={ok:0,warn:0,alert:0,none:0};
-  allLatest.forEach(function(item){
+  items.forEach(function(item){
     var s=overallStatus(item.latest);
     counts[s]=(counts[s]||0)+1;
   });
@@ -759,9 +769,10 @@ function renderDonut(allLatest){
   var colors=['#22c55e','#f97316','#ef4444','#6b7280'];
   var labels=['All clear','Monitor','Action needed','No data'];
 
-  if(donutChart){donutChart.destroy();donutChart=null;}
-  var canvas=document.getElementById('donut-chart');
-  donutChart=new Chart(canvas,{
+  if(chartRef[0]){chartRef[0].destroy();chartRef[0]=null;}
+  var canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  chartRef[0]=new Chart(canvas,{
     type:'doughnut',
     data:{
       labels:labels,
@@ -769,27 +780,41 @@ function renderDonut(allLatest){
     },
     options:{
       responsive:false,
-      cutout:'68%',
+      cutout:'65%',
       plugins:{
         legend:{display:false},
         tooltip:{
           callbacks:{
-            label:function(ctx){return ' '+ctx.label+': '+ctx.parsed+' bod'+(ctx.parsed===1?'y':'ies');}
+            label:function(ctx){
+              var noun=canvasId==='donut-pools'?'pool':'spa';
+              return ' '+ctx.label+': '+ctx.parsed+' '+noun+(ctx.parsed===1?'':'s');
+            }
           }
         }
       }
     }
   });
 
-  // Custom legend
-  var leg=document.getElementById('donut-legend');
+  var leg=document.getElementById(legendId);
+  if(!leg)return;
   leg.innerHTML=labels.map(function(l,i){
+    if(data[i]===0)return '';
     return '<div class="donut-leg-row">'
       +'<span class="donut-leg-dot" style="background:'+colors[i]+';"></span>'
       +'<span>'+l+'</span>'
       +'<span class="donut-leg-val">'+data[i]+'</span>'
       +'</div>';
   }).join('');
+}
+
+var donutPoolsRef=[null];
+var donutSpasRef=[null];
+
+function renderDonut(allLatest){
+  var pools=allLatest.filter(function(item){return !item.body.spa;});
+  var spas=allLatest.filter(function(item){return item.body.spa;});
+  buildDonutChart('donut-pools','donut-legend-pools',pools,donutPoolsRef);
+  buildDonutChart('donut-spas','donut-legend-spas',spas,donutSpasRef);
 }
 
 function renderTimeline(allLatest){
