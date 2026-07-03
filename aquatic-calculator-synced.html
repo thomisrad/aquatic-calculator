@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v26 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v27 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -455,7 +455,8 @@ var GH_TOKEN='';
 var GH_OWNER='thomisrad';
 var GH_REPO='aquatic-calculator';
 var GH_FILE='readings.json';
-var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE;
+var GH_BRANCH='data';
+var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE+'?ref='+GH_BRANCH;
 var ghSynced=false;
 var st={level:0,body:0,inputs:{},history:[],histFilter:'all'};
 var trendChart=null;
@@ -566,7 +567,7 @@ async function ghSave(entry){
     var sha=null;if(r.ok){var j=await r.json();sha=j.sha;}
     var newHistory=[entry].concat(st.history);
     var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var body={message:'Reading: '+entry.body+' - '+entry.when,content:content};
+    var body={message:'Reading: '+entry.body+' - '+entry.when,content:content,branch:GH_BRANCH};
     if(sha)body.sha=sha;
     var w=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!w.ok)throw new Error('HTTP '+w.status);
@@ -581,7 +582,7 @@ async function ghDelete(id){
     if(!r.ok)throw new Error();
     var j=await r.json();
     var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var w=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Deleted reading',content:content,sha:j.sha})});
+    var w=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Deleted reading',content:content,sha:j.sha,branch:GH_BRANCH})});
     if(!w.ok)throw new Error();
     st.history=newHistory;saveLocal();return true;
   }catch(e){return false;}
