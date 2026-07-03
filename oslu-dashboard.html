@@ -200,7 +200,10 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.17 - Jul 3, 2026</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="version">v1.18 - Jul 3, 2026</span>
+        <span id="refresh-countdown" style="font-size:10px;color:var(--text3);"></span>
+      </div>
     </div>
   </div>
 
@@ -384,6 +387,7 @@ async function loadData(){
     document.getElementById('last-updated').textContent='Last updated: '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSyncBadge('ok','Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
     renderDashboard();
+    startAutoRefresh();
   }catch(e){
     setSyncBadge('err','Connection error');
     document.getElementById('last-updated').textContent='Could not load data - check connection';
@@ -1040,6 +1044,36 @@ function exportDashCSV(){
   var blob=new Blob([csv],{type:"text/csv"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);
   a.download="aquatic-readings-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+var autoRefreshInterval=null;
+var autoRefreshSeconds=0;
+var AUTO_REFRESH_MS=7*60*1000; // 7 minutes
+
+function startAutoRefresh(){
+  stopAutoRefresh();
+  autoRefreshSeconds=Math.round(AUTO_REFRESH_MS/1000);
+  updateCountdown();
+  autoRefreshInterval=setInterval(function(){
+    autoRefreshSeconds--;
+    updateCountdown();
+    if(autoRefreshSeconds<=0){
+      autoRefreshSeconds=Math.round(AUTO_REFRESH_MS/1000);
+      loadData();
+    }
+  },1000);
+}
+
+function stopAutoRefresh(){
+  if(autoRefreshInterval){clearInterval(autoRefreshInterval);autoRefreshInterval=null;}
+}
+
+function updateCountdown(){
+  var el=document.getElementById('refresh-countdown');
+  if(!el)return;
+  var m=Math.floor(autoRefreshSeconds/60);
+  var s=autoRefreshSeconds%60;
+  el.textContent='Auto-refresh in '+m+':'+(s<10?'0':'')+s;
 }
 
 window.onload=function(){
