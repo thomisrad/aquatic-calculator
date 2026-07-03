@@ -153,6 +153,17 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
 /* Frequency chart */
 .freq-label-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-top:4px;}
+.dash-tabs{display:flex;gap:8px;margin-bottom:1.25rem;}
+.dash-tab{padding:10px 20px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;font-family:var(--font);}
+.dash-tab.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
+.dash-hist-entry{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;}
+.dash-hist-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.dash-hist-who{font-size:13px;font-weight:500;color:var(--text);}
+.dash-hist-when{font-size:11px;color:var(--text3);text-align:right;}
+.dash-hist-params{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.dash-hist-param{font-size:12px;color:var(--text2);}
+.dash-hist-param span{color:var(--text);font-weight:500;}
+.dash-del-btn{background:var(--danger-bg);border:0.5px solid var(--danger-border);color:var(--danger-text);font-size:11px;padding:4px 10px;border-radius:var(--radius);cursor:pointer;font-family:var(--font);}
 .oos-overlay{position:absolute;inset:0;background:rgba(133,79,11,0.15);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;}
 .oos-badge{background:var(--warn-bg);border:1.5px solid var(--warn-border);border-radius:var(--radius);padding:12px 16px;text-align:center;max-width:200px;}
 .oos-badge-title{font-size:13px;font-weight:600;color:var(--warn-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
@@ -189,10 +200,16 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-      <span class="version">v1.14 - Jun 20, 2026</span>
+      <span class="version">v1.15 - Jun 24, 2026</span>
     </div>
   </div>
 
+  <div class="dash-tabs">
+    <button class="dash-tab active" id="tab-overview" onclick="showDashTab('overview')">Overview</button>
+    <button class="dash-tab" id="tab-history" onclick="showDashTab('history')">History</button>
+  </div>
+
+  <div id="tab-overview-content">
   <div class="controls">
     <button class="window-btn active" id="w7" onclick="setWindow(7)">Last 7 days</button>
     <button class="window-btn" id="w30" onclick="setWindow(30)">Last 30 days</button>
@@ -270,6 +287,25 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   <!-- Level sections -->
   <div id="level-sections"></div>
+
+  </div><!-- end tab-overview-content -->
+
+  <!-- HISTORY TAB -->
+  <div id="tab-history-content" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
+        <div style="font-size:11px;color:var(--text3);" id="hist-summary">Loading...</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="hist-body-filter" onchange="renderDashHistory()" style="font-size:12px;padding:6px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:var(--font);">
+          <option value="all">All bodies</option>
+        </select>
+        <button onclick="exportDashCSV()" style="font-size:12px;padding:6px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-family:var(--font);cursor:pointer;">Export CSV</button>
+      </div>
+    </div>
+    <div id="dash-hist-list"></div>
+  </div><!-- end tab-history-content -->
 
   <div class="dash-footer">
     OSLU Aquatic Management Dashboard | Data from OSLU Aquatic Chemical Calculator<br>
@@ -855,6 +891,129 @@ function renderVisuals(filtered){
   renderDonut(allLatest);
   renderTimeline(allLatest);
   renderHeatmap(allLatest);
+}
+
+function showDashTab(tab){
+  ["overview","history"].forEach(function(t){
+    document.getElementById("tab-"+t+"-content").style.display=t===tab?"block":"none";
+    document.getElementById("tab-"+t).classList.toggle("active",t===tab);
+  });
+  if(tab==="history"){
+    populateDashHistFilter();
+    renderDashHistory();
+  }
+}
+
+function populateDashHistFilter(){
+  var sel=document.getElementById("hist-body-filter");
+  sel.innerHTML='<option value="all">All bodies</option>';
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var o=document.createElement("option");
+      o.value=li+"-"+bi;
+      o.textContent=b.name+" ("+l.short+")";
+      sel.appendChild(o);
+    });
+  });
+}
+
+function lsiPill(lsi){
+  if(lsi==null)return '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text3);">LSI --</span>';
+  var bg=lsi<-0.5?"var(--danger-bg)":lsi>0.5?"var(--warn-bg)":"var(--success-bg)";
+  var col=lsi<-0.5?"var(--danger-text)":lsi>0.5?"var(--warn-text)":"var(--success-text)";
+  var brd=lsi<-0.5?"var(--danger-border)":lsi>0.5?"var(--warn-border)":"var(--success-border)";
+  return '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:'+bg+';color:'+col+';border:0.5px solid '+brd+';">LSI '+parseFloat(lsi).toFixed(2)+'</span>';
+}
+
+function renderDashHistory(){
+  var filter=document.getElementById("hist-body-filter").value;
+  var entries=allReadings.slice();
+  if(filter!=="all"){
+    var p=filter.split("-");
+    entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});
+  }
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  var summary=document.getElementById("hist-summary");
+  if(summary)summary.textContent=entries.length+" reading"+(entries.length!==1?"s":"")+(filter==="all"?" across all bodies":" for selected body");
+  var list=document.getElementById("dash-hist-list");
+  if(!entries.length){
+    list.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;">No readings found.</div>';
+    return;
+  }
+  list.innerHTML=entries.map(function(e){
+    if(e.outOfService){
+      return '<div class="dash-hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+e.body+' - '+e.level+'</div>'
+        +'<div class="dash-hist-when">'+e.when+'</div>'
+        +'<div style="font-size:11px;color:var(--warn-text);">Reason: '+e.reason+'</div>'
+        +(e.tester?'<div style="font-size:11px;color:var(--warn-text);">By: '+e.tester+'</div>':'')
+        +'</div></div></div>';
+    }
+    if(e.returnedToService){
+      return '<div class="dash-hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+e.body+' - '+e.level+'</div>'
+        +'<div class="dash-hist-when">'+e.when+'</div>'
+        +(e.tester?'<div style="font-size:11px;color:var(--success-text);">By: '+e.tester+'</div>':'')
+        +'</div></div></div>';
+    }
+    var r=e.readings||{};
+    return '<div class="dash-hist-entry">'
+      +'<div class="dash-hist-head">'
+      +'<div><div class="dash-hist-who">'+e.body+' - '+e.level+'</div>'
+      +'<div class="dash-hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div>'
+      +(e.tester?'<div style="font-size:11px;color:var(--text3);">Tested by '+e.tester+'</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +lsiPill(e.lsi)
+      +' <button class="dash-del-btn" onclick="dashDeleteEntry(\''+(e.id)+'\')">Delete</button>'
+      +'</div></div>'
+      +'<div class="dash-hist-params">'
+      +(r.orp!=null?'<div class="dash-hist-param">ORP <span>'+r.orp+' mV</span></div>':'')
+      +(r.orpSetpoint!=null?'<div class="dash-hist-param">SP <span>'+r.orpSetpoint+' mV</span></div>':'')
+      +(r.pH!=null?'<div class="dash-hist-param">pH <span>'+r.pH+'</span></div>':'')
+      +(r.fc!=null?'<div class="dash-hist-param">FC <span>'+r.fc+' ppm</span></div>':'')
+      +(r.cc!=null?'<div class="dash-hist-param">CC <span>'+r.cc+' ppm</span></div>':'')
+      +(r.ta!=null?'<div class="dash-hist-param">TA <span>'+r.ta+' ppm</span></div>':'')
+      +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
+      +'</div></div>';
+  }).join("");
+}
+
+async function dashDeleteEntry(id){
+  if(!confirm("Delete this reading? This cannot be undone."))return;
+  var numId=parseInt(id);
+  var newHistory=allReadings.filter(function(e){return e.id!==numId;});
+  try{
+    var r=await fetch(GH_API,{headers:{"Authorization":"token "+GH_TOKEN,"Accept":"application/vnd.github.v3+json"}});
+    if(!r.ok)throw new Error();
+    var j=await r.json();
+    var enc=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
+    var w=await fetch(GH_API,{method:"PUT",headers:{"Authorization":"token "+GH_TOKEN,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify({message:"Deleted reading",content:enc,sha:j.sha})});
+    if(!w.ok)throw new Error();
+    allReadings=newHistory;
+    setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":"")+" (GitHub)");
+    renderDashHistory();
+    renderDashboard();
+  }catch(e){
+    alert("Delete failed - connection issue. Try again.");
+  }
+}
+
+function exportDashCSV(){
+  if(!allReadings.length){alert("No readings to export.");return;}
+  var filter=document.getElementById("hist-body-filter").value;
+  var entries=allReadings.slice();
+  if(filter!=="all"){var p=filter.split("-");entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});}
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)"]];
+  entries.forEach(function(e){
+    var r=e.readings||{};
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||""]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var blob=new Blob([csv],{type:"text/csv"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="aquatic-readings-"+new Date().toISOString().slice(0,10)+".csv";a.click();
 }
 
 window.onload=function(){

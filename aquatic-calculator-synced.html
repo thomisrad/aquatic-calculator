@@ -1091,18 +1091,18 @@ function renderHistory(){
         +'<div class="hist-when">'+e.when+'</div>'
         +'<div style="font-size:12px;color:var(--warn-text);margin-top:3px;">Reason: '+e.reason+'</div></div>'
         +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')
-        +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div></div>';
+        +</div></div></div>';
     }
     if(e.returnedToService){
       return '<div class="hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
         +'<div class="hist-head"><div><div class="hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+e.body+' - '+e.level+'</div>'
         +'<div class="hist-when">'+e.when+'</div></div>'
         +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')
-        +'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button></div></div></div>';
+        +</div></div></div>';
     }
     return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div>'+(e.tester?'<div style="font-size:11px;color:var(--text3);margin-top:1px;">Tested by '+e.tester+'</div>':'')+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')+'<span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
-      +(ghSynced?'<button class="del-btn" onclick="deleteEntry('+e.id+')" aria-label="Delete">X</button>':'')+'</div></div>'
+      ++'</div></div>'
       +'<div class="hist-params">'
       +(e.readings.orp!=null?'<div class="hist-param">ORP <span>'+e.readings.orp+' mV</span></div>':'')
       +(e.readings.orpSetpoint!=null?'<div class="hist-param">SP <span>'+e.readings.orpSetpoint+' mV</span></div>':'')
