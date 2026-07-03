@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v28 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v29 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -299,7 +299,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
     <p class="slabel">Chemical Dosages</p>
     <div class="dgrid" id="dose-grid"></div>
     <div class="action-select-wrap">
-      <select onchange="if(this.value==='save'){saveToHistory();this.value='';}else if(this.value==='copy'){copyReading();this.value='';}else if(this.value==='oos'){markOutOfService();this.value='';}else if(this.value==='return'){returnToService();this.value='';}">
+      <select onchange="if(this.value==='save'){this.disabled=true;this.style.opacity='0.6';saveToHistory().finally(function(){this.disabled=false;this.style.opacity='1';this.value='';}.bind(this));}else if(this.value==='copy'){copyReading();this.value='';}else if(this.value==='oos'){markOutOfService();this.value='';}else if(this.value==='return'){returnToService();this.value='';}">
         <option value="">-- Save or share this reading --</option>
         <option value="save">Save reading to shared history</option>
         <option value="copy">Copy reading to clipboard</option>
@@ -422,7 +422,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v28 (synced)<br>
+      OSLU Aquatic Chemical Calculator v29 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -523,10 +523,25 @@ function setSyncBadge(type,text){
   b.textContent=text;
 }
 
+// Fetch with 5-second timeout -- prevents indefinite hangs on poor signal
+async function fetchWithTimeout(url, options, timeoutMs){
+  timeoutMs = timeoutMs || 5000;
+  var controller = new AbortController();
+  var timer = setTimeout(function(){ controller.abort(); }, timeoutMs);
+  try{
+    var response = await fetch(url, Object.assign({}, options, {signal: controller.signal}));
+    clearTimeout(timer);
+    return response;
+  }catch(e){
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
 async function ghLoad(isRetry){
   setSyncBadge('syncing','Syncing...');
   try{
-    var r=await fetch(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}});
+    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
     if(r.status===404){st.history=[];ghSynced=true;setSyncBadge('ok','Shared - 0 readings (GitHub)');if(document.getElementById('hist-page').style.display!=='none')renderHistory();return;}
     if(!r.ok)throw new Error('HTTP '+r.status);
     var j=await r.json();
@@ -556,20 +571,29 @@ async function ghLoad(isRetry){
     }
     if(document.getElementById('hist-page').style.display!=='none')renderHistory();
   }catch(e){
-    if(!isRetry){setTimeout(function(){ghLoad(true);},3000);setSyncBadge('syncing','Retrying...');}
+    if(!isRetry){setTimeout(function(){ghLoad(true);},1500);setSyncBadge('syncing','Retrying -- poor signal...');}
     else{ghSynced=false;setSyncBadge('err','GitHub offline - using local data');loadLocal();if(document.getElementById('hist-page').style.display!=='none')renderHistory();}
   }
 }
 
 async function ghSave(entry){
   try{
-    var r=await fetch(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}});
+    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
     var sha=null;if(r.ok){var j=await r.json();sha=j.sha;}
+    // Deduplicate: skip if an identical reading for same body exists within last 90 seconds
+    var isDuplicate=st.history.some(function(e){
+      return e.levelIdx===entry.levelIdx&&e.bodyIdx===entry.bodyIdx
+        &&Math.abs(e.ts-entry.ts)<90000
+        &&e.readings&&entry.readings
+        &&e.readings.pH===entry.readings.pH
+        &&e.readings.fc===entry.readings.fc;
+    });
+    if(isDuplicate){console.warn('Duplicate reading skipped');return true;}
     var newHistory=[entry].concat(st.history);
     var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
     var body={message:'Reading: '+entry.body+' - '+entry.when,content:content,branch:GH_BRANCH};
     if(sha)body.sha=sha;
-    var w=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    var w=await fetchWithTimeout(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
     if(!w.ok)throw new Error('HTTP '+w.status);
     st.history=newHistory;saveLocal();return true;
   }catch(e){return false;}
@@ -578,11 +602,11 @@ async function ghSave(entry){
 async function ghDelete(id){
   try{
     var newHistory=st.history.filter(function(e){return e.id!==id;});
-    var r=await fetch(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}});
+    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
     if(!r.ok)throw new Error();
     var j=await r.json();
     var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var w=await fetch(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Deleted reading',content:content,sha:j.sha,branch:GH_BRANCH})});
+    var w=await fetchWithTimeout(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Deleted reading',content:content,sha:j.sha,branch:GH_BRANCH})});
     if(!w.ok)throw new Error();
     st.history=newHistory;saveLocal();return true;
   }catch(e){return false;}
@@ -1028,7 +1052,7 @@ async function saveToHistory(){
     doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
   };
   setSyncBadge('syncing','Saving...');
-  var ok=await ghSave(entry);
+  var ok=await ghSave(entry).catch(function(){return false;});
   if(ok){
     entry.synced=true;
     setSyncBadge('ok','Saved - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
@@ -1038,7 +1062,7 @@ async function saveToHistory(){
     st.history.unshift(entry);
     saveLocal();
     setSyncBadge('err','Saved locally -- will auto-sync when online');
-    alert('No connection. Saved locally with timestamp '+entry.when+'. Will auto-sync when back in range.');
+    alert('Weak or no signal -- saved locally at '+entry.when+'. Will auto-sync automatically when you return to Wi-Fi or full signal. Check History for a Pending sync badge.');
   }
   renderHistory();
 }
