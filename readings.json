@@ -1,5 +1,49 @@
 [
   {
+    "id": 1783117584041,
+    "ts": 1783117584041,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 3, 2026 at 3:26 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 11,
+      "cc": 0,
+      "ta": null,
+      "ch": null,
+      "cya": 75,
+      "temp": 82,
+      "orp": 702,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "3.3 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783117544417,
     "ts": 1783117544417,
     "level": "Level 13 - Outdoor",
@@ -10,7 +54,7 @@
     "when": "Jul 3, 2026 at 3:25 PM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7,
       "fc": 11,
