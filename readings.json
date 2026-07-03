@@ -1,5 +1,55 @@
 [
   {
+    "id": 1783101235914,
+    "ts": 1783101235914,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 3, 2026 at 10:53 AM",
+    "tester": "Tom T.",
+    "lsi": -0.37,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 6.5,
+      "cc": 1,
+      "ta": 60,
+      "ch": 110,
+      "cya": null,
+      "temp": 80,
+      "orp": 856,
+      "orpSetpoint": 855
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "66.7 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "39.58 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783101359881,
     "ts": 1783101359881,
     "level": "Level 1 - Indoor",
@@ -10,7 +60,7 @@
     "when": "Jul 3, 2026 at 10:55 AM",
     "tester": "Tom T.",
     "lsi": -0.31,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 8,
@@ -110,7 +160,7 @@
     "when": "Jul 3, 2026 at 10:55 AM",
     "tester": "Tom T.",
     "lsi": -0.31,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 8,
