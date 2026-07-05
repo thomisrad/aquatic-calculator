@@ -1,5 +1,195 @@
 [
   {
+    "id": 1783208876582,
+    "ts": 1783208876582,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 4, 2026 at 4:47 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 9,
+      "cc": 1.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 857,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "114.3 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1783209005839,
+    "ts": 1783209005839,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jul 4, 2026 at 4:50 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 12,
+      "cc": 4.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 52,
+      "orp": 888,
+      "orpSetpoint": 875
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "30.4 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "1.1 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1783208977924,
+    "ts": 1783208977924,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Jul 4, 2026 at 4:49 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 13,
+      "cc": 2.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 819,
+      "orpSetpoint": 815
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "24.6 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1783208892212,
+    "ts": 1783208892212,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 4, 2026 at 4:48 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 9,
+      "cc": 1.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 857,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "114.3 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1783208876582,
+    "ts": 1783208876582,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 4, 2026 at 4:47 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 9,
+      "cc": 1.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 857,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "114.3 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783207889759,
     "ts": 1783207889759,
     "level": "Level 2 - Outdoor",
@@ -10,7 +200,7 @@
     "when": "Jul 4, 2026 at 4:31 PM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 8,
