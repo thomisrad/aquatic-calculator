@@ -1,5 +1,43 @@
 [
   {
+    "id": 1783466777346,
+    "ts": 1783466777346,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 7, 2026 at 4:26 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 2,
+      "cc": 0,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 612,
+      "orpSetpoint": 695
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "33.8 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "39.6 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783443741352,
     "ts": 1783443741352,
     "level": "Level 2 - Outdoor",
@@ -10,7 +48,7 @@
     "when": "Jul 7, 2026 at 10:02 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 10,
@@ -70,38 +108,6 @@
     ]
   },
   {
-    "id": 1783377111277,
-    "ts": 1783377111277,
-    "level": "Level 1 - Indoor",
-    "levelIdx": 0,
-    "bodyIdx": 2,
-    "body": "Cold spa",
-    "volume": 900,
-    "when": "Jul 6, 2026 at 3:31 PM",
-    "tester": "Jason N.",
-    "lsi": null,
-    "synced": true,
-    "readings": {
-      "pH": 7.4,
-      "fc": 11,
-      "cc": 0.5,
-      "ta": null,
-      "ch": null,
-      "cya": null,
-      "temp": 52,
-      "orp": 875,
-      "orpSetpoint": 880
-    },
-    "doses": [
-      {
-        "chem": "Soda ash (Na2CO3)",
-        "amount": "1.1 oz",
-        "ok": false,
-        "shock": false
-      }
-    ]
-  },
-  {
     "id": 1783377173481,
     "ts": 1783377173481,
     "level": "Level 1 - Indoor",
@@ -112,7 +118,7 @@
     "when": "Jul 6, 2026 at 3:32 PM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 9.5,
@@ -182,7 +188,7 @@
     "when": "Jul 6, 2026 at 3:31 PM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 13,
