@@ -1,5 +1,37 @@
 [
   {
+    "id": 1783534123209,
+    "ts": 1783534123209,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jul 8, 2026 at 11:08 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 12,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 662,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1783534080365,
     "ts": 1783534080365,
     "level": "Level 13 - Outdoor",
@@ -10,7 +42,7 @@
     "when": "Jul 8, 2026 at 11:08 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 1,
