@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v29 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v30 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -422,7 +422,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v29 (synced)<br>
+      OSLU Aquatic Chemical Calculator v30 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -538,7 +538,7 @@ async function fetchWithTimeout(url, options, timeoutMs){
   }
 }
 
-async function ghLoad(isRetry){
+async function ghLoad(isRetry,skipAutoSync){
   setSyncBadge('syncing','Syncing...');
   try{
     var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
@@ -563,7 +563,7 @@ async function ghLoad(isRetry){
     saveLocal();
     ghSynced=true;
     var pending=pendingCount();
-    if(pending>0){
+    if(pending>0&&!skipAutoSync){
       setSyncBadge('syncing',pending+' offline reading'+(pending!==1?'s':'')+' pending sync...');
       setTimeout(function(){autoSync();},500);
     }else{
@@ -617,6 +617,19 @@ async function autoSync(){
   var pending=st.history.filter(function(e){return e.synced===false;});
   if(!pending.length)return;
   setSyncBadge('syncing','Syncing '+pending.length+' offline reading'+(pending.length!==1?'s':'')+'...');
+
+  // Always do a fresh pull from GitHub first so we have the complete remote
+  // history before appending -- prevents partial overwrites on spotty signal
+  await ghLoad(false,true);
+
+  // Re-check pending after merge (some may have already been synced by another device)
+  pending=st.history.filter(function(e){return e.synced===false;});
+  if(!pending.length){
+    setSyncBadge('ok','All readings already synced');
+    renderHistory();
+    return;
+  }
+
   var successCount=0;
   // Push each unsynced reading in chronological order (oldest first)
   var sorted=pending.slice().sort(function(a,b){return a.ts-b.ts;});
@@ -624,7 +637,6 @@ async function autoSync(){
     var entry=sorted[i];
     var ok=await ghSave(entry);
     if(ok){
-      // Mark as synced in local history
       for(var j=0;j<st.history.length;j++){
         if(st.history[j].id===entry.id){st.history[j].synced=true;break;}
       }
