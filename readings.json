@@ -1,5 +1,49 @@
 [
   {
+    "id": 1784067097458,
+    "ts": 1784067097458,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Jul 14, 2026 at 3:11 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 11.5,
+      "cc": 1,
+      "ta": 50,
+      "ch": null,
+      "cya": 35,
+      "temp": 103,
+      "orp": 643,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "4.2 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "3.74 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1784067015459,
     "ts": 1784067015459,
     "level": "Level 13 - Outdoor",
@@ -10,7 +54,7 @@
     "when": "Jul 14, 2026 at 3:10 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 10,
