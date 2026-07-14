@@ -1,5 +1,99 @@
 [
   {
+    "id": 1784067927230,
+    "ts": 1784067927229,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jul 14, 2026 at 3:25 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 7.5,
+      "cc": 0.5,
+      "ta": 60,
+      "ch": null,
+      "cya": 55,
+      "temp": 82,
+      "orp": 664,
+      "orpSetpoint": 670
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "56.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "124.8 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1784067790902,
+    "ts": 1784067790902,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Jul 14, 2026 at 3:23 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 13.5,
+      "cc": 1.5,
+      "ta": 100,
+      "ch": null,
+      "cya": 25,
+      "temp": 103,
+      "orp": 663,
+      "orpSetpoint": 665
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "1.4 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1784067097458,
     "ts": 1784067097458,
     "level": "Level 13 - Outdoor",
@@ -10,7 +104,7 @@
     "when": "Jul 14, 2026 at 3:11 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 11.5,
