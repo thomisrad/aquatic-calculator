@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v30 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v31 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -422,7 +422,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v30 (synced)<br>
+      OSLU Aquatic Chemical Calculator v31 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -542,9 +542,10 @@ async function ghLoad(isRetry,skipAutoSync){
   setSyncBadge('syncing','Syncing...');
   try{
     var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    if(r.status===404){st.history=[];ghSynced=true;setSyncBadge('ok','Shared - 0 readings (GitHub)');if(document.getElementById('hist-page').style.display!=='none')renderHistory();return;}
+    if(r.status===404){st.history=[];ghSynced=true;cachedSHA=null;setSyncBadge('ok','Shared - 0 readings (GitHub)');if(document.getElementById('hist-page').style.display!=='none')renderHistory();return;}
     if(!r.ok)throw new Error('HTTP '+r.status);
     var j=await r.json();
+    cachedSHA=j.sha; // Cache SHA so ghSave doesn't need to fetch again
     var content=atob(j.content.replace(/\n/g,''));
     var remoteHistory=JSON.parse(content);
     // Merge: keep local unsynced readings, replace rest with remote
@@ -576,27 +577,79 @@ async function ghLoad(isRetry,skipAutoSync){
   }
 }
 
-async function ghSave(entry){
+// Cached SHA from last successful GitHub read -- reused by ghSave to avoid
+// a redundant fetch and stale-SHA errors when writing multiple entries
+var cachedSHA=null;
+
+async function fetchCurrentSHA(){
   try{
     var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    var sha=null;if(r.ok){var j=await r.json();sha=j.sha;}
-    // Deduplicate: skip if an identical reading for same body exists within last 90 seconds
+    if(r.ok){var j=await r.json();cachedSHA=j.sha;return j;}
+    return null;
+  }catch(e){return null;}
+}
+
+async function ghSave(entry){
+  try{
+    // Get a fresh SHA if we don't have one cached
+    if(!cachedSHA){
+      var fetched=await fetchCurrentSHA();
+      if(!fetched&&fetched!==null){return false;} // network error
+    }
+
+    // Deduplicate: skip if identical reading exists within 90 seconds
     var isDuplicate=st.history.some(function(e){
-      return e.levelIdx===entry.levelIdx&&e.bodyIdx===entry.bodyIdx
+      return e.synced===true
+        &&e.levelIdx===entry.levelIdx&&e.bodyIdx===entry.bodyIdx
         &&Math.abs(e.ts-entry.ts)<90000
         &&e.readings&&entry.readings
         &&e.readings.pH===entry.readings.pH
         &&e.readings.fc===entry.readings.fc;
     });
-    if(isDuplicate){console.warn('Duplicate reading skipped');return true;}
-    var newHistory=[entry].concat(st.history);
-    var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var body={message:'Reading: '+entry.body+' - '+entry.when,content:content,branch:GH_BRANCH};
-    if(sha)body.sha=sha;
-    var w=await fetchWithTimeout(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(isDuplicate){console.warn('Duplicate skipped');return true;}
+
+    // Build new history: entry prepended to current remote-synced history
+    var remoteOnly=st.history.filter(function(e){return e.synced!==false;});
+    var newHistory=[entry].concat(remoteOnly);
+    var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
+    var body={message:'Reading: '+entry.body+' - '+entry.when,content:encoded,branch:GH_BRANCH};
+    if(cachedSHA)body.sha=cachedSHA;
+
+    var w=await fetchWithTimeout(GH_API,{
+      method:'PUT',
+      headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+      body:JSON.stringify(body)
+    },8000);
+
+    if(w.status===409){
+      // SHA conflict -- someone else wrote concurrently. Refresh and retry once.
+      console.warn('SHA conflict, refreshing and retrying...');
+      cachedSHA=null;
+      var fresh=await fetchCurrentSHA();
+      if(!fresh)return false;
+      // Rebuild with updated remote history
+      var freshHistory=JSON.parse(atob(fresh.content.replace(/\n/g,'')));
+      var freshRemote=freshHistory;
+      var freshNew=[entry].concat(freshRemote);
+      var freshEncoded=btoa(unescape(encodeURIComponent(JSON.stringify(freshNew,null,2))));
+      var body2={message:'Reading: '+entry.body+' - '+entry.when,content:freshEncoded,branch:GH_BRANCH,sha:cachedSHA};
+      var w2=await fetchWithTimeout(GH_API,{method:'PUT',
+        headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
+        body:JSON.stringify(body2)},8000);
+      if(!w2.ok)return false;
+      var w2j=await w2.json();
+      cachedSHA=w2j.content&&w2j.content.sha?w2j.content.sha:null;
+      st.history=freshNew;saveLocal();return true;
+    }
+
     if(!w.ok)throw new Error('HTTP '+w.status);
+
+    // Cache the new SHA from the write response for the next sequential save
+    var wj=await w.json();
+    cachedSHA=wj.content&&wj.content.sha?wj.content.sha:null;
+
     st.history=newHistory;saveLocal();return true;
-  }catch(e){return false;}
+  }catch(e){console.error('ghSave error:',e);return false;}
 }
 
 async function ghDelete(id){
@@ -1227,8 +1280,9 @@ window.onload=function(){
   // Auto-sync when device comes back online
   window.addEventListener('online',function(){
     if(GH_TOKEN&&pendingCount()>0){
+      cachedSHA=null; // Invalidate cached SHA -- remote may have changed while offline
       setSyncBadge('syncing','Back online -- syncing offline readings...');
-      setTimeout(function(){ghLoad(false);},1000);
+      setTimeout(function(){ghLoad(false);},1500);
     }
   });
 };
