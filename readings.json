@@ -1,5 +1,55 @@
 [
   {
+    "id": 1784391822672,
+    "ts": 1784391822671,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jul 18, 2026 at 9:23 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.4,
+      "fc": 12,
+      "cc": 0,
+      "ta": 50,
+      "ch": null,
+      "cya": 90,
+      "temp": 82,
+      "orp": 716,
+      "orpSetpoint": 670
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "9.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "56.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "50.20 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1784390654268,
     "ts": 1784390654268,
     "level": "Level 13 - Outdoor",
@@ -10,7 +60,7 @@
     "when": "Jul 18, 2026 at 9:04 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 8.5,
