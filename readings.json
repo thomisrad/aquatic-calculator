@@ -1,5 +1,55 @@
 [
   {
+    "id": 1784413964926,
+    "ts": 1784413964926,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Jul 18, 2026 at 3:32 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.3,
+      "fc": 9,
+      "cc": 0,
+      "ta": 50,
+      "ch": null,
+      "cya": 90,
+      "temp": 82,
+      "orp": 704,
+      "orpSetpoint": 670
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Hold -- FC high",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "84.6 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "50.20 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1784413631665,
     "ts": 1784413631665,
     "level": "Level 13 - Outdoor",
@@ -10,7 +60,7 @@
     "when": "Jul 18, 2026 at 3:27 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 12,
