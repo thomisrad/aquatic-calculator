@@ -1,5 +1,21 @@
 [
   {
+    "id": 1784996250432,
+    "ts": 1784996250432,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jul 25, 2026 at 9:17 AM",
+    "outOfService": true,
+    "reason": "Water replacement",
+    "tester": "Tom T.",
+    "synced": false,
+    "readings": {},
+    "doses": []
+  },
+  {
     "id": 1784996226531,
     "ts": 1784996226531,
     "level": "Level 1 - Indoor",
@@ -10,7 +26,7 @@
     "when": "Jul 25, 2026 at 9:17 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 6.5,
