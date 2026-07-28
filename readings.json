@@ -1,5 +1,43 @@
 [
   {
+    "id": 1785257014615,
+    "ts": 1785257014615,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Jul 28, 2026 at 9:43 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.6,
+      "fc": 12.5,
+      "cc": 1,
+      "ta": 40,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 860,
+      "orpSetpoint": 865
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "23.18 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785256059364,
     "ts": 1785256059364,
     "level": "Level 2 - Outdoor",
@@ -10,7 +48,7 @@
     "when": "Jul 28, 2026 at 9:27 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.3,
       "fc": 11,
