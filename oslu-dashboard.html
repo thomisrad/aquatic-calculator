@@ -201,7 +201,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.18 - Jul 3, 2026</span>
+        <span class="version">v1.19 - Jul 29, 2026</span>
         <span id="refresh-countdown" style="font-size:10px;color:var(--text3);"></span>
       </div>
     </div>
@@ -285,6 +285,13 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div class="visual-title">Last tested</div>
       <div class="visual-sub">How recently each body was tested</div>
       <div id="timeline-rows"></div>
+    </div>
+
+    <!-- 3. Last backwash timeline -->
+    <div class="visual-card" style="flex:2;min-width:280px;">
+      <div class="visual-title">Last backwash</div>
+      <div class="visual-sub">Days since last recorded backwash per body</div>
+      <div id="backwash-rows"></div>
     </div>
 
 
@@ -647,6 +654,14 @@ function renderDashboard(){
 
         html+='</div>';
 
+        // Backwash tag
+        if(latest.backwash){
+          html+='<div style="font-size:11px;font-weight:500;color:var(--success-text);background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:6px;">Backwash performed - '+timeAgo(latest.ts)+'</div>';
+        }
+        // Notes
+        if(latest.notes){
+          html+='<div style="font-size:11px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:5px 9px;margin-bottom:6px;">Note: '+latest.notes+'</div>';
+        }
         // Action items
         var actions=getActions(latest);
         if(actions.length){
@@ -760,6 +775,7 @@ function renderVisuals(filtered){
 
   renderDonut(allLatest);
   renderTimeline(allLatest);
+  renderBackwash(allLatest);
   renderHeatmap(allLatest);
 }
 
@@ -843,6 +859,31 @@ function renderTimeline(allLatest){
 
 
 
+function renderBackwash(allLatest){
+  var wrap=document.getElementById('backwash-rows');
+  if(!wrap)return;
+  var html='';
+  allLatest.forEach(function(item){
+    // Find most recent reading with backwash:true for this body
+    var bwReadings=allReadings.filter(function(r){
+      return r.levelIdx===item.li&&r.bodyIdx===item.bi&&r.backwash===true;
+    });
+    var lastBW=bwReadings.length?bwReadings.reduce(function(a,b){return a.ts>b.ts?a:b;}):null;
+    var age=lastBW?Math.floor((Date.now()-lastBW.ts)/(1000*60*60*24)):null;
+    // Colour: green 0-7 days, amber 8-14 days, red 15+ days, grey never
+    var color=age===null?'#6b7280':age<=7?'#22c55e':age<=14?'#f97316':'#ef4444';
+    var pct=age===null?0:Math.max(5,Math.min(100,100-Math.min(100,(age/21)*100)));
+    var ageText=age===null?'Never recorded':age===0?'Today':age===1?'Yesterday':age+' days ago';
+    var name=item.body.name+' ('+item.level.short+')';
+    html+='<div class="tl-row">'
+      +'<span class="tl-label" title="'+name+'">'+name+'</span>'
+      +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
+      +'<span class="tl-age">'+ageText+'</span>'
+      +'</div>';
+  });
+  wrap.innerHTML=html;
+}
+
 function renderHeatmap(allLatest){
   var params=[
     {key:'orp',label:'ORP',check:function(item){
@@ -920,6 +961,7 @@ function renderVisuals(filtered){
   });
   renderDonut(allLatest);
   renderTimeline(allLatest);
+  renderBackwash(allLatest);
   renderHeatmap(allLatest);
 }
 
