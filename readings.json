@@ -1,5 +1,49 @@
 [
   {
+    "id": 1785344195208,
+    "ts": 1785344195208,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 29, 2026 at 9:56 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7.5,
+      "cc": 0.5,
+      "ta": 100,
+      "ch": null,
+      "cya": 85,
+      "temp": 82,
+      "orp": 695,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785343877557,
     "ts": 1785343877556,
     "level": "Level 1 - Indoor",
@@ -10,7 +54,7 @@
     "when": "Jul 29, 2026 at 9:51 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 27,
