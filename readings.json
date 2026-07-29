@@ -1,5 +1,57 @@
 [
   {
+    "id": 1785362952727,
+    "ts": 1785362952727,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 29, 2026 at 3:09 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.7,
+      "fc": 14,
+      "cc": 0,
+      "ta": 100,
+      "ch": null,
+      "cya": 85,
+      "temp": 82,
+      "orp": 694,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "13.2 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "8.6 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785362904140,
     "ts": 1785362904140,
     "level": "Level 13 - Outdoor",
@@ -10,7 +62,7 @@
     "when": "Jul 29, 2026 at 3:08 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
