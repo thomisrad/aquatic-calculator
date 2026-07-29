@@ -1,5 +1,55 @@
 [
   {
+    "id": 1785345274385,
+    "ts": 1785345274385,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Jul 29, 2026 at 10:14 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.2,
+      "fc": 6.5,
+      "cc": 1.5,
+      "ta": 50,
+      "ch": null,
+      "cya": 25,
+      "temp": 103,
+      "orp": 706,
+      "orpSetpoint": 660
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "7.8 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "2.2 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "0.96 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785344843753,
     "ts": 1785344843753,
     "level": "Level 2 - Outdoor",
@@ -10,7 +60,7 @@
     "when": "Jul 29, 2026 at 10:07 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.4,
       "fc": 5.5,
