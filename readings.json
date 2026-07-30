@@ -1,5 +1,63 @@
 [
   {
+    "id": 1785450848693,
+    "ts": 1785450848693,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 30, 2026 at 3:34 PM",
+    "tester": "Tom T.",
+    "lsi": 0.32,
+    "synced": false,
+    "notes": "Empty acid barrel",
+    "backwash": null,
+    "readings": {
+      "pH": 8,
+      "fc": 14,
+      "cc": 0,
+      "ta": 100,
+      "ch": 100,
+      "cya": 85,
+      "temp": 82,
+      "orp": 689,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "Sodium thiosulfate",
+        "amount": "13.2 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "34.3 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "73.92 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785450816029,
     "ts": 1785450816029,
     "level": "Level 2 - Outdoor",
@@ -10,7 +68,7 @@
     "when": "Jul 30, 2026 at 3:33 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
