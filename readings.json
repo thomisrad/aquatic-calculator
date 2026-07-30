@@ -1,5 +1,57 @@
 [
   {
+    "id": 1785426251095,
+    "ts": 1785426251095,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 30, 2026 at 8:44 AM",
+    "tester": "Tom T.",
+    "lsi": -0.08,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.6,
+      "fc": 9,
+      "cc": 0.5,
+      "ta": 100,
+      "ch": 100,
+      "cya": 85,
+      "temp": 82,
+      "orp": 713,
+      "orpSetpoint": 700
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Calcium chloride",
+        "amount": "73.92 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785363775343,
     "ts": 1785363775343,
     "level": "Level 1 - Indoor",
@@ -10,7 +62,7 @@
     "when": "Jul 29, 2026 at 3:22 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
