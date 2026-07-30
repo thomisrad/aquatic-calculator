@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v32 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v33 (synced) - Jun 18, 2026</span>
   </div>
 </div>
 
@@ -431,7 +431,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v32 (synced)<br>
+      OSLU Aquatic Chemical Calculator v33 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -556,6 +556,7 @@ async function ghLoad(isRetry,skipAutoSync){
     var j=await r.json();
     cachedSHA=j.sha; // Cache SHA so ghSave doesn't need to fetch again
     var content=atob(j.content.replace(/\n/g,''));
+    remoteHistory=JSON.parse(content); // Store as authoritative remote source
     var remoteHistory=JSON.parse(content);
     // Merge: keep local unsynced readings, replace rest with remote
     var localUnsynced=st.history.filter(function(e){return e.synced===false;});
@@ -589,11 +590,18 @@ async function ghLoad(isRetry,skipAutoSync){
 // Cached SHA from last successful GitHub read -- reused by ghSave to avoid
 // a redundant fetch and stale-SHA errors when writing multiple entries
 var cachedSHA=null;
+var remoteHistory=[]; // Always reflects what is currently on GitHub -- never mixed with local
 
 async function fetchCurrentSHA(){
   try{
     var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    if(r.ok){var j=await r.json();cachedSHA=j.sha;return j;}
+    if(r.ok){
+      var j=await r.json();
+      cachedSHA=j.sha;
+      // Always update remoteHistory from fresh fetch
+      try{remoteHistory=JSON.parse(atob(j.content.replace(/\n/g,'')));}catch(e){remoteHistory=[];}
+      return j;
+    }
     return null;
   }catch(e){return null;}
 }
@@ -617,9 +625,13 @@ async function ghSave(entry){
     });
     if(isDuplicate){console.warn('Duplicate skipped');return true;}
 
-    // Build new history: entry prepended to current remote-synced history
-    var remoteOnly=st.history.filter(function(e){return e.synced!==false;});
-    var newHistory=[entry].concat(remoteOnly);
+    // CRITICAL: always build from remoteHistory (what is actually on GitHub)
+    // NEVER use st.history as base -- it may contain only partial local data
+    // If remoteHistory is empty, fetch it now
+    if(!remoteHistory.length&&!cachedSHA){
+      await fetchCurrentSHA();
+    }
+    var newHistory=[entry].concat(remoteHistory);
     var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
     var body={message:'Reading: '+entry.body+' - '+entry.when,content:encoded,branch:GH_BRANCH};
     if(cachedSHA)body.sha=cachedSHA;
@@ -637,9 +649,8 @@ async function ghSave(entry){
       var fresh=await fetchCurrentSHA();
       if(!fresh)return false;
       // Rebuild with updated remote history
-      var freshHistory=JSON.parse(atob(fresh.content.replace(/\n/g,'')));
-      var freshRemote=freshHistory;
-      var freshNew=[entry].concat(freshRemote);
+      // fetchCurrentSHA already updated remoteHistory
+      var freshNew=[entry].concat(remoteHistory);
       var freshEncoded=btoa(unescape(encodeURIComponent(JSON.stringify(freshNew,null,2))));
       var body2={message:'Reading: '+entry.body+' - '+entry.when,content:freshEncoded,branch:GH_BRANCH,sha:cachedSHA};
       var w2=await fetchWithTimeout(GH_API,{method:'PUT',
@@ -648,6 +659,7 @@ async function ghSave(entry){
       if(!w2.ok)return false;
       var w2j=await w2.json();
       cachedSHA=w2j.content&&w2j.content.sha?w2j.content.sha:null;
+      remoteHistory=freshNew;
       st.history=freshNew;saveLocal();return true;
     }
 
@@ -656,7 +668,7 @@ async function ghSave(entry){
     // Cache the new SHA from the write response for the next sequential save
     var wj=await w.json();
     cachedSHA=wj.content&&wj.content.sha?wj.content.sha:null;
-
+    remoteHistory=newHistory; // Keep remoteHistory in sync after successful write
     st.history=newHistory;saveLocal();return true;
   }catch(e){console.error('ghSave error:',e);return false;}
 }
@@ -1357,6 +1369,7 @@ window.onload=function(){
   window.addEventListener('online',function(){
     if(GH_TOKEN&&pendingCount()>0){
       cachedSHA=null; // Invalidate cached SHA -- remote may have changed while offline
+      remoteHistory=[]; // Force fresh fetch on next save
       setSyncBadge('syncing','Back online -- syncing offline readings...');
       setTimeout(function(){ghLoad(false);},1500);
     }
