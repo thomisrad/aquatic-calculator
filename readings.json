@@ -1,5 +1,57 @@
 [
   {
+    "id": 1785514942235,
+    "ts": 1785514942234,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Jul 31, 2026 at 9:22 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": "I replaced acid barrel with cannibalized barrels from P1. About a 1/3 of a barrel.",
+    "backwash": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0,
+      "ta": 100,
+      "ch": null,
+      "cya": 85,
+      "temp": 82,
+      "orp": 696,
+      "orpSetpoint": 680
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785514417513,
     "ts": 1785514417513,
     "level": "Level 2 - Outdoor",
@@ -10,7 +62,7 @@
     "when": "Jul 31, 2026 at 9:13 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
