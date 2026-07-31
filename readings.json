@@ -1,5 +1,51 @@
 [
   {
+    "id": 1785516175515,
+    "ts": 1785516175515,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Jul 31, 2026 at 9:42 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.8,
+      "fc": 15.5,
+      "cc": 2,
+      "ta": 30,
+      "ch": null,
+      "cya": null,
+      "temp": 56,
+      "orp": 873,
+      "orpSetpoint": 885
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "4.1 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Muriatic acid (31.45%)",
+        "amount": "0.5 fl oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "1.28 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785515824830,
     "ts": 1785515824830,
     "level": "Level 1 - Indoor",
@@ -10,7 +56,7 @@
     "when": "Jul 31, 2026 at 9:37 AM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
