@@ -1,5 +1,51 @@
 [
   {
+    "id": 1785594932030,
+    "ts": 1785594932029,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Aug 1, 2026 at 7:35 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.4,
+      "fc": 6,
+      "cc": 0.5,
+      "ta": 50,
+      "ch": null,
+      "cya": 80,
+      "temp": 82,
+      "orp": 650,
+      "orpSetpoint": 650
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "56.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "50.20 lbs",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785538613661,
     "ts": 1785538613661,
     "level": "Level 2 - Outdoor",
