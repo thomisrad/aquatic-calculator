@@ -1,5 +1,51 @@
 [
   {
+    "id": 1785624874921,
+    "ts": 1785624874921,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Aug 1, 2026 at 3:54 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": "Filter pressure gauge doesn’t work",
+    "backwash": true,
+    "readings": {
+      "pH": 7.6,
+      "fc": 7.5,
+      "cc": 0.5,
+      "ta": 100,
+      "ch": null,
+      "cya": 85,
+      "temp": 82,
+      "orp": 677,
+      "orpSetpoint": 680
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785624230516,
     "ts": 1785624230516,
     "level": "Level 1 - Indoor",
@@ -10,7 +56,7 @@
     "when": "Aug 1, 2026 at 3:43 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
