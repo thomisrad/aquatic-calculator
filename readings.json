@@ -1,5 +1,51 @@
 [
   {
+    "id": 1785623858447,
+    "ts": 1785623858446,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Aug 1, 2026 at 3:37 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 11,
+      "cc": 1.5,
+      "ta": 40,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 863,
+      "orpSetpoint": 860
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "76.2 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "23.18 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785597538093,
     "ts": 1785597538093,
     "level": "Level 1 - Indoor",
