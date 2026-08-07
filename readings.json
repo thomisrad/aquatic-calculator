@@ -1,5 +1,51 @@
 [
   {
+    "id": 1786116807938,
+    "ts": 1786116807938,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Aug 7, 2026 at 8:33 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": "Cleaned pump basket",
+    "backwash": true,
+    "readings": {
+      "pH": 7.4,
+      "fc": 13.5,
+      "cc": 0.5,
+      "ta": 70,
+      "ch": null,
+      "cya": 55,
+      "temp": 82,
+      "orp": 704,
+      "orpSetpoint": 660
+    },
+    "doses": [
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "56.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "124.8 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1785625696989,
     "ts": 1785625696989,
     "level": "Level 2 - Outdoor",
@@ -253,7 +299,7 @@
     "tester": "Tom T.",
     "lsi": null,
     "synced": true,
-    "notes": "Filter pressure gauge doesn’t work",
+    "notes": "Filter pressure gauge doesnât work",
     "backwash": true,
     "readings": {
       "pH": 7.6,
