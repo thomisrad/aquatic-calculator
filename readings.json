@@ -1,5 +1,51 @@
 [
   {
+    "id": 1786122524116,
+    "ts": 1786122524116,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Aug 7, 2026 at 10:08 AM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0,
+      "ta": 100,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 691,
+      "orpSetpoint": 685
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Total alkalinity",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1786117408643,
     "ts": 1786117408643,
     "level": "Level 2 - Outdoor",
@@ -351,7 +397,7 @@
     "tester": "Tom T.",
     "lsi": null,
     "synced": true,
-    "notes": "Filter pressure gauge doesnât work",
+    "notes": "Filter pressure gauge doesnÃ¢ÂÂt work",
     "backwash": true,
     "readings": {
       "pH": 7.6,
