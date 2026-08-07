@@ -1,5 +1,51 @@
 [
   {
+    "id": 1786134643211,
+    "ts": 1786134643211,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Aug 7, 2026 at 1:30 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7.5,
+      "cc": 2,
+      "ta": 40,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 854,
+      "orpSetpoint": 855
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "1.86 gal",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "23.18 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1786122570913,
     "ts": 1786122570913,
     "level": "Level 13 - Outdoor",
@@ -449,7 +495,7 @@
     "tester": "Tom T.",
     "lsi": null,
     "synced": true,
-    "notes": "Filter pressure gauge doesnÃ¢ÂÂt work",
+    "notes": "Filter pressure gauge doesnÃÂ¢ÃÂÃÂt work",
     "backwash": true,
     "readings": {
       "pH": 7.6,
