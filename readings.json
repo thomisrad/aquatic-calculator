@@ -1,5 +1,51 @@
 [
   {
+    "id": 1786134918756,
+    "ts": 1786134918756,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Aug 7, 2026 at 1:35 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": null,
+    "backwash": null,
+    "readings": {
+      "pH": 7.4,
+      "fc": 10.5,
+      "cc": 2,
+      "ta": 30,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 827,
+      "orpSetpoint": 825
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "19.5 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "Soda ash (Na2CO3)",
+        "amount": "2.4 oz",
+        "ok": false,
+        "shock": false
+      },
+      {
+        "chem": "Sodium bicarbonate",
+        "amount": "2.85 lbs",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1786134643211,
     "ts": 1786134643211,
     "level": "Level 1 - Indoor",
@@ -495,7 +541,7 @@
     "tester": "Tom T.",
     "lsi": null,
     "synced": true,
-    "notes": "Filter pressure gauge doesnÃÂ¢ÃÂÃÂt work",
+    "notes": "Filter pressure gauge doesnÃÂÃÂ¢ÃÂÃÂÃÂÃÂt work",
     "backwash": true,
     "readings": {
       "pH": 7.6,
