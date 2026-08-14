@@ -1,5 +1,283 @@
 [
   {
+    "id": 1786723850702,
+    "ts": 1786723850702,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 33000,
+    "when": "Aug 14, 2026 at 9:10 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0,
+      "ta": null,
+      "ch": null,
+      "cya": 75,
+      "temp": 82,
+      "orp": 681,
+      "orpSetpoint": 685
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786723218290,
+    "ts": 1786723218290,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Aug 14, 2026 at 9:00 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 10.5,
+      "cc": 2,
+      "ta": null,
+      "ch": null,
+      "cya": 0,
+      "temp": 103,
+      "orp": 668,
+      "orpSetpoint": 655
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "8.8 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "3.6 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786722296947,
+    "ts": 1786722296947,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Aug 14, 2026 at 8:44 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.6,
+      "fc": 6.5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 52,
+      "orp": 878,
+      "orpSetpoint": 875
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "3.2 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786722232451,
+    "ts": 1786722232451,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 2000,
+    "when": "Aug 14, 2026 at 8:43 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.6,
+      "fc": 6.5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 103,
+      "orp": 816,
+      "orpSetpoint": 815
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "7.2 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786722188598,
+    "ts": 1786722188598,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 18600,
+    "when": "Aug 14, 2026 at 8:43 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 12,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 80,
+      "orp": 865,
+      "orpSetpoint": 855
+    },
+    "doses": [
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786654991255,
+    "ts": 1786654991255,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 1,
+    "body": "Hot spa",
+    "volume": 900,
+    "when": "Aug 13, 2026 at 2:03 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 6,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": 0,
+      "temp": 103,
+      "orp": 641,
+      "orpSetpoint": 655
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "3.7 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "3.6 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
+    "id": 1786654948334,
+    "ts": 1786654948334,
+    "level": "Level 2 - Outdoor",
+    "levelIdx": 1,
+    "bodyIdx": 0,
+    "body": "Pool",
+    "volume": 47000,
+    "when": "Aug 13, 2026 at 2:02 PM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": true,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7,
+      "cc": 0,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 82,
+      "orp": 658,
+      "orpSetpoint": 660
+    },
+    "doses": [
+      {
+        "chem": "Sodium hypochlorite (12.5%)",
+        "amount": "Controller managing",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1786631026885,
     "ts": 1786631026885,
     "level": "Level 13 - Outdoor",
@@ -10,7 +288,7 @@
     "when": "Aug 13, 2026 at 7:23 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.5,
       "fc": 6,
@@ -903,7 +1181,7 @@
     "tester": "Tom T.",
     "lsi": null,
     "synced": true,
-    "notes": "Filter pressure gauge doesnÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂt work",
+    "notes": "Filter pressure gauge doesnÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂt work",
     "backwash": true,
     "readings": {
       "pH": 7.6,
