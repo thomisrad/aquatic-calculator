@@ -1,5 +1,49 @@
 [
   {
+    "id": 1786977778542,
+    "ts": 1786977778542,
+    "level": "Level 13 - Outdoor",
+    "levelIdx": 2,
+    "bodyIdx": 1,
+    "body": "Hot tub",
+    "volume": 3500,
+    "when": "Aug 17, 2026 at 7:42 AM",
+    "tester": "Jason N.",
+    "lsi": null,
+    "synced": false,
+    "readings": {
+      "pH": 7.5,
+      "fc": 9.5,
+      "cc": 1,
+      "ta": null,
+      "ch": null,
+      "cya": 0,
+      "temp": 103,
+      "orp": 705,
+      "orpSetpoint": 705
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "1.8 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      },
+      {
+        "chem": "Cyanuric acid",
+        "amount": "13.9 oz",
+        "ok": false,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1786723887512,
     "ts": 1786723887512,
     "level": "Level 1 - Indoor",
@@ -10,7 +54,7 @@
     "when": "Aug 14, 2026 at 9:11 AM",
     "tester": "Jason N.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "readings": {
       "pH": 7.6,
       "fc": 6.5,
