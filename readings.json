@@ -1,5 +1,45 @@
 [
   {
+    "id": 1788639035008,
+    "ts": 1788639035008,
+    "level": "Level 1 - Indoor",
+    "levelIdx": 0,
+    "bodyIdx": 2,
+    "body": "Cold spa",
+    "volume": 900,
+    "when": "Sep 5, 2026 at 1:10 PM",
+    "tester": "Tom T.",
+    "lsi": null,
+    "synced": false,
+    "notes": "Need to drain ASAP",
+    "backwash": null,
+    "readings": {
+      "pH": 7.5,
+      "fc": 7.5,
+      "cc": 4.5,
+      "ta": null,
+      "ch": null,
+      "cya": null,
+      "temp": 56,
+      "orp": 880,
+      "orpSetpoint": 890
+    },
+    "doses": [
+      {
+        "chem": "[SHOCK] Sodium hypochlorite (12.5%)",
+        "amount": "34.6 fl oz",
+        "ok": false,
+        "shock": true
+      },
+      {
+        "chem": "pH",
+        "amount": "OK - in range",
+        "ok": true,
+        "shock": false
+      }
+    ]
+  },
+  {
     "id": 1788638816253,
     "ts": 1788638816253,
     "level": "Level 1 - Indoor",
@@ -10,7 +50,7 @@
     "when": "Sep 5, 2026 at 1:06 PM",
     "tester": "Tom T.",
     "lsi": null,
-    "synced": false,
+    "synced": true,
     "notes": null,
     "backwash": null,
     "readings": {
