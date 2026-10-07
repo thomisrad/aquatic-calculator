@@ -201,7 +201,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.19 - Jul 29, 2026</span>
+        <span class="version">v1.21 - Oct 7, 2026</span>
         <span id="refresh-countdown" style="font-size:10px;color:var(--text3);"></span>
       </div>
     </div>
@@ -380,25 +380,104 @@ function setSyncBadge(type,text){
   b.textContent=text;
 }
 
+// ===== GH CORE BEGIN (shared by calculator + dashboard) =====
+// Every write follows one rule: fetch the CURRENT remote file, apply a small ID-based change
+// to that fresh copy, PUT with the SHA from that same fetch. Local copies are never a write base.
+// Output is compact JSON (no indentation): ~40% smaller, keeps readings.json under the 1 MB Contents API limit longer.
+function b64ToUtf8(b){
+  var bin=atob(String(b).replace(/\s/g,''));
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
+function stripLocal(e){var c={};for(var k in e){if(k!=='synced')c[k]=e[k];}return c;}
+
+// One timer covers the whole request INCLUDING reading the body (a stalled body hangs forever otherwise)
+async function ghRequest(opts,ms){
+  var c=new AbortController();
+  var t=setTimeout(function(){c.abort();},ms);
+  try{
+    var r=await fetch(GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
+    var text=await r.text();
+    return{status:r.status,ok:r.ok,text:text};
+  }finally{clearTimeout(t);}
+}
+function ghHdr(accept,json){
+  var h={'Authorization':'token '+GH_TOKEN,'Accept':accept||'application/vnd.github.v3+json'};
+  if(json)h['Content-Type']='application/json';
+  return h;
+}
+
+async function ghFetchRemote(){
+  try{
+    var r=await ghRequest({headers:ghHdr()},5000);
+    if(r.status===404)return{ok:true,list:[],sha:null,missing:true};
+    if(r.status===401)return{ok:false,reason:'auth',status:401};
+    if(!r.ok)return{ok:false,reason:'http',status:r.status};
+    var j=JSON.parse(r.text);
+    var text;
+    if(j.content&&j.encoding!=='none'){
+      text=b64ToUtf8(j.content);
+    }else if(j.size>0){
+      // Contents API returns EMPTY content for files over 1 MB -- fetch the raw body instead
+      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000);
+      if(!rr.ok)return{ok:false,reason:'http',status:rr.status};
+      text=rr.text;
+    }else{text='[]';}
+    var list=JSON.parse(text);
+    if(!Array.isArray(list))return{ok:false,reason:'format'};
+    if(j.size>10&&list.length===0)return{ok:false,reason:'format'}; // never trust an "empty" read of a non-empty file
+    return{ok:true,list:list,sha:j.sha};
+  }catch(e){return{ok:false,reason:'network',error:String(e)};}
+}
+
+async function ghPut(list,sha,message){
+  try{
+    var body={message:message,content:utf8ToB64(JSON.stringify(list.map(stripLocal))),branch:GH_BRANCH};
+    if(sha)body.sha=sha;
+    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000);
+    if(w.ok)return{ok:true};
+    return{ok:false,status:w.status};
+  }catch(e){return{ok:false,error:String(e)};} // outcome unknown -- caller re-checks by ID on next attempt
+}
+
+// mutator(remoteList) -> null (nothing to change) or {list, added, removed}
+async function ghMutate(mutator,message){
+  for(var attempt=0;attempt<3;attempt++){
+    var rem=await ghFetchRemote();
+    if(!rem.ok)return{ok:false,reason:rem.reason,status:rem.status};
+    var plan=mutator(rem.list);
+    if(!plan)return{ok:true,changed:false,list:rem.list};
+    // Safety guard: the write may only add/remove exactly what the mutator says it does
+    var keep=new Set(plan.list),lost=0;
+    for(var i=0;i<rem.list.length;i++){if(!keep.has(rem.list[i]))lost++;}
+    var added=plan.list.length-(rem.list.length-lost);
+    if(lost!==(plan.removed||0)||added!==(plan.added||0))return{ok:false,reason:'guard'};
+    var w=await ghPut(plan.list,rem.sha,message);
+    if(w.ok)return{ok:true,changed:true,list:plan.list};
+    if(w.status===409||w.status===422)continue; // someone wrote first: re-fetch, re-apply, retry
+    return{ok:false,reason:w.status?'http':'network',status:w.status};
+  }
+  return{ok:false,reason:'conflict'};
+}
+// ===== GH CORE END =====
+
 async function loadData(){
   setSyncBadge('syncing','Loading...');
-  try{
-    var r=await fetch(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}});
-    if(r.status===401){setSyncBadge('err','Invalid token');alert('Token invalid or expired. Please re-enter.');resetToken();return;}
-    if(r.status===404){allReadings=[];setSyncBadge('ok','Connected - no readings yet');renderDashboard();return;}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    var j=await r.json();
-    var content=atob(j.content.replace(/\n/g,''));
-    allReadings=JSON.parse(content);
+  var rem=await ghFetchRemote();
+  if(rem.ok){
+    allReadings=rem.list;
     var now=new Date();
     document.getElementById('last-updated').textContent='Last updated: '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-    setSyncBadge('ok','Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
+    setSyncBadge('ok',rem.missing?'Connected - no readings yet':'Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
     renderDashboard();
     startAutoRefresh();
-  }catch(e){
-    setSyncBadge('err','Connection error');
-    document.getElementById('last-updated').textContent='Could not load data - check connection';
+    return;
   }
+  if(rem.reason==='auth'){setSyncBadge('err','Invalid token');alert('Token invalid or expired. Please re-enter.');resetToken();return;}
+  setSyncBadge('err','Connection error');
+  document.getElementById('last-updated').textContent='Could not load data - check connection';
 }
 
 function setWindow(days){
@@ -1053,21 +1132,22 @@ function renderDashHistory(){
 
 async function dashDeleteEntry(id){
   if(!confirm("Delete this reading? This cannot be undone."))return;
-  var numId=parseInt(id);
-  var newHistory=allReadings.filter(function(e){return e.id!==numId;});
-  try{
-    var r=await fetch(GH_API,{headers:{"Authorization":"token "+GH_TOKEN,"Accept":"application/vnd.github.v3+json"}});
-    if(!r.ok)throw new Error();
-    var j=await r.json();
-    var enc=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var w=await fetch(GH_API,{method:"PUT",headers:{"Authorization":"token "+GH_TOKEN,"Accept":"application/vnd.github.v3+json","Content-Type":"application/json"},body:JSON.stringify({message:"Deleted reading",content:enc,sha:j.sha,branch:GH_BRANCH})});
-    if(!w.ok)throw new Error();
-    allReadings=newHistory;
+  var numId=Number(id);
+  setSyncBadge('syncing','Deleting...');
+  var res=await ghMutate(function(remote){
+    var kept=remote.filter(function(e){return e.id!==numId;});
+    if(kept.length===remote.length)return null;            // already gone
+    if(remote.length-kept.length>1)return{list:remote,added:0,removed:0}; // duplicate IDs: refuse, change nothing
+    return{list:kept,added:0,removed:1};
+  },'Deleted reading');
+  if(res.ok){
+    allReadings=res.list;
     setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":"")+" (GitHub)");
     renderDashHistory();
     renderDashboard();
-  }catch(e){
-    alert("Delete failed - connection issue. Try again.");
+  }else{
+    setSyncBadge('err','Delete failed');
+    alert("Delete failed ("+res.reason+"). Nothing was changed. Try again.");
   }
 }
 

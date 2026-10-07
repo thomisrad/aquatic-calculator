@@ -203,7 +203,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v34 (synced) - Jun 18, 2026</span>
+    <span class="version-label">v36 (synced) - Oct 7, 2026</span>
   </div>
 </div>
 
@@ -431,7 +431,7 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:12px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v34 (synced)<br>
+      OSLU Aquatic Chemical Calculator v36 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -505,14 +505,6 @@ function submitName(){
 function loadToken(){try{var t=localStorage.getItem(TKEY);if(t)GH_TOKEN=t;}catch(e){}}
 function saveToken(t){GH_TOKEN=t;try{localStorage.setItem(TKEY,t);}catch(e){}}
 function clearToken(){GH_TOKEN='';try{localStorage.removeItem(TKEY);}catch(e){}}
-function loadLocal(){
-  try{var h=localStorage.getItem(HKEY);if(h)st.history=JSON.parse(h);}catch(e){}
-  try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
-}
-function saveLocal(){
-  try{localStorage.setItem(HKEY,JSON.stringify(st.history));localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}
-}
-
 function showTokenSetup(){document.getElementById('token-setup').style.display='block';document.getElementById('main-app').style.display='none';}
 function hideTokenSetup(){document.getElementById('token-setup').style.display='none';document.getElementById('main-app').style.display='block';}
 function submitToken(){
@@ -547,195 +539,219 @@ async function fetchWithTimeout(url, options, timeoutMs){
   }
 }
 
-async function ghLoad(isRetry,skipAutoSync){
-  setSyncBadge('syncing','Syncing...');
+// ===== GH CORE BEGIN (shared by calculator + dashboard) =====
+// Every write follows one rule: fetch the CURRENT remote file, apply a small ID-based change
+// to that fresh copy, PUT with the SHA from that same fetch. Local copies are never a write base.
+// Output is compact JSON (no indentation): ~40% smaller, keeps readings.json under the 1 MB Contents API limit longer.
+function b64ToUtf8(b){
+  var bin=atob(String(b).replace(/\s/g,''));
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
+function stripLocal(e){var c={};for(var k in e){if(k!=='synced')c[k]=e[k];}return c;}
+
+// One timer covers the whole request INCLUDING reading the body (a stalled body hangs forever otherwise)
+async function ghRequest(opts,ms){
+  var c=new AbortController();
+  var t=setTimeout(function(){c.abort();},ms);
   try{
-    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    if(r.status===404){st.history=[];ghSynced=true;cachedSHA=null;setSyncBadge('ok','Shared - 0 readings (GitHub)');if(document.getElementById('hist-page').style.display!=='none')renderHistory();return;}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    var j=await r.json();
-    cachedSHA=j.sha; // Cache SHA so ghSave doesn't need to fetch again
-    var content=atob(j.content.replace(/\n/g,''));
-    remoteHistory=JSON.parse(content); // Store as authoritative remote source
-    var remoteHistory=JSON.parse(content);
-    // Merge: keep local unsynced readings, replace rest with remote
-    var localUnsynced=st.history.filter(function(e){return e.synced===false;});
-    // Mark all remote readings as synced
-    remoteHistory.forEach(function(e){e.synced=true;});
-    // Merge: remote readings + any local unsynced not already in remote
-    var remoteIds=new Set(remoteHistory.map(function(e){return e.id;}));
-    var newUnsynced=localUnsynced.filter(function(e){return!remoteIds.has(e.id);});
-    var seenIds=new Set();
-    var merged=remoteHistory.concat(newUnsynced).filter(function(e){
-      if(seenIds.has(e.id))return false;
-      seenIds.add(e.id);return true;
-    });
-    st.history=merged.sort(function(a,b){return b.ts-a.ts;});
-    saveLocal();
-    ghSynced=true;
-    var pending=pendingCount();
-    if(pending>0&&!skipAutoSync){
-      setSyncBadge('syncing',pending+' offline reading'+(pending!==1?'s':'')+' pending sync...');
-      setTimeout(function(){autoSync();},500);
-    }else{
-      setSyncBadge('ok','Shared - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
-    }
-    if(document.getElementById('hist-page').style.display!=='none')renderHistory();
-  }catch(e){
-    if(!isRetry){setTimeout(function(){ghLoad(true);},1500);setSyncBadge('syncing','Retrying -- poor signal...');}
-    else{ghSynced=false;setSyncBadge('err','GitHub offline - using local data');loadLocal();if(document.getElementById('hist-page').style.display!=='none')renderHistory();}
+    var r=await fetch(GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
+    var text=await r.text();
+    return{status:r.status,ok:r.ok,text:text};
+  }finally{clearTimeout(t);}
+}
+function ghHdr(accept,json){
+  var h={'Authorization':'token '+GH_TOKEN,'Accept':accept||'application/vnd.github.v3+json'};
+  if(json)h['Content-Type']='application/json';
+  return h;
+}
+
+async function ghFetchRemote(){
+  try{
+    var r=await ghRequest({headers:ghHdr()},5000);
+    if(r.status===404)return{ok:true,list:[],sha:null,missing:true};
+    if(r.status===401)return{ok:false,reason:'auth',status:401};
+    if(!r.ok)return{ok:false,reason:'http',status:r.status};
+    var j=JSON.parse(r.text);
+    var text;
+    if(j.content&&j.encoding!=='none'){
+      text=b64ToUtf8(j.content);
+    }else if(j.size>0){
+      // Contents API returns EMPTY content for files over 1 MB -- fetch the raw body instead
+      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000);
+      if(!rr.ok)return{ok:false,reason:'http',status:rr.status};
+      text=rr.text;
+    }else{text='[]';}
+    var list=JSON.parse(text);
+    if(!Array.isArray(list))return{ok:false,reason:'format'};
+    if(j.size>10&&list.length===0)return{ok:false,reason:'format'}; // never trust an "empty" read of a non-empty file
+    return{ok:true,list:list,sha:j.sha};
+  }catch(e){return{ok:false,reason:'network',error:String(e)};}
+}
+
+async function ghPut(list,sha,message){
+  try{
+    var body={message:message,content:utf8ToB64(JSON.stringify(list.map(stripLocal))),branch:GH_BRANCH};
+    if(sha)body.sha=sha;
+    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000);
+    if(w.ok)return{ok:true};
+    return{ok:false,status:w.status};
+  }catch(e){return{ok:false,error:String(e)};} // outcome unknown -- caller re-checks by ID on next attempt
+}
+
+// mutator(remoteList) -> null (nothing to change) or {list, added, removed}
+async function ghMutate(mutator,message){
+  for(var attempt=0;attempt<3;attempt++){
+    var rem=await ghFetchRemote();
+    if(!rem.ok)return{ok:false,reason:rem.reason,status:rem.status};
+    var plan=mutator(rem.list);
+    if(!plan)return{ok:true,changed:false,list:rem.list};
+    // Safety guard: the write may only add/remove exactly what the mutator says it does
+    var keep=new Set(plan.list),lost=0;
+    for(var i=0;i<rem.list.length;i++){if(!keep.has(rem.list[i]))lost++;}
+    var added=plan.list.length-(rem.list.length-lost);
+    if(lost!==(plan.removed||0)||added!==(plan.added||0))return{ok:false,reason:'guard'};
+    var w=await ghPut(plan.list,rem.sha,message);
+    if(w.ok)return{ok:true,changed:true,list:plan.list};
+    if(w.status===409||w.status===422)continue; // someone wrote first: re-fetch, re-apply, retry
+    return{ok:false,reason:w.status?'http':'network',status:w.status};
   }
+  return{ok:false,reason:'conflict'};
+}
+// ===== GH CORE END =====
+
+// ===== OUTBOX BEGIN (calculator only) =====
+var OKEY='aquatic_outbox_v1';
+var outbox=[];        // readings on THIS device not yet confirmed on GitHub. Only removed after confirmation.
+var lastRemote=[];    // last confirmed copy of GitHub list: display/cache only, never a write base
+var syncPromise=null;
+var saving=false;
+
+function newId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function loadOutbox(){try{var o=localStorage.getItem(OKEY);outbox=o?JSON.parse(o):[];if(!Array.isArray(outbox))outbox=[];}catch(e){outbox=[];}}
+function saveOutbox(){try{localStorage.setItem(OKEY,JSON.stringify(outbox));return true;}catch(e){console.error('outbox save failed',e);return false;}}
+
+function loadLocal(){
+  try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
+  var cache=[];
+  try{var h=localStorage.getItem(HKEY);if(h)cache=JSON.parse(h);}catch(e){}
+  if(!Array.isArray(cache))cache=[];
+  loadOutbox();
+  // One-time migration from v34: pending readings used to live only inside the history cache
+  var have=new Set(outbox.map(function(e){return e.id;})),moved=false,cutoff=Date.now()-14*86400000;
+  cache.forEach(function(e){
+    if(e&&e.synced===false&&e.ts>cutoff&&!have.has(e.id)){outbox.push(e);have.add(e.id);moved=true;}
+  });
+  if(moved)saveOutbox();
+  lastRemote=cache;
+  rebuildHistory();
+}
+function saveInputsLocal(){try{localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}}
+function saveLocal(){ // offline display cache: newest 500 confirmed readings (outbox has its own key)
+  saveInputsLocal();
+  try{localStorage.setItem(HKEY,JSON.stringify(lastRemote.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,500).map(stripLocal)));}catch(e){}
+}
+function rebuildHistory(){
+  var ids=new Set(outbox.map(function(e){return e.id;}));
+  var rem=lastRemote.filter(function(e){return!ids.has(e.id);});
+  rem.forEach(function(e){e.synced=true;});
+  outbox.forEach(function(e){e.synced=false;});
+  st.history=outbox.concat(rem).sort(function(a,b){return b.ts-a.ts;});
+}
+function histOpen(){var p=document.getElementById('hist-page');return !!p&&p.style.display!=='none';}
+function pendingCount(){return outbox.length;}
+
+function updatePendingBadge(reason){
+  var n=outbox.length;if(!n)return;
+  var msg=n+' reading'+(n!==1?'s':'')+' saved on this device -- ';
+  if(reason==='offline'||reason==='network')msg+='will sync when signal returns';
+  else if(reason==='auth')msg+='GitHub token rejected, reset token';
+  else if(reason==='guard')msg+='sync paused by safety check, tell Tom';
+  else if(reason==='token')msg+='enter GitHub token to sync';
+  else msg+='will retry automatically';
+  setSyncBadge('err',msg);
 }
 
-// Cached SHA from last successful GitHub read -- reused by ghSave to avoid
-// a redundant fetch and stale-SHA errors when writing multiple entries
-var cachedSHA=null;
-var remoteHistory=[]; // Always reflects what is currently on GitHub -- never mixed with local
-
-async function fetchCurrentSHA(){
-  try{
-    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    if(r.ok){
-      var j=await r.json();
-      cachedSHA=j.sha;
-      // Always update remoteHistory from fresh fetch
-      try{remoteHistory=JSON.parse(atob(j.content.replace(/\n/g,'')));}catch(e){remoteHistory=[];}
-      return j;
-    }
-    return null;
-  }catch(e){return null;}
+// Persist FIRST (before any network), then try to sync. Returns true only when GitHub has confirmed it.
+async function submitEntry(entry){
+  entry.synced=false;
+  if(!outbox.some(function(e){return e.id===entry.id;}))outbox.unshift(entry);
+  saveOutbox();
+  rebuildHistory();
+  await syncOutbox();
+  return !outbox.some(function(e){return e.id===entry.id;});
 }
 
-async function ghSave(entry){
-  try{
-    // Get a fresh SHA if we don't have one cached
-    if(!cachedSHA){
-      var fetched=await fetchCurrentSHA();
-      if(!fetched&&fetched!==null){return false;} // network error
-    }
+async function syncOutbox(){
+  while(syncPromise){try{await syncPromise;}catch(e){}}
+  if(!outbox.length)return{ok:true,n:0};
+  syncPromise=doSync();
+  try{return await syncPromise;}finally{syncPromise=null;}
+}
 
-    // Deduplicate: skip if identical reading exists within 90 seconds
-    var isDuplicate=st.history.some(function(e){
-      return e.synced===true
-        &&e.levelIdx===entry.levelIdx&&e.bodyIdx===entry.bodyIdx
-        &&Math.abs(e.ts-entry.ts)<90000
-        &&e.readings&&entry.readings
-        &&e.readings.pH===entry.readings.pH
-        &&e.readings.fc===entry.readings.fc;
-    });
-    if(isDuplicate){console.warn('Duplicate skipped');return true;}
+async function doSync(){
+  if(!GH_TOKEN){updatePendingBadge('token');return{ok:false,reason:'token'};}
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){updatePendingBadge('offline');return{ok:false,reason:'offline'};}
+  var seen=new Set(),batch=outbox.filter(function(e){if(seen.has(e.id))return false;seen.add(e.id);return true;});
+  setSyncBadge('syncing','Syncing '+batch.length+' reading'+(batch.length!==1?'s':'')+'...');
+  var res=await ghMutate(function(remote){
+    var have=new Set(remote.map(function(e){return e.id;}));
+    var add=batch.filter(function(e){return!have.has(e.id);});
+    if(!add.length)return null; // already on GitHub (e.g. an earlier PUT landed but the reply was lost)
+    add.sort(function(a,b){return b.ts-a.ts;});
+    return{list:add.map(stripLocal).concat(remote),added:add.length,removed:0};
+  },'Sync '+batch.length+' reading'+(batch.length!==1?'s':''));
+  if(!res.ok){updatePendingBadge(res.reason);return{ok:false,reason:res.reason};}
+  // GitHub now holds every batch ID -> only now is it safe to drop them from the outbox
+  outbox=outbox.filter(function(e){return!seen.has(e.id);});
+  saveOutbox();
+  lastRemote=res.list;
+  rebuildHistory();saveLocal();ghSynced=true;
+  if(outbox.length)setSyncBadge('syncing',outbox.length+' reading'+(outbox.length!==1?'s':'')+' still to sync...');
+  else setSyncBadge('ok','Synced '+batch.length+' reading'+(batch.length!==1?'s':'')+' -- all up to date');
+  if(histOpen())renderHistory();
+  return{ok:true,n:batch.length};
+}
 
-    // CRITICAL: always build from remoteHistory (what is actually on GitHub)
-    // NEVER use st.history as base -- it may contain only partial local data
-    // Always fetch if remoteHistory is empty -- cachedSHA alone is not enough
-    if(!remoteHistory.length){
-      var fetched2=await fetchCurrentSHA();
-      if(!fetched2){return false;} // Cannot proceed without remote history
-    }
-    // Final safety check -- refuse to write if remoteHistory still empty
-    if(!remoteHistory.length){
-      console.error('ghSave aborted: remoteHistory empty after fetch');
-      return false;
-    }
-    var newHistory=[entry].concat(remoteHistory);
-    var encoded=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var body={message:'Reading: '+entry.body+' - '+entry.when,content:encoded,branch:GH_BRANCH};
-    if(cachedSHA)body.sha=cachedSHA;
+async function ghLoad(isRetry,skipAutoSync){
+  if(outbox.length&&!skipAutoSync){return autoSync();} // one fetch + one write covers both
+  setSyncBadge('syncing','Syncing...');
+  var rem=await ghFetchRemote();
+  if(rem.ok){
+    lastRemote=rem.list;rebuildHistory();saveLocal();ghSynced=true;
+    if(outbox.length)updatePendingBadge();
+    else setSyncBadge('ok','Shared - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' (GitHub)');
+    if(histOpen())renderHistory();
+    return;
+  }
+  if(rem.reason==='auth'){setSyncBadge('err','GitHub token rejected -- reset token');return;}
+  if(!isRetry){setSyncBadge('syncing','Retrying -- poor signal...');setTimeout(function(){ghLoad(true,skipAutoSync);},1500);return;}
+  ghSynced=false;
+  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','GitHub offline - using local data');
+  if(histOpen())renderHistory();
+}
 
-    var w=await fetchWithTimeout(GH_API,{
-      method:'PUT',
-      headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify(body)
-    },8000);
-
-    if(w.status===409){
-      // SHA conflict -- someone else wrote concurrently. Refresh and retry once.
-      console.warn('SHA conflict, refreshing and retrying...');
-      cachedSHA=null;
-      var fresh=await fetchCurrentSHA();
-      if(!fresh)return false;
-      // Rebuild with updated remote history
-      // fetchCurrentSHA already updated remoteHistory
-      var freshNew=[entry].concat(remoteHistory);
-      var freshEncoded=btoa(unescape(encodeURIComponent(JSON.stringify(freshNew,null,2))));
-      var body2={message:'Reading: '+entry.body+' - '+entry.when,content:freshEncoded,branch:GH_BRANCH,sha:cachedSHA};
-      var w2=await fetchWithTimeout(GH_API,{method:'PUT',
-        headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},
-        body:JSON.stringify(body2)},8000);
-      if(!w2.ok)return false;
-      var w2j=await w2.json();
-      cachedSHA=w2j.content&&w2j.content.sha?w2j.content.sha:null;
-      remoteHistory=freshNew;
-      st.history=freshNew;saveLocal();return true;
-    }
-
-    if(!w.ok)throw new Error('HTTP '+w.status);
-
-    // Cache the new SHA from the write response for the next sequential save
-    var wj=await w.json();
-    cachedSHA=wj.content&&wj.content.sha?wj.content.sha:null;
-    remoteHistory=newHistory; // Keep remoteHistory in sync after successful write
-    st.history=newHistory;saveLocal();return true;
-  }catch(e){console.error('ghSave error:',e);return false;}
+async function autoSync(){ // manual "Sync" menu item, online event, timer, and ghLoad all land here
+  if(!outbox.length){return ghLoad(false,true);}
+  await syncOutbox();
+  if(histOpen())renderHistory();
 }
 
 async function ghDelete(id){
-  try{
-    var newHistory=st.history.filter(function(e){return e.id!==id;});
-    var r=await fetchWithTimeout(GH_API,{headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json'}},5000);
-    if(!r.ok)throw new Error();
-    var j=await r.json();
-    var content=btoa(unescape(encodeURIComponent(JSON.stringify(newHistory,null,2))));
-    var w=await fetchWithTimeout(GH_API,{method:'PUT',headers:{'Authorization':'token '+GH_TOKEN,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'},body:JSON.stringify({message:'Deleted reading',content:content,sha:j.sha,branch:GH_BRANCH})});
-    if(!w.ok)throw new Error();
-    st.history=newHistory;saveLocal();return true;
-  }catch(e){return false;}
-}
-
-// ---- Auto-sync unsynced local readings ----
-async function autoSync(){
-  var pending=st.history.filter(function(e){return e.synced===false;});
-  if(!pending.length)return;
-  setSyncBadge('syncing','Syncing '+pending.length+' offline reading'+(pending.length!==1?'s':'')+'...');
-
-  // Always do a fresh pull from GitHub first so we have the complete remote
-  // history before appending -- prevents partial overwrites on spotty signal
-  await ghLoad(false,true);
-
-  // Re-check pending after merge (some may have already been synced by another device)
-  pending=st.history.filter(function(e){return e.synced===false;});
-  if(!pending.length){
-    setSyncBadge('ok','All readings already synced');
-    renderHistory();
-    return;
+  if(outbox.some(function(e){return e.id===id;})){ // never reached GitHub -- just drop it locally
+    outbox=outbox.filter(function(e){return e.id!==id;});saveOutbox();rebuildHistory();saveLocal();return true;
   }
-
-  var successCount=0;
-  // Push each unsynced reading in chronological order (oldest first)
-  var sorted=pending.slice().sort(function(a,b){return a.ts-b.ts;});
-  for(var i=0;i<sorted.length;i++){
-    var entry=sorted[i];
-    var ok=await ghSave(entry);
-    if(ok){
-      for(var j=0;j<st.history.length;j++){
-        if(st.history[j].id===entry.id){st.history[j].synced=true;break;}
-      }
-      successCount++;
-    }
-  }
-  saveLocal();
-  var stillPending=st.history.filter(function(e){return e.synced===false;}).length;
-  if(stillPending===0){
-    setSyncBadge('ok','Auto-synced '+successCount+' reading'+(successCount!==1?'s':'')+' -- all up to date');
-  }else{
-    setSyncBadge('err',stillPending+' reading'+(stillPending!==1?'s':'')+' still pending sync');
-  }
-  renderHistory();
+  var res=await ghMutate(function(remote){
+    var kept=remote.filter(function(e){return e.id!==id;});
+    if(kept.length===remote.length)return null;
+    return{list:kept,added:0,removed:remote.length-kept.length};
+  },'Deleted reading');
+  if(res.ok){lastRemote=res.list;rebuildHistory();saveLocal();return true;}
+  return false;
 }
-
-function pendingCount(){
-  return st.history.filter(function(e){return e.synced===false;}).length;
-}
+// ===== OUTBOX END =====
 
 function currentBody(){return LEVELS[st.level].bodies[st.body];}
 function currentVol(){return currentBody().vol;}
@@ -746,7 +762,7 @@ function bkey(){return st.level+'-'+st.body;}
 function saveInputs(){
   var d={};
   ['pH','fc','cc','ta','ch','cya','temp','orp','orp-setpoint'].forEach(function(f){d[f]=document.getElementById(f).value;});
-  st.inputs[bkey()]=d;saveLocal();
+  st.inputs[bkey()]=d;saveInputsLocal();
 }
 function loadInputs(){
   var d=st.inputs[bkey()]||{};
@@ -891,7 +907,7 @@ function markOutOfService(){
   if(!reason)return;
   var now=new Date();
   var oosEntry={
-    id:Date.now(),ts:now.getTime(),
+    id:newId(),ts:now.getTime(),
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
@@ -903,16 +919,11 @@ function markOutOfService(){
     stored[bkey()]={reason:reason,since:oosEntry.when,ts:now.getTime()};
     localStorage.setItem('aquatic_oos',JSON.stringify(stored));
   }catch(e){}
-  // Refresh from GitHub first to ensure we have full history before writing
-  setSyncBadge('syncing','Syncing before saving...');
-  ghLoad(false).then(function(){
-    st.history.unshift(oosEntry);
-    saveLocal();
-    ghSave(oosEntry).then(function(ok){
-      setSyncBadge(ok?'ok':'err',ok?'Out of service status synced':'Saved locally -- sync pending');
-      updateOOSBanner();
-      renderHistory();
-    });
+  setSyncBadge('syncing','Saving...');
+  submitEntry(oosEntry).then(function(ok){
+    if(ok)setSyncBadge('ok','Out of service status synced');else updatePendingBadge();
+    updateOOSBanner();
+    renderHistory();
   });
   alert(b.name+' marked as OUT OF SERVICE: '+reason+'\nThis will appear on the management dashboard.');
 }
@@ -927,22 +938,18 @@ function returnToService(){
   }catch(e){}
   var now=new Date();
   var returnEntry={
-    id:Date.now(),ts:now.getTime(),
+    id:newId(),ts:now.getTime(),
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
     returnedToService:true,tester:getUserName(),synced:false,
     readings:{},doses:[]
   };
-  setSyncBadge('syncing','Syncing before saving...');
-  ghLoad(false).then(function(){
-    st.history.unshift(returnEntry);
-    saveLocal();
-    ghSave(returnEntry).then(function(ok){
-      setSyncBadge(ok?'ok':'err',ok?'Return to service synced':'Saved locally -- sync pending');
-      updateOOSBanner();
-      renderHistory();
-    });
+  setSyncBadge('syncing','Saving...');
+  submitEntry(returnEntry).then(function(ok){
+    if(ok)setSyncBadge('ok','Return to service synced');else updatePendingBadge();
+    updateOOSBanner();
+    renderHistory();
   });
   alert(b.name+' returned to service.');
 }
@@ -1113,7 +1120,7 @@ function buildReadingText(){
   if(notesVal){lines.push('');lines.push('-- NOTES --');lines.push(notesVal);}
   if(bwVal){lines.push('');lines.push('Backwash performed: Yes');}
   lines.push('');lines.push('================================');
-  lines.push('Generated by OSLU Aquatic Chemical Calculator v31');
+  lines.push('Generated by OSLU Aquatic Chemical Calculator v36');
   return lines.join('\n');
 }
 
@@ -1135,11 +1142,16 @@ function showCopyFallback(text){
 }
 
 async function saveToHistory(){
+  if(saving)return; // ignore double-taps
+  saving=true;
+  try{await saveToHistoryInner();}finally{saving=false;}
+}
+async function saveToHistoryInner(){
   var d=st.inputs[bkey()]||{};
   var b=currentBody();
   var now=new Date();
   var entry={
-    id:Date.now(),ts:now.getTime(),
+    id:newId(),ts:now.getTime(),
     level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
     body:b.name,volume:b.vol,
     when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
@@ -1151,17 +1163,13 @@ async function saveToHistory(){
     doses:lastDoses.map(function(d){return{chem:d.chem,amount:d.amount,ok:!!d.ok,shock:!!d.shock};})
   };
   setSyncBadge('syncing','Saving...');
-  var ok=await ghSave(entry).catch(function(){return false;});
+  var ok=await submitEntry(entry);
   if(ok){
-    entry.synced=true;
-    setSyncBadge('ok','Saved - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)');
+    setSyncBadge('ok','Saved - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' (GitHub)');
     alert('Saved and synced -- visible to all staff.');
   }else{
-    // Save locally with synced=false so auto-sync picks it up later
-    st.history.unshift(entry);
-    saveLocal();
-    setSyncBadge('err','Saved locally -- will auto-sync when online');
-    alert('Weak or no signal -- saved locally at '+entry.when+'. Will auto-sync automatically when you return to Wi-Fi or full signal. Check History for a Pending sync badge.');
+    updatePendingBadge();
+    alert('Weak or no signal -- saved on this device at '+entry.when+'. It stays queued and syncs automatically when signal returns. Check History for a Pending badge.');
   }
   // Clear notes and backwash after saving
   try{var n=document.getElementById('reading-notes');if(n)n.value='';}catch(e){}
@@ -1173,8 +1181,8 @@ async function deleteEntry(id){
   if(!confirm('Delete this reading? This cannot be undone.'))return;
   setSyncBadge('syncing','Deleting...');
   var ok=await ghDelete(id);
-  if(ok){setSyncBadge('ok','Deleted - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' remaining (GitHub)');}
-  else{st.history=st.history.filter(function(e){return e.id!==id;});saveLocal();setSyncBadge('err','GitHub offline -- deleted locally only');}
+  if(ok){setSyncBadge('ok','Deleted - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' remaining (GitHub)');}
+  else{setSyncBadge('err','Delete failed -- needs signal. Nothing was changed.');alert('Could not delete: no signal or GitHub busy. Nothing was changed. Try again with a connection.');}
   renderHistory();
 }
 
@@ -1292,7 +1300,7 @@ function batchCopyLatest(){
 
   lines.push('');
   lines.push('================================');
-  lines.push('OSLU Aquatic Chemical Calculator v31');
+  lines.push('OSLU Aquatic Chemical Calculator v36');
 
   var text=lines.join('\n');
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -1361,7 +1369,7 @@ function renderTrends(){
 }
 
 window.onload=function(){
-  try{var i=localStorage.getItem(IKEY);if(i)st.inputs=JSON.parse(i);}catch(e){}
+  loadLocal(); // restores cached history AND the offline outbox before anything touches the network
   loadToken();
   if(!GH_TOKEN){showTokenSetup();}
   else if(!loadName()){hideTokenSetup();showNameSetup();}
@@ -1371,15 +1379,17 @@ window.onload=function(){
     updateVolDisplay();updateCYAField();loadInputs();updateOOSBanner();
     setTimeout(function(){ghLoad(false);},800);
   }
-  // Auto-sync when device comes back online
+  if(outbox.length)updatePendingBadge('offline');
+  // Retry triggers for flaky Level 1 signal: back online, app brought to foreground, and a light timer
   window.addEventListener('online',function(){
-    if(GH_TOKEN&&pendingCount()>0){
-      cachedSHA=null; // Invalidate cached SHA -- remote may have changed while offline
-      remoteHistory=[]; // Force fresh fetch on next save
-      setSyncBadge('syncing','Back online -- syncing offline readings...');
-      setTimeout(function(){ghLoad(false);},1500);
-    }
+    if(GH_TOKEN&&outbox.length){setSyncBadge('syncing','Back online -- syncing...');setTimeout(function(){syncOutbox();},1500);}
   });
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible'&&GH_TOKEN&&outbox.length)syncOutbox();
+  });
+  setInterval(function(){
+    if(GH_TOKEN&&outbox.length&&document.visibilityState==='visible'&&navigator.onLine!==false)syncOutbox();
+  },45000);
 };
 </script>
 </body>
