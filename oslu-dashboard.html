@@ -16,6 +16,7 @@
   --warn-bg:#faeeda;--warn-text:#854f0b;--warn-border:rgba(133,79,11,0.25);
   --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:rgba(163,45,45,0.25);
   --radius:8px;--radius-lg:12px;
+  --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 @media(prefers-color-scheme:dark){
@@ -27,6 +28,7 @@
     --success-bg:#173404;--success-text:#97c459;--success-border:rgba(151,196,89,0.2);
     --warn-bg:#412402;--warn-text:#ef9f27;--warn-border:rgba(239,159,39,0.2);
     --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.2);
+    --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
   }
 }
 body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;}
@@ -170,6 +172,11 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .oos-badge-reason{font-size:11px;color:var(--warn-text);opacity:0.9;line-height:1.5;}
 .oos-badge-since{font-size:10px;color:var(--warn-text);opacity:0.65;margin-top:3px;}
 .body-card{position:relative;}
+/* Card shadows: Overview tab only */
+#tab-overview-content .summary-card,
+#tab-overview-content .visual-card,
+#tab-overview-content .body-card,
+#tab-overview-content .heatmap-card{box-shadow:var(--card-shadow);}
 </style>
 </head>
 <body>
@@ -201,7 +208,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.21 - Oct 7, 2026</span>
+        <span class="version">v1.23 - Oct 7, 2026</span>
         <span id="refresh-countdown" style="font-size:10px;color:var(--text3);"></span>
       </div>
     </div>
@@ -739,7 +746,7 @@ function renderDashboard(){
         }
         // Notes
         if(latest.notes){
-          html+='<div style="font-size:11px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:5px 9px;margin-bottom:6px;">Note: '+latest.notes+'</div>';
+          html+=noteBox(latest.notes,'5px 9px');
         }
         // Action items
         var actions=getActions(latest);
@@ -1076,6 +1083,8 @@ function lsiPill(lsi){
   return '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:'+bg+';color:'+col+';border:0.5px solid '+brd+';">LSI '+parseFloat(lsi).toFixed(2)+'</span>';
 }
 
+function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function noteBox(n,pad){return '<div style="font-size:11px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:'+pad+';margin-bottom:6px;white-space:pre-wrap;">Note: '+escHtml(n)+'</div>';}
 function renderDashHistory(){
   var filter=document.getElementById("hist-body-filter").value;
   var entries=allReadings.slice();
@@ -1126,7 +1135,9 @@ function renderDashHistory(){
       +(r.cc!=null?'<div class="dash-hist-param">CC <span>'+r.cc+' ppm</span></div>':'')
       +(r.ta!=null?'<div class="dash-hist-param">TA <span>'+r.ta+' ppm</span></div>':'')
       +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
-      +'</div></div>';
+      +'</div>'
+      +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
+      +'</div>';
   }).join("");
 }
 
