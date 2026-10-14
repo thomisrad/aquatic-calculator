@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OSLU Aquatic Maintenance Log</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeece8;
+  --text:#1a1a18;--text2:#52524e;--text3:#62625e;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.2);
+  --info-bg:#e6f1fb;--info-text:#185fa5;--info-border:rgba(24,95,165,0.3);
+  --success-bg:#eaf3de;--success-text:#3b6d11;--success-border:rgba(59,109,17,0.3);
+  --warn-bg:#faeeda;--warn-text:#854f0b;--warn-border:rgba(133,79,11,0.3);
+  --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:rgba(163,45,45,0.3);
+  --radius:8px;--radius-lg:12px;
+  --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
+  --btn-shadow:0 1px 2px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.08);
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1e1e1c;--bg2:#2a2a28;--bg3:#323230;
+    --text:#f0ede8;--text2:#c4c4c0;--text3:#a8a8a4;
+    --border:rgba(255,255,255,0.1);--border2:rgba(255,255,255,0.18);
+    --info-bg:#0c3058;--info-text:#85b7eb;--info-border:rgba(133,183,235,0.25);
+    --success-bg:#173404;--success-text:#97c459;--success-border:rgba(151,196,89,0.25);
+    --warn-bg:#412402;--warn-text:#ef9f27;--warn-border:rgba(239,159,39,0.25);
+    --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.25);
+    --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
+    --btn-shadow:0 1px 2px rgba(0,0,0,0.5),0 2px 8px rgba(0,0,0,0.35);
+  }
+}
+html,body{height:100%;-webkit-tap-highlight-color:transparent;}
+body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;touch-action:manipulation;font-size:14px;}
+.wrap{max-width:860px;margin:0 auto;padding:1.5rem 1rem;}
+.app-header{margin-bottom:1.25rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.app-header h1{font-size:20px;font-weight:500;}
+.app-header p{font-size:14px;color:var(--text2);margin-top:4px;}
+.sync-badge{font-size:12px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:0.5px solid var(--border);}
+.sync-badge.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.sync-badge.err{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.sync-badge.syncing{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.version-label{font-size:12px;color:var(--text3);text-align:right;margin-top:4px;}
+button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
+.page-btns{display:flex;gap:8px;margin-bottom:1.25rem;}
+.page-btn{flex:1;padding:10px 4px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;min-height:44px;}
+.page-btn.active{background:var(--bg2);color:var(--text);font-weight:500;}
+.count-pill{display:inline-block;min-width:20px;padding:1px 6px;margin-left:4px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-size:12px;font-weight:500;}
+.count-pill.zero{background:var(--bg2);color:var(--text3);border-color:var(--border);}
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.field{margin-bottom:14px;}
+.field label,.slabel{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+.field .hint{font-size:12px;color:var(--text3);margin-top:4px;}
+.field input[type=text],.field input[type=number],.field input[type=datetime-local],.field select,.field textarea,.filters select{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
+.field textarea{min-height:88px;resize:vertical;line-height:1.4;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:480px){.row2{grid-template-columns:1fr;}}
+.seg{display:flex;gap:8px;}
+.seg button{flex:1;padding:12px 8px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:15px;min-height:48px;}
+.seg button.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;min-height:44px;cursor:pointer;}
+.check input{width:22px;height:22px;}
+.followup-box{background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);padding:12px;margin-top:8px;}
+.followup-box label{color:var(--warn-text);}
+.btn{padding:12px 18px;font-size:15px;font-weight:500;border-radius:var(--radius);border:0.5px solid var(--border2);background:var(--bg);color:var(--text);min-height:48px;}
+.btn.primary{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);width:100%;}
+.btn.small{padding:8px 14px;font-size:13px;min-height:40px;}
+.btn.warn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.btn[disabled]{opacity:0.5;cursor:not-allowed;}
+.toast{display:none;margin-bottom:12px;padding:10px 14px;border-radius:var(--radius);font-size:14px;border:0.5px solid var(--border);}
+.toast.ok{display:block;background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.toast.warn{display:block;background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.toast.err{display:block;background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.entry-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.entry-title{font-size:15px;font-weight:500;}
+.entry-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.entry-body{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.entry-meta{font-size:13px;color:var(--text2);margin-top:8px;display:flex;flex-wrap:wrap;gap:4px 14px;}
+.pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;margin-left:4px;}
+.pill.pm{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.pill.repair{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.pill.open{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.pill.closed{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.pill.pending{background:var(--bg2);color:var(--text2);}
+.still{margin-top:8px;padding:8px 10px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);border-radius:var(--radius);font-size:13px;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.filters select{flex:1;min-width:140px;font-size:14px;}
+.empty{text-align:center;color:var(--text3);padding:2rem 1rem;font-size:14px;}
+.eq-group{margin-bottom:14px;}
+.eq-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);}
+.eq-row:last-child{border-bottom:none;}
+.note{font-size:12px;color:var(--text3);line-height:1.6;margin-top:1rem;}
+.token-screen{max-width:480px;margin:4rem auto;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;}
+.token-screen h2{font-size:18px;font-weight:500;margin-bottom:8px;}
+.token-screen p{font-size:14px;color:var(--text2);margin-bottom:1.5rem;line-height:1.6;}
+.token-screen label{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.token-screen input{width:100%;padding:10px;font-size:16px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);margin-bottom:1rem;font-family:var(--font);}
+.card,.token-screen{box-shadow:var(--card-shadow);}
+button:not(.page-btn.active){box-shadow:var(--btn-shadow);transition:box-shadow .12s,transform .12s;}
+button:active{box-shadow:none;transform:translateY(1px);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="token-setup" style="display:none;">
+  <div class="token-screen">
+    <h2>Connect to GitHub</h2>
+    <p>Enter your GitHub personal access token to sync aquatic maintenance entries across devices. If you already use the Aquatic Calculator on this device, this step is skipped automatically.</p>
+    <label for="token-input">GitHub personal access token</label>
+    <input type="password" id="token-input" placeholder="github_pat_xxxxxxxxxxxx" autocomplete="off"/>
+    <button class="btn primary" onclick="submitToken()">Save token and connect</button>
+    <p class="note">Your token is stored only in this browser and is sent only to GitHub.</p>
+  </div>
+</div>
+
+<div id="name-setup" style="display:none;">
+  <div class="token-screen">
+    <h2>One more step</h2>
+    <p>Enter your name so each entry is attributed correctly. It is saved on this device only and shared with the Aquatic Calculator.</p>
+    <label for="name-first">First name</label>
+    <input type="text" id="name-first" maxlength="30" autocomplete="given-name" oninput="checkNameInputs()"/>
+    <label for="name-last-initial">Last name initial</label>
+    <input type="text" id="name-last-initial" maxlength="1" autocomplete="family-name" oninput="checkNameInputs()" style="text-transform:uppercase;"/>
+    <button class="btn primary" id="name-submit-btn" onclick="submitName()" disabled>Save and continue</button>
+  </div>
+</div>
+
+<div id="main-app" style="display:none;">
+  <div class="app-header">
+    <div>
+      <h1>OSLU Aquatic Maintenance Log</h1>
+      <p>Preventive maintenance and repairs - aquatic equipment</p>
+    </div>
+    <div>
+      <div id="sync-badge" class="sync-badge">Starting...</div>
+      <div class="version-label" id="version-label"></div>
+    </div>
+  </div>
+
+  <div class="page-btns">
+    <button class="page-btn active" id="pb-log" onclick="showPage('log')">Log work</button>
+    <button class="page-btn" id="pb-open" onclick="showPage('open')">Open<span class="count-pill zero" id="open-count">0</span></button>
+    <button class="page-btn" id="pb-history" onclick="showPage('history')">History</button>
+    <button class="page-btn" id="pb-equip" onclick="showPage('equip')">Equipment</button>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+
+  <!-- LOG WORK -->
+  <div id="page-log">
+    <div class="card">
+      <div class="field"><label for="sel-body">Body of water</label>
+        <select id="sel-body" onchange="fillEquipSelect()"></select></div>
+      <div class="field"><label for="sel-equip">Equipment</label>
+        <select id="sel-equip" onchange="onEquipPick()"></select>
+        <div id="equip-other-wrap" style="display:none;margin-top:8px;"><input type="text" id="equip-other" maxlength="60" placeholder="Equipment name, e.g. Pump P-101"/></div></div>
+      <div class="field"><label>Type of work</label>
+        <div class="seg"><button id="type-pm" onclick="setType('pm')">Preventive maintenance</button><button id="type-repair" onclick="setType('repair')">Repair</button></div></div>
+      <div class="field"><label for="desc">Work done</label>
+        <textarea id="desc" maxlength="1000" placeholder="What was done? e.g. Replaced shaft seal, checked alignment"></textarea></div>
+      <div class="row2">
+        <div class="field"><label for="by">Performed by</label><input type="text" id="by" maxlength="60"/></div>
+        <div class="field"><label for="company">Contractor / company</label><input type="text" id="company" maxlength="60" placeholder="Only if an outside vendor"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="parts">Parts used</label><input type="text" id="parts" maxlength="200" placeholder="Optional"/></div>
+        <div class="field"><label for="minutes">Time spent (minutes)</label><input type="number" id="minutes" min="0" step="5" inputmode="numeric" placeholder="Optional"/></div>
+      </div>
+      <div class="field"><label for="when">Date and time performed</label><input type="datetime-local" id="when"/></div>
+      <label class="check"><input type="checkbox" id="followup" onchange="onFollowChange()"/> Needs follow-up (keeps this open until closed out)</label>
+      <div class="followup-box" id="followup-wrap" style="display:none;">
+        <label for="followup-note">What still needs to be done?</label>
+        <textarea id="followup-note" maxlength="500" placeholder="e.g. Waiting on replacement seal, reinspect after install" style="width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--warn-border);border-radius:var(--radius);background:var(--bg);color:var(--text);min-height:72px;"></textarea>
+      </div>
+      <div style="margin-top:16px;"><button class="btn primary" id="btn-save" onclick="saveWork()">Save entry</button></div>
+    </div>
+    <p class="note">Entries are a permanent log and are not edited. If something was logged by mistake, tell Jason or Tom. A repair marked "needs follow-up" appears under Open and on the dashboard until someone closes it out.</p>
+  </div>
+
+  <!-- OPEN REPAIRS -->
+  <div id="page-open" style="display:none;"><div id="open-list"></div></div>
+
+  <!-- HISTORY -->
+  <div id="page-history" style="display:none;">
+    <div class="filters">
+      <select id="f-body" onchange="onFilter()"></select>
+      <select id="f-type" onchange="onFilter()"><option value="all">All types</option><option value="pm">Preventive maintenance</option><option value="repair">Repairs</option></select>
+      <select id="f-status" onchange="onFilter()"><option value="all">All entries</option><option value="open">Open follow-ups only</option></select>
+    </div>
+    <div id="hist-list"></div>
+    <div style="margin-top:8px;"><button class="btn small" onclick="exportCSV()">Export CSV</button></div>
+  </div>
+
+  <!-- EQUIPMENT -->
+  <div id="page-equip" style="display:none;">
+    <div class="card">
+      <div class="slabel">Add equipment</div>
+      <div class="field"><label for="eq-body">Body of water</label><select id="eq-body"></select></div>
+      <div class="row2">
+        <div class="field"><label for="eq-name">Name</label><input type="text" id="eq-name" maxlength="60" placeholder="e.g. Pump P-101"/></div>
+        <div class="field"><label for="eq-type">Type</label><select id="eq-type"></select></div>
+      </div>
+      <button class="btn warn small" onclick="addEquip()">Add equipment</button>
+      <p class="note">Adding or retiring equipment needs a signal. Staff can always log work against the standard choices (pump, filter, heater, controller, chemical feed) or type a name under Other.</p>
+    </div>
+    <div id="equip-list"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var APP_VERSION='v1 - Oct 7, 2026';
+var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
+var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
+function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
+var GH_API=ghUrl('aquatic-maintenance.json');   // default file for the shared core
+var EQUIP_API=ghUrl('aquatic-equipment.json');  // small aquatic equipment list, edited online only
+
+// ===== GH CORE BEGIN (shared by calculator + dashboard + maintenance) =====
+// url is optional everywhere and defaults to GH_API, so one core can serve several data files.
+// Every write follows one rule: fetch the CURRENT remote file, apply a small ID-based change
+// to that fresh copy, PUT with the SHA from that same fetch. Local copies are never a write base.
+function b64ToUtf8(b){
+  var bin=atob(String(b).replace(/\s/g,''));
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
+function stripLocal(e){var c={};for(var k in e){if(k!=='synced')c[k]=e[k];}return c;}
+
+// One timer covers the whole request INCLUDING reading the body (a stalled body hangs forever otherwise)
+async function ghRequest(opts,ms,url){
+  var c=new AbortController();
+  var t=setTimeout(function(){c.abort();},ms);
+  try{
+    var r=await fetch(url||GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
+    var text=await r.text();
+    return{status:r.status,ok:r.ok,text:text};
+  }finally{clearTimeout(t);}
+}
+function ghHdr(accept,json){
+  var h={'Authorization':'token '+GH_TOKEN,'Accept':accept||'application/vnd.github.v3+json'};
+  if(json)h['Content-Type']='application/json';
+  return h;
+}
+
+async function ghFetchRemote(url){
+  try{
+    var r=await ghRequest({headers:ghHdr()},5000,url);
+    if(r.status===404)return{ok:true,list:[],sha:null,missing:true};
+    if(r.status===401)return{ok:false,reason:'auth',status:401};
+    if(!r.ok)return{ok:false,reason:'http',status:r.status};
+    var j=JSON.parse(r.text);
+    var text;
+    if(j.content&&j.encoding!=='none'){
+      text=b64ToUtf8(j.content);
+    }else if(j.size>0){
+      // Contents API returns EMPTY content for files over 1 MB -- fetch the raw body instead
+      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000,url);
+      if(!rr.ok)return{ok:false,reason:'http',status:rr.status};
+      text=rr.text;
+    }else{text='[]';}
+    var list=JSON.parse(text);
+    if(!Array.isArray(list))return{ok:false,reason:'format'};
+    if(j.size>10&&list.length===0)return{ok:false,reason:'format'}; // never trust an "empty" read of a non-empty file
+    return{ok:true,list:list,sha:j.sha};
+  }catch(e){return{ok:false,reason:'network',error:String(e)};}
+}
+
+async function ghPut(list,sha,message,url){
+  try{
+    var body={message:message,content:utf8ToB64(JSON.stringify(list.map(stripLocal))),branch:GH_BRANCH};
+    if(sha)body.sha=sha;
+    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000,url);
+    if(w.ok)return{ok:true};
+    return{ok:false,status:w.status};
+  }catch(e){return{ok:false,error:String(e)};} // outcome unknown -- caller re-checks by ID on next attempt
+}
+
+// mutator(remoteList) -> null (nothing to change) or {list, added, removed}
+async function ghMutate(mutator,message,url){
+  for(var attempt=0;attempt<3;attempt++){
+    var rem=await ghFetchRemote(url);
+    if(!rem.ok)return{ok:false,reason:rem.reason,status:rem.status};
+    var plan=mutator(rem.list);
+    if(!plan)return{ok:true,changed:false,list:rem.list};
+    // Safety guard: the write may only add/remove exactly what the mutator says it does
+    var keep=new Set(plan.list),lost=0;
+    for(var i=0;i<rem.list.length;i++){if(!keep.has(rem.list[i]))lost++;}
+    var added=plan.list.length-(rem.list.length-lost);
+    if(lost!==(plan.removed||0)||added!==(plan.added||0))return{ok:false,reason:'guard'};
+    var w=await ghPut(plan.list,rem.sha,message,url);
+    if(w.ok)return{ok:true,changed:true,list:plan.list};
+    if(w.status===409||w.status===422)continue; // someone wrote first: re-fetch, re-apply, retry
+    return{ok:false,reason:w.status?'http':'network',status:w.status};
+  }
+  return{ok:false,reason:'conflict'};
+}
+// ===== GH CORE END =====
+
+// ===== MAINT LOGIC BEGIN =====
+var BODIES=[
+  {levelIdx:0,bodyIdx:0,level:'Level 1 - Indoor',lv:'L1',body:'Pool'},
+  {levelIdx:0,bodyIdx:1,level:'Level 1 - Indoor',lv:'L1',body:'Hot spa'},
+  {levelIdx:0,bodyIdx:2,level:'Level 1 - Indoor',lv:'L1',body:'Cold spa'},
+  {levelIdx:1,bodyIdx:0,level:'Level 2 - Outdoor',lv:'L2',body:'Pool'},
+  {levelIdx:1,bodyIdx:1,level:'Level 2 - Outdoor',lv:'L2',body:'Hot spa'},
+  {levelIdx:2,bodyIdx:0,level:'Level 13 - Outdoor',lv:'L13',body:'Pool'},
+  {levelIdx:2,bodyIdx:1,level:'Level 13 - Outdoor',lv:'L13',body:'Hot tub'}];
+var GENERIC_EQUIP=['Circulation pump','Filter','Heater','ORP / chemical controller','Chemical feed pump'];
+var OKEY='oslu_maint_outbox_v1',HKEY='oslu_maint_cache_v1',EKEY='oslu_equip_cache_v1';
+var st={page:'log',history:[],equip:[],closingId:null,type:null,filt:{body:'all',type:'all',status:'all'}};
+var outbox=[],lastRemote=[],syncPromise=null,saving=false;
+
+function bodyOf(l,b){for(var i=0;i<BODIES.length;i++){if(BODIES[i].levelIdx===l&&BODIES[i].bodyIdx===b)return BODIES[i];}return null;}
+function bodyName(e){var b=bodyOf(e.levelIdx,e.bodyIdx);return b?b.body+' ('+b.lv+')':(e.body||'?');}
+function newId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function fmtWhen(ts){var d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+// ---- records (append-only: nothing is ever edited in place) ----
+function validateWork(f){
+  if(!f.body)return 'Choose the body of water.';
+  if(f.type!=='pm'&&f.type!=='repair')return 'Choose Preventive maintenance or Repair.';
+  if(!f.equipName)return 'Choose the equipment (or type it under Other).';
+  if(!f.description||f.description.trim().length<3)return 'Describe the work that was done.';
+  if(!f.performedBy||!f.performedBy.trim())return 'Enter who performed the work.';
+  if(f.followUp&&(!f.followUpNote||f.followUpNote.trim().length<3))return 'Describe what still needs to be done.';
+  if(f.minutes!=null&&(isNaN(f.minutes)||f.minutes<0))return 'Time spent must be a number of minutes.';
+  if(f.ts>Date.now()+5*60000)return 'The date and time is in the future.';
+  return null;
+}
+function buildWork(f){
+  return{id:newId(),kind:'work',type:f.type,ts:f.ts,loggedAt:Date.now(),when:fmtWhen(f.ts),
+    levelIdx:f.body.levelIdx,bodyIdx:f.body.bodyIdx,level:f.body.level,body:f.body.body,
+    equipmentId:f.equipId||null,equipment:f.equipName.trim(),description:f.description.trim(),
+    performedBy:f.performedBy.trim(),company:(f.company||'').trim()||null,parts:(f.parts||'').trim()||null,
+    minutes:f.minutes==null?null:f.minutes,followUp:!!f.followUp,followUpNote:f.followUp?f.followUpNote.trim():null,loggedBy:f.loggedBy};
+}
+function buildCloseout(orig,f){
+  return{id:newId(),kind:'closeout',closes:orig.id,type:orig.type,ts:f.ts,loggedAt:Date.now(),when:fmtWhen(f.ts),
+    levelIdx:orig.levelIdx,bodyIdx:orig.bodyIdx,level:orig.level,body:orig.body,
+    equipmentId:orig.equipmentId||null,equipment:orig.equipment,description:f.description.trim(),
+    performedBy:f.performedBy.trim(),company:(f.company||'').trim()||null,parts:(f.parts||'').trim()||null,
+    minutes:f.minutes==null?null:f.minutes,followUp:false,followUpNote:null,loggedBy:f.loggedBy};
+}
+// An open repair is a follow-up that no later close-out refers to.
+function openItems(list){
+  var closed=new Set();
+  list.forEach(function(e){if(e&&e.kind==='closeout'&&e.closes!=null)closed.add(e.closes);});
+  return list.filter(function(e){return e&&e.kind!=='closeout'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
+}
+function csvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function buildCSV(list){
+  var head=['Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'];
+  var rows=[head.join(',')];
+  list.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
+    rows.push([e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(csvCell).join(','));
+  });
+  return rows.join('\r\n');
+}
+
+// ---- equipment registry (small, online-only edits through the same safe write) ----
+function equipForBody(l,b){return st.equip.filter(function(e){return e.active!==false&&e.levelIdx===l&&e.bodyIdx===b;}).sort(function(a,b){return String(a.name).localeCompare(String(b.name));});}
+function cacheEquip(){try{localStorage.setItem(EKEY,JSON.stringify(st.equip));}catch(e){}}
+async function loadEquipRemote(){
+  var rem=await ghFetchRemote(EQUIP_API);
+  if(!rem.ok)return false;
+  st.equip=rem.list;cacheEquip();
+  if(typeof onEquipChanged==='function')onEquipChanged();
+  return true;
+}
+async function addEquipment(levelIdx,bodyIdx,name,type,by){
+  name=String(name||'').trim();
+  var item={id:newId(),levelIdx:levelIdx,bodyIdx:bodyIdx,name:name,type:type,active:true,addedBy:by,addedAt:Date.now()};
+  var res=await ghMutate(function(remote){
+    if(remote.some(function(e){return e.active!==false&&e.levelIdx===levelIdx&&e.bodyIdx===bodyIdx&&String(e.name).toLowerCase()===name.toLowerCase();}))return null;
+    return{list:[item].concat(remote),added:1,removed:0};
+  },'Add aquatic equipment: '+name,EQUIP_API);
+  if(res.ok){st.equip=res.list;cacheEquip();return{ok:true,duplicate:!res.changed};}
+  return{ok:false,reason:res.reason};
+}
+async function retireEquipment(id,by){
+  var res=await ghMutate(function(remote){
+    var i=-1;for(var k=0;k<remote.length;k++){if(remote[k].id===id&&remote[k].active!==false){i=k;break;}}
+    if(i<0)return null;
+    var list=remote.slice();list[i]=Object.assign({},remote[i],{active:false,retiredBy:by,retiredAt:Date.now()});
+    return{list:list,added:1,removed:1};
+  },'Retire aquatic equipment',EQUIP_API);
+  if(res.ok){st.equip=res.list;cacheEquip();return{ok:true};}
+  return{ok:false,reason:res.reason};
+}
+
+// ---- offline outbox + sync (same rules as the calculator: persist first, remove only after the server confirms the ID) ----
+function loadOutbox(){try{var o=localStorage.getItem(OKEY);outbox=o?JSON.parse(o):[];if(!Array.isArray(outbox))outbox=[];}catch(e){outbox=[];}}
+function saveOutbox(){try{localStorage.setItem(OKEY,JSON.stringify(outbox));return true;}catch(e){console.error('outbox save failed',e);return false;}}
+function loadLocal(){
+  var cache=[];
+  try{var h=localStorage.getItem(HKEY);if(h)cache=JSON.parse(h);}catch(e){}
+  if(!Array.isArray(cache))cache=[];
+  try{var q=localStorage.getItem(EKEY);if(q){var l=JSON.parse(q);if(Array.isArray(l))st.equip=l;}}catch(e){}
+  loadOutbox();lastRemote=cache;rebuildHistory();
+}
+function saveLocal(){ // offline display cache: newest 500 confirmed entries plus every open repair (outbox has its own key)
+  try{
+    var keep=new Set(lastRemote.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,500));
+    openItems(lastRemote).forEach(function(e){keep.add(e);});
+    localStorage.setItem(HKEY,JSON.stringify(Array.from(keep).map(stripLocal)));
+  }catch(e){}
+}
+function rebuildHistory(){
+  var ids=new Set(outbox.map(function(e){return e.id;}));
+  var rem=lastRemote.filter(function(e){return!ids.has(e.id);});
+  rem.forEach(function(e){e.synced=true;});
+  outbox.forEach(function(e){e.synced=false;});
+  st.history=outbox.concat(rem).sort(function(a,b){return b.ts-a.ts;});
+}
+function pendingCount(){return outbox.length;}
+function updatePendingBadge(reason){
+  var n=outbox.length;if(!n)return;
+  var msg=n+' entr'+(n!==1?'ies':'y')+' saved on this device -- ';
+  if(reason==='offline'||reason==='network')msg+='will sync when signal returns';
+  else if(reason==='auth')msg+='GitHub token rejected, change token';
+  else if(reason==='guard')msg+='sync paused by safety check, tell Tom';
+  else if(reason==='token')msg+='enter GitHub token to sync';
+  else msg+='will retry automatically';
+  setSyncBadge('err',msg);
+}
+async function submitEntry(entry){
+  entry.synced=false;
+  if(!outbox.some(function(e){return e.id===entry.id;}))outbox.unshift(entry);
+  saveOutbox();rebuildHistory();
+  await syncOutbox();
+  return !outbox.some(function(e){return e.id===entry.id;});
+}
+async function syncOutbox(){
+  while(syncPromise){try{await syncPromise;}catch(e){}}
+  if(!outbox.length)return{ok:true,n:0};
+  syncPromise=doSync();
+  try{return await syncPromise;}finally{syncPromise=null;}
+}
+async function doSync(){
+  if(!GH_TOKEN){updatePendingBadge('token');return{ok:false,reason:'token'};}
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){updatePendingBadge('offline');return{ok:false,reason:'offline'};}
+  var seen=new Set(),batch=outbox.filter(function(e){if(seen.has(e.id))return false;seen.add(e.id);return true;});
+  setSyncBadge('syncing','Syncing '+batch.length+' entr'+(batch.length!==1?'ies':'y')+'...');
+  var res=await ghMutate(function(remote){
+    var have=new Set(remote.map(function(e){return e.id;}));
+    var add=batch.filter(function(e){return!have.has(e.id);});
+    if(!add.length)return null; // already on GitHub (an earlier PUT landed but the reply was lost)
+    add.sort(function(a,b){return b.ts-a.ts;});
+    return{list:add.map(stripLocal).concat(remote),added:add.length,removed:0};
+  },'Sync '+batch.length+' aquatic maintenance entr'+(batch.length!==1?'ies':'y'));
+  if(!res.ok){updatePendingBadge(res.reason);return{ok:false,reason:res.reason};}
+  outbox=outbox.filter(function(e){return!seen.has(e.id);});
+  saveOutbox();lastRemote=res.list;rebuildHistory();saveLocal();
+  if(outbox.length)setSyncBadge('syncing',outbox.length+' still to sync...');
+  else setSyncBadge('ok','Synced '+batch.length+' entr'+(batch.length!==1?'ies':'y')+' -- all up to date');
+  if(typeof renderAll==='function')renderAll();
+  return{ok:true,n:batch.length};
+}
+async function ghLoad(isRetry,skipAutoSync){
+  if(outbox.length&&!skipAutoSync){return autoSync();}
+  setSyncBadge('syncing','Syncing...');
+  var rem=await ghFetchRemote();
+  if(rem.ok){
+    lastRemote=rem.list;rebuildHistory();saveLocal();
+    if(outbox.length)updatePendingBadge();
+    else setSyncBadge('ok','Shared - '+lastRemote.length+' entr'+(lastRemote.length!==1?'ies':'y')+' (GitHub)');
+    if(typeof renderAll==='function')renderAll();
+    loadEquipRemote();
+    return;
+  }
+  if(rem.reason==='auth'){setSyncBadge('err','GitHub token rejected -- change token');return;}
+  if(!isRetry){setSyncBadge('syncing','Retrying -- poor signal...');setTimeout(function(){ghLoad(true,skipAutoSync);},1500);return;}
+  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','GitHub offline - using local data');
+  if(typeof renderAll==='function')renderAll();
+}
+async function autoSync(){if(!outbox.length){return ghLoad(false,true);}await syncOutbox();}
+// ===== MAINT LOGIC END =====
+
+// ===== UI =====
+function $(id){return document.getElementById(id);}
+function setSyncBadge(type,text){var b=$('sync-badge');if(!b)return;b.className='sync-badge '+type;b.textContent=text;}
+function loadName(){try{return localStorage.getItem(NKEY)||null;}catch(e){return null;}}
+function saveName(n){try{localStorage.setItem(NKEY,n);}catch(e){}}
+function getUserName(){return loadName()||'Staff';}
+function loadToken(){try{var t=localStorage.getItem(TKEY);if(t)GH_TOKEN=t;}catch(e){}}
+function saveToken(t){GH_TOKEN=t;try{localStorage.setItem(TKEY,t);}catch(e){}}
+function clearToken(){GH_TOKEN='';try{localStorage.removeItem(TKEY);}catch(e){}}
+function showScreen(w){$('token-setup').style.display=w==='token'?'block':'none';$('name-setup').style.display=w==='name'?'block':'none';$('main-app').style.display=w==='main'?'block':'none';}
+function checkNameInputs(){
+  var ok=($('name-first').value||'').trim().length>0&&($('name-last-initial').value||'').trim().length===1;
+  $('name-submit-btn').disabled=!ok;
+}
+function submitName(){
+  var f=($('name-first').value||'').trim(),l=($('name-last-initial').value||'').trim().toUpperCase();
+  if(!f||!l)return;saveName(f+' '+l+'.');startApp();
+}
+function submitToken(){
+  var t=$('token-input').value.trim();if(!t){alert('Please paste your GitHub token.');return;}
+  saveToken(t);if(!loadName())showScreen('name');else startApp();
+}
+function changeToken(){if(!confirm('Clear your saved token? Entries saved on this device stay queued.'))return;clearToken();showScreen('token');}
+
+var toastTimer=null;
+function toast(kind,msg){var t=$('toast');t.className='toast '+kind;t.textContent=msg;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.className='toast';},9000);}
+
+function nowLocal(){var d=new Date(Date.now()-new Date().getTimezoneOffset()*60000);return d.toISOString().slice(0,16);}
+function fillBodySelects(){
+  var h='';BODIES.forEach(function(b,i){h+='<option value="'+i+'">'+esc(b.lv+' - '+b.body)+'</option>';});
+  $('sel-body').innerHTML='<option value="">Choose...</option>'+h;
+  $('eq-body').innerHTML=h;
+  $('f-body').innerHTML='<option value="all">All bodies of water</option>'+h;
+  var t='';GENERIC_EQUIP.concat(['Other']).forEach(function(n){t+='<option>'+esc(n)+'</option>';});$('eq-type').innerHTML=t;
+}
+function fillEquipSelect(){
+  var sel=$('sel-equip'),prev=sel.value,bi=$('sel-body').value;
+  if(bi===''){sel.innerHTML='<option value="">Choose a body of water first</option>';$('equip-other-wrap').style.display='none';return;}
+  var b=BODIES[+bi],items=equipForBody(b.levelIdx,b.bodyIdx),h='<option value="">Choose...</option>';
+  if(items.length){items.forEach(function(e){h+='<option value="id:'+esc(e.id)+'">'+esc(e.name)+(e.type?' ('+esc(e.type)+')':'')+'</option>';});}
+  else{GENERIC_EQUIP.forEach(function(n){h+='<option value="gen:'+esc(n)+'">'+esc(n)+'</option>';});}
+  h+='<option value="other">Other / not listed...</option>';
+  sel.innerHTML=h;
+  if(prev&&[].some.call(sel.options,function(o){return o.value===prev;}))sel.value=prev;
+  onEquipPick();
+}
+function onEquipPick(){$('equip-other-wrap').style.display=$('sel-equip').value==='other'?'block':'none';}
+function onEquipChanged(){fillEquipSelect();if(st.page==='equip')renderEquip();}
+function setType(t){st.type=t;$('type-pm').classList.toggle('active',t==='pm');$('type-repair').classList.toggle('active',t==='repair');}
+function onFollowChange(){$('followup-wrap').style.display=$('followup').checked?'block':'none';}
+function resolveEquip(){
+  var v=$('sel-equip').value;
+  if(v==='other')return{equipId:null,equipName:($('equip-other').value||'').trim()};
+  if(v.indexOf('id:')===0){var id=v.slice(3),b=BODIES[+$('sel-body').value],e=equipForBody(b.levelIdx,b.bodyIdx).filter(function(x){return String(x.id)===id;})[0];return{equipId:e?e.id:null,equipName:e?e.name:''};}
+  if(v.indexOf('gen:')===0)return{equipId:null,equipName:v.slice(4)};
+  return{equipId:null,equipName:''};
+}
+function numOrNull(v){v=(v||'').trim();return v===''?null:Number(v);}
+async function saveWork(){
+  if(saving)return;
+  var bi=$('sel-body').value,eq=resolveEquip(),wv=$('when').value,ts=wv?new Date(wv).getTime():Date.now();
+  var f={body:bi===''?null:BODIES[+bi],type:st.type,equipId:eq.equipId,equipName:eq.equipName,description:$('desc').value,performedBy:$('by').value,
+    company:$('company').value,parts:$('parts').value,minutes:numOrNull($('minutes').value),ts:isNaN(ts)?Date.now():ts,
+    followUp:$('followup').checked,followUpNote:$('followup-note').value,loggedBy:getUserName()};
+  var err=validateWork(f);if(err){toast('err',err);return;}
+  saving=true;$('btn-save').disabled=true;setSyncBadge('syncing','Saving...');
+  try{
+    var rec=buildWork(f),ok=await submitEntry(rec);
+    toast(ok?'ok':'warn',ok?'Saved and synced. Visible to everyone.':'Weak or no signal - saved on this device. It stays queued and syncs automatically.');
+    if(!ok)updatePendingBadge();
+    resetForm();renderAll();
+  }finally{saving=false;$('btn-save').disabled=false;}
+}
+function resetForm(){
+  ['desc','company','parts','minutes','followup-note','equip-other'].forEach(function(i){$(i).value='';});
+  $('followup').checked=false;onFollowChange();setType(null);$('sel-equip').value='';onEquipPick();$('when').value=nowLocal();$('when').max=nowLocal();
+}
+
+function showPage(p){
+  st.page=p;
+  ['log','open','history','equip'].forEach(function(x){$('page-'+x).style.display=x===p?'block':'none';$('pb-'+x).classList.toggle('active',x===p);});
+  if(p!=='open')st.closingId=null;
+  renderAll();
+}
+function renderAll(){
+  var n=openItems(st.history).length,c=$('open-count');c.textContent=n;c.className='count-pill'+(n?'':' zero');
+  if(st.page==='open'){if(!st.closingId)renderOpen();}
+  else if(st.page==='history')renderHistory();
+  else if(st.page==='equip')renderEquip();
+}
+function whoText(e){return 'Performed by '+esc(e.performedBy)+(e.company?' ('+esc(e.company)+')':'')+(e.loggedBy&&e.loggedBy!==e.performedBy?' - logged by '+esc(e.loggedBy):'');}
+function metaHTML(e){
+  var m=['<span>'+whoText(e)+'</span>'];
+  if(e.parts)m.push('<span>Parts: '+esc(e.parts)+'</span>');
+  if(e.minutes!=null)m.push('<span>'+esc(e.minutes)+' min</span>');
+  return '<div class="entry-meta">'+m.join('')+'</div>';
+}
+function daysOpen(e){return Math.max(0,Math.floor((Date.now()-e.ts)/86400000));}
+function renderOpen(){
+  var items=openItems(st.history),h='';
+  if(!items.length){$('open-list').innerHTML='<div class="empty">No open repairs. Everything logged has been closed out.</div>';return;}
+  items.forEach(function(e){
+    var d=daysOpen(e);
+    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+esc(e.when)+' - open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+'</div></div><div><span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'+(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
+      +'<div class="entry-body">'+esc(e.description)+'</div><div class="still"><b>Still needed:</b> '+esc(e.followUpNote)+'</div>'+metaHTML(e);
+    if(st.closingId===e.id){
+      h+='<div class="followup-box" style="margin-top:12px;"><div class="field"><label for="co-desc">What was done to close this out?</label><textarea id="co-desc" maxlength="1000" style="width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--warn-border);border-radius:var(--radius);background:var(--bg);color:var(--text);min-height:72px;"></textarea></div>'
+        +'<div class="row2"><div class="field"><label for="co-by">Performed by</label><input type="text" id="co-by" maxlength="60" value="'+esc(getUserName())+'"/></div><div class="field"><label for="co-company">Company (if outside vendor)</label><input type="text" id="co-company" maxlength="60"/></div></div>'
+        +'<div class="field"><label for="co-min">Time spent (minutes)</label><input type="number" id="co-min" min="0" step="5" inputmode="numeric"/></div>'
+        +'<div style="display:flex;gap:8px;"><button class="btn primary" onclick="saveClose('+e.id+')">Close out</button><button class="btn" onclick="cancelClose()">Cancel</button></div></div>';
+    }else h+='<div style="margin-top:12px;"><button class="btn small warn" onclick="startClose('+e.id+')">Close out</button></div>';
+    h+='</div>';
+  });
+  $('open-list').innerHTML=h;
+}
+function startClose(id){st.closingId=id;renderOpen();var t=$('co-desc');if(t)t.focus();}
+function cancelClose(){st.closingId=null;renderOpen();}
+async function saveClose(id){
+  if(saving)return;
+  var orig=openItems(st.history).filter(function(e){return e.id===id;})[0];if(!orig){toast('err','That item is already closed.');st.closingId=null;renderAll();return;}
+  var f={description:$('co-desc').value,performedBy:$('co-by').value,company:$('co-company').value,parts:'',minutes:numOrNull($('co-min').value),ts:Date.now(),loggedBy:getUserName()};
+  if(!f.description||f.description.trim().length<3){toast('err','Describe what was done to close this out.');return;}
+  if(!f.performedBy||!f.performedBy.trim()){toast('err','Enter who performed the work.');return;}
+  if(f.minutes!=null&&(isNaN(f.minutes)||f.minutes<0)){toast('err','Time spent must be a number of minutes.');return;}
+  saving=true;setSyncBadge('syncing','Saving...');
+  try{
+    var ok=await submitEntry(buildCloseout(orig,f));
+    toast(ok?'ok':'warn',ok?'Closed out and synced.':'Closed out - saved on this device and will sync when signal returns.');
+    if(!ok)updatePendingBadge();
+    st.closingId=null;renderAll();
+  }finally{saving=false;}
+}
+function onFilter(){st.filt={body:$('f-body').value,type:$('f-type').value,status:$('f-status').value};renderHistory();}
+function filtered(){
+  var openSet=new Set(openItems(st.history).map(function(e){return e.id;}));
+  return st.history.filter(function(e){
+    if(st.filt.body!=='all'){var b=BODIES[+st.filt.body];if(!b||e.levelIdx!==b.levelIdx||e.bodyIdx!==b.bodyIdx)return false;}
+    if(st.filt.type!=='all'&&e.type!==st.filt.type)return false;
+    if(st.filt.status==='open'&&!openSet.has(e.id))return false;
+    return true;
+  });
+}
+function renderHistory(){
+  var list=filtered(),openSet=new Set(openItems(st.history).map(function(e){return e.id;})),closedSet=new Set();
+  st.history.forEach(function(e){if(e.kind==='closeout')closedSet.add(e.closes);});
+  if(!list.length){$('hist-list').innerHTML='<div class="empty">No entries match.</div>';return;}
+  var h='';
+  list.slice(0,100).forEach(function(e){
+    var closeout=e.kind==='closeout';
+    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+esc(e.when)+'</div></div><div>'
+      +'<span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'
+      +(closeout?'<span class="pill closed">Close-out</span>':'')
+      +(openSet.has(e.id)?'<span class="pill open">Open</span>':(closedSet.has(e.id)?'<span class="pill closed">Closed</span>':''))
+      +(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
+      +'<div class="entry-body">'+esc(e.description)+'</div>'
+      +(e.followUp&&e.followUpNote?'<div class="still"><b>Still needed:</b> '+esc(e.followUpNote)+'</div>':'')+metaHTML(e)+'</div>';
+  });
+  if(list.length>100)h+='<div class="empty">Showing the newest 100 of '+list.length+'. Export CSV for everything.</div>';
+  $('hist-list').innerHTML=h;
+}
+function exportCSV(){
+  var d=new Date(),stamp=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  var blob=new Blob(['\ufeff'+buildCSV(st.history)],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-maintenance-'+stamp+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function renderEquip(){
+  var h='';
+  BODIES.forEach(function(b){
+    var items=equipForBody(b.levelIdx,b.bodyIdx);
+    h+='<div class="card eq-group"><div class="slabel">'+esc(b.level)+' - '+esc(b.body)+'</div>';
+    if(!items.length)h+='<div class="entry-sub">No equipment listed yet. Staff use the standard choices.</div>';
+    items.forEach(function(e){h+='<div class="eq-row"><div><b>'+esc(e.name)+'</b><div class="entry-sub">'+esc(e.type||'')+'</div></div><button class="btn small" onclick="retireEq('+e.id+')">Retire</button></div>';});
+    h+='</div>';
+  });
+  $('equip-list').innerHTML=h;
+}
+async function addEquip(){
+  var name=($('eq-name').value||'').trim();if(name.length<2){toast('err','Enter the equipment name.');return;}
+  var b=BODIES[+$('eq-body').value];setSyncBadge('syncing','Saving equipment...');
+  var r=await addEquipment(b.levelIdx,b.bodyIdx,name,$('eq-type').value,getUserName());
+  if(r.ok){$('eq-name').value='';toast('ok',r.duplicate?'That equipment is already listed.':'Equipment added.');setSyncBadge('ok','Equipment saved');onEquipChanged();}
+  else{toast('err','Could not save equipment ('+r.reason+'). It needs a signal; try again.');setSyncBadge('err','Equipment not saved');}
+}
+async function retireEq(id){
+  if(!confirm('Retire this equipment? Past entries keep its name.'))return;
+  var r=await retireEquipment(id,getUserName());
+  if(r.ok){toast('ok','Equipment retired.');onEquipChanged();}else toast('err','Could not retire ('+r.reason+'). It needs a signal; try again.');
+}
+
+var wired=false;
+function startApp(){
+  showScreen('main');$('version-label').textContent=APP_VERSION;
+  loadLocal();fillBodySelects();$('by').value=getUserName()==='Staff'?'':getUserName();resetForm();fillEquipSelect();renderAll();
+  if(outbox.length)updatePendingBadge('offline');
+  setTimeout(function(){ghLoad(false);},400);
+  if(wired)return;wired=true;
+  window.addEventListener('online',function(){if(GH_TOKEN&&outbox.length){setSyncBadge('syncing','Back online -- syncing...');setTimeout(function(){syncOutbox();},1500);}});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&GH_TOKEN&&outbox.length)syncOutbox();});
+  setInterval(function(){if(GH_TOKEN&&outbox.length&&document.visibilityState==='visible'&&navigator.onLine!==false)syncOutbox();},45000);
+}
+window.onload=function(){
+  loadToken();
+  if(!GH_TOKEN){showScreen('token');return;}
+  if(!loadName()){showScreen('name');return;}
+  startApp();
+};
+</script>
+</body>
+</html>

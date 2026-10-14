@@ -177,6 +177,27 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 #tab-overview-content .visual-card,
 #tab-overview-content .body-card,
 #tab-overview-content .heatmap-card{box-shadow:var(--card-shadow);}
+
+/* Maintenance (Overview) */
+.maint-panels{display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.maint-panels .visual-card{min-width:320px;}
+.maint-count{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-size:13px;font-weight:500;text-align:center;}
+.maint-count.zero{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.maint-item{padding:9px 0;border-bottom:0.5px solid var(--border);}
+.maint-item:last-child{border-bottom:none;}
+.maint-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:14px;color:var(--text);}
+.maint-item-sub{font-size:13px;color:var(--text2);margin-top:2px;}
+.maint-item-text{font-size:13px;color:var(--text2);margin-top:4px;word-break:break-word;}
+.maint-pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;margin-left:4px;}
+.maint-pill.pm{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.maint-pill.repair{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.maint-pill.closed{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.maint-empty{font-size:14px;color:var(--text3);padding:10px 0;}
+.maint-warn{font-size:13px;color:var(--warn-text);background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);padding:6px 10px;margin-bottom:6px;}
+.maint-line{font-size:13px;color:var(--text2);margin-top:8px;margin-bottom:10px;padding-top:7px;border-top:0.5px solid var(--border);}
+.maint-open{display:inline-block;font-size:12px;padding:1px 8px;margin-right:4px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-weight:500;}
+.hist-switch{display:flex;gap:8px;margin-bottom:1rem;}
+.maint-pill.open{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
 </style>
 </head>
 <body>
@@ -208,7 +229,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.25 - Oct 7, 2026</span>
+        <span class="version">v1.28 - Oct 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -305,6 +326,9 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   </div>
 
+  <!-- Aquatic maintenance (from aquatic-maintenance.json) -->
+  <div id="maint-section"></div>
+
   <!-- Parameter heatmap -->
   <div class="heatmap-card">
     <div class="visual-title">Parameter health heatmap</div>
@@ -319,9 +343,10 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   <!-- HISTORY TAB -->
   <div id="tab-history-content" style="display:none;">
+    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
       <div>
-        <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
+        <div id="hist-title" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
         <div style="font-size:13px;color:var(--text3);" id="hist-summary">Loading...</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -351,6 +376,144 @@ var GH_BRANCH='data';
 var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE+'?ref='+GH_BRANCH;
 var TKEY='aquatic_gh_token';
 var allReadings=[];
+// ===== MAINTENANCE DATA (read-only; written by oslu-aquatic-maintenance.html to aquatic-maintenance.json) =====
+var MAINT_API=GH_API.replace(GH_FILE,'aquatic-maintenance.json');
+var maintRecords=[];
+var maintState='unknown'; // 'ok' = loaded this refresh, 'stale' = last good copy (refresh failed), 'unknown' = never loaded
+function maintOpenItems(list){ // an open repair = a follow-up that no later close-out refers to
+  var closed=new Set();
+  list.forEach(function(e){if(e&&e.kind==='closeout'&&e.closes!=null)closed.add(e.closes);});
+  return list.filter(function(e){return e&&e.kind!=='closeout'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
+}
+function maintTypeLabel(t){return t==='pm'?'PM':'Repair';}
+function maintBodyLabel(e){var l=LEVELS[e.levelIdx],b=l&&l.bodies[e.bodyIdx];return b?b.name+' ('+l.short+')':(e.body||'Unknown');}
+function maintWho(e){return escHtml(e.performedBy||'Unknown')+(e.company?' ('+escHtml(e.company)+')':'');}
+function maintShortDate(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function maintClip(s,n){s=String(s==null?'':s);return s.length>n?s.slice(0,n-1)+'\u2026':s;}
+function maintBodyHTML(li,bi){ // small line on each body card: open repairs + last work and who did it
+  if(maintState==='unknown')return '';
+  var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;});
+  if(!recs.length)return '';
+  var open=maintOpenItems(recs),last=recs.slice().sort(function(a,b){return b.ts-a.ts;})[0];
+  return '<div class="maint-line">'+(open.length?'<span class="maint-open">'+open.length+' open repair'+(open.length!==1?'s':'')+'</span> ':'')
+    +'Last work: '+escHtml(maintShortDate(last.ts))+' - '+escHtml(last.equipment)+' ('+maintWho(last)+')</div>';
+}
+
+// ---- History tab: aquatic maintenance view (Jason deletes mistaken entries here, same model as readings) ----
+var histView='readings';
+function setHistView(v){
+  histView=v;
+  document.getElementById('hv-readings').classList.toggle('active',v==='readings');
+  document.getElementById('hv-maint').classList.toggle('active',v==='maint');
+  document.getElementById('hist-title').textContent=v==='maint'?'Aquatic maintenance log':'All readings';
+  renderDashHistory();
+}
+function maintStatusPill(e,openSet,closedSet){
+  if(e.kind==='closeout')return '<span class="maint-pill closed">Close-out</span>';
+  if(openSet.has(e.id))return '<span class="maint-pill open">Open</span>';
+  if(closedSet.has(e.id))return '<span class="maint-pill closed">Closed</span>';
+  return '';
+}
+function renderMaintHistory(){
+  var filter=document.getElementById('hist-body-filter').value,summary=document.getElementById('hist-summary'),list=document.getElementById('dash-hist-list');
+  if(maintState==='unknown'){
+    if(summary)summary.textContent='Not loaded';
+    list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">Aquatic maintenance data is unavailable. Use Refresh to try again.</div>';return;
+  }
+  var entries=maintRecords.slice();
+  if(filter!=='all'){var p=filter.split('-');entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});}
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  if(summary)summary.textContent=entries.length+' entr'+(entries.length!==1?'ies':'y')+(filter==='all'?' across all bodies':' for selected body')+(maintState==='stale'?' (last copy loaded - refresh failed)':'');
+  if(!entries.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">No aquatic maintenance entries found.</div>';return;}
+  var openSet=new Set(maintOpenItems(maintRecords).map(function(e){return e.id;})),closedSet=new Set();
+  maintRecords.forEach(function(e){if(e.kind==='closeout')closedSet.add(e.closes);});
+  var h='';
+  entries.slice(0,300).forEach(function(e){
+    var meta=['Performed by '+maintWho(e)];
+    if(e.loggedBy&&e.loggedBy!==e.performedBy)meta.push('logged by '+escHtml(e.loggedBy));
+    if(e.parts)meta.push('Parts: '+escHtml(e.parts));
+    if(e.minutes!=null)meta.push(escHtml(e.minutes)+' min');
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</div><div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div></div>'
+      +'<div style="white-space:nowrap;"><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'+maintStatusPill(e,openSet,closedSet)+'</div></div>'
+      +'<div class="maint-item-text" style="font-size:14px;color:var(--text);white-space:pre-wrap;margin-top:6px;">'+escHtml(e.description)+'</div>'
+      +(e.followUp&&e.followUpNote?'<div class="maint-item-text"><b>Still needed:</b> '+escHtml(e.followUpNote)+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+meta.join(' - ')+'</div>'
+      +'<button class="dash-del-btn" onclick="dashDeleteMaint('+e.id+')">Delete</button></div></div>';
+  });
+  if(entries.length>300)h+='<div class="maint-empty" style="text-align:center;">Showing the newest 300 of '+entries.length+'. Export CSV for everything.</div>';
+  list.innerHTML=h;
+}
+// Delete acts on a FRESH copy of the file and removes only the chosen entry.
+// Deleting an entry also removes its close-outs (no orphans); deleting a close-out re-opens the repair.
+async function dashDeleteMaint(id){
+  var numId=Number(id),target=maintRecords.filter(function(e){return e.id===numId;})[0];
+  var msg='Delete this aquatic maintenance entry? This cannot be undone.';
+  if(target&&target.kind==='closeout')msg='Delete this close-out? The repair will show as open again.';
+  else if(target){
+    var n=maintRecords.filter(function(e){return e.kind==='closeout'&&e.closes===numId;}).length;
+    if(n)msg='Delete this entry and its '+n+' close-out'+(n!==1?'s':'')+'? This cannot be undone.';
+  }
+  if(!confirm(msg))return;
+  setSyncBadge('syncing','Deleting...');
+  var blocked=false;
+  var res=await ghMutate(function(remote){
+    var t=null;for(var i=0;i<remote.length;i++){if(remote[i].id===numId){t=remote[i];break;}}
+    if(!t)return null; // already gone
+    var kept=remote.filter(function(e){
+      if(e.id===numId)return false;
+      if(t.kind!=='closeout'&&e.kind==='closeout'&&e.closes===numId)return false;
+      return true;
+    });
+    var removed=remote.length-kept.length;
+    if(removed>10){blocked=true;return null;} // implausible: refuse, change nothing
+    return{list:kept,added:0,removed:removed};
+  },'Deleted aquatic maintenance entry',MAINT_API);
+  if(res.ok&&!blocked){
+    maintRecords=res.list;maintState='ok';
+    setSyncBadge('ok','Deleted - '+maintRecords.length+' maintenance entr'+(maintRecords.length!==1?'ies':'y')+' remaining (GitHub)');
+    renderDashHistory();renderDashboard();
+  }else{
+    setSyncBadge('err','Delete failed');
+    alert('Delete failed ('+(blocked?'safety check':res.reason)+'). Nothing was changed. Try again.');
+  }
+}
+function maintCsvCell(v){if(v==null)return '';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function exportMaintCSV(){
+  var rows=[['Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'].join(',')];
+  maintRecords.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
+    rows.push([e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(maintCsvCell).join(','));
+  });
+  var d=new Date(),stamp=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  var blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-maintenance-'+stamp+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+function renderMaint(){
+  var el=document.getElementById('maint-section');if(!el)return;
+  var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
+  var open=maintOpenItems(maintRecords),recent=maintRecords.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,8),h='<div class="maint-panels">';
+  h+='<div class="visual-card"><div class="visual-title">Open repairs'+(maintState==='unknown'?'':' <span class="maint-count'+(open.length?'':' zero')+'">'+open.length+'</span>')+'</div><div class="visual-sub">Follow-ups not yet closed out, oldest first</div>'+warn;
+  if(maintState!=='unknown'){
+    if(!open.length)h+='<div class="maint-empty">No open repairs.</div>';
+    open.slice(0,6).forEach(function(e){
+      var d=Math.max(0,Math.floor((Date.now()-e.ts)/86400000));
+      h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span></div>'
+        +'<div class="maint-item-sub">Open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text"><b>Still needed:</b> '+escHtml(maintClip(e.followUpNote,140))+'</div></div>';
+    });
+    if(open.length>6)h+='<div class="maint-empty">+ '+(open.length-6)+' more open</div>';
+  }
+  h+='</div><div class="visual-card"><div class="visual-title">Recent aquatic maintenance</div><div class="visual-sub">Latest work logged, with who did it</div>'+(open.length||maintState==='unknown'?'':warn);
+  if(maintState!=='unknown'){
+    if(!recent.length)h+='<div class="maint-empty">No maintenance logged yet.</div>';
+    recent.forEach(function(e){
+      h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'+(e.kind==='closeout'?'<span class="maint-pill closed">Close-out</span>':'')+'</span></div>'
+        +'<div class="maint-item-sub">'+escHtml(maintShortDate(e.ts))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text">'+escHtml(maintClip(e.description,120))+'</div></div>';
+    });
+  }
+  el.innerHTML=h+'</div></div>';
+}
 var windowDays=7;
 var miniCharts={};
 
@@ -387,10 +550,10 @@ function setSyncBadge(type,text){
   b.textContent=text;
 }
 
-// ===== GH CORE BEGIN (shared by calculator + dashboard) =====
+// ===== GH CORE BEGIN (shared by calculator + dashboard + maintenance) =====
+// url is optional everywhere and defaults to GH_API, so one core can serve several data files.
 // Every write follows one rule: fetch the CURRENT remote file, apply a small ID-based change
 // to that fresh copy, PUT with the SHA from that same fetch. Local copies are never a write base.
-// Output is compact JSON (no indentation): ~40% smaller, keeps readings.json under the 1 MB Contents API limit longer.
 function b64ToUtf8(b){
   var bin=atob(String(b).replace(/\s/g,''));
   var bytes=new Uint8Array(bin.length);
@@ -401,11 +564,11 @@ function utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
 function stripLocal(e){var c={};for(var k in e){if(k!=='synced')c[k]=e[k];}return c;}
 
 // One timer covers the whole request INCLUDING reading the body (a stalled body hangs forever otherwise)
-async function ghRequest(opts,ms){
+async function ghRequest(opts,ms,url){
   var c=new AbortController();
   var t=setTimeout(function(){c.abort();},ms);
   try{
-    var r=await fetch(GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
+    var r=await fetch(url||GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
     var text=await r.text();
     return{status:r.status,ok:r.ok,text:text};
   }finally{clearTimeout(t);}
@@ -416,9 +579,9 @@ function ghHdr(accept,json){
   return h;
 }
 
-async function ghFetchRemote(){
+async function ghFetchRemote(url){
   try{
-    var r=await ghRequest({headers:ghHdr()},5000);
+    var r=await ghRequest({headers:ghHdr()},5000,url);
     if(r.status===404)return{ok:true,list:[],sha:null,missing:true};
     if(r.status===401)return{ok:false,reason:'auth',status:401};
     if(!r.ok)return{ok:false,reason:'http',status:r.status};
@@ -428,7 +591,7 @@ async function ghFetchRemote(){
       text=b64ToUtf8(j.content);
     }else if(j.size>0){
       // Contents API returns EMPTY content for files over 1 MB -- fetch the raw body instead
-      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000);
+      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000,url);
       if(!rr.ok)return{ok:false,reason:'http',status:rr.status};
       text=rr.text;
     }else{text='[]';}
@@ -439,20 +602,20 @@ async function ghFetchRemote(){
   }catch(e){return{ok:false,reason:'network',error:String(e)};}
 }
 
-async function ghPut(list,sha,message){
+async function ghPut(list,sha,message,url){
   try{
     var body={message:message,content:utf8ToB64(JSON.stringify(list.map(stripLocal))),branch:GH_BRANCH};
     if(sha)body.sha=sha;
-    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000);
+    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000,url);
     if(w.ok)return{ok:true};
     return{ok:false,status:w.status};
   }catch(e){return{ok:false,error:String(e)};} // outcome unknown -- caller re-checks by ID on next attempt
 }
 
 // mutator(remoteList) -> null (nothing to change) or {list, added, removed}
-async function ghMutate(mutator,message){
+async function ghMutate(mutator,message,url){
   for(var attempt=0;attempt<3;attempt++){
-    var rem=await ghFetchRemote();
+    var rem=await ghFetchRemote(url);
     if(!rem.ok)return{ok:false,reason:rem.reason,status:rem.status};
     var plan=mutator(rem.list);
     if(!plan)return{ok:true,changed:false,list:rem.list};
@@ -461,7 +624,7 @@ async function ghMutate(mutator,message){
     for(var i=0;i<rem.list.length;i++){if(!keep.has(rem.list[i]))lost++;}
     var added=plan.list.length-(rem.list.length-lost);
     if(lost!==(plan.removed||0)||added!==(plan.added||0))return{ok:false,reason:'guard'};
-    var w=await ghPut(plan.list,rem.sha,message);
+    var w=await ghPut(plan.list,rem.sha,message,url);
     if(w.ok)return{ok:true,changed:true,list:plan.list};
     if(w.status===409||w.status===422)continue; // someone wrote first: re-fetch, re-apply, retry
     return{ok:false,reason:w.status?'http':'network',status:w.status};
@@ -472,7 +635,10 @@ async function ghMutate(mutator,message){
 
 async function loadData(){
   setSyncBadge('syncing','Loading...');
-  var rem=await ghFetchRemote();
+  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API)]); // readings + maintenance, in parallel
+  var rem=both[0],mrem=both[1];
+  if(mrem.ok){maintRecords=mrem.list;maintState='ok';}
+  else{maintState=(maintState==='ok'||maintState==='stale')?'stale':'unknown';} // a maintenance failure never blocks the pool/spa views
   if(rem.ok){
     allReadings=rem.list;
     var now=new Date();
@@ -703,6 +869,7 @@ function renderDashboard(){
       if(latest){html+='<div class="body-when">'+timeAgo(latest.ts)+(latest.tester?' by '+latest.tester:'')+'</div><div style="font-size:12px;color:var(--text3);">'+bodyRecs.length+' reading'+(bodyRecs.length!==1?'s':'')+' in window</div>';}
       else{html+='<div class="body-when">No readings</div>';}
       html+='</div></div>';
+      html+=maintBodyHTML(li,bi);
 
       if(latest){
         var r=latest.readings;
@@ -785,6 +952,7 @@ function renderDashboard(){
   });
 
   document.getElementById('level-sections').innerHTML=html;
+  renderMaint();
 
   // Render mini charts after DOM update
   setTimeout(function(){
@@ -1087,6 +1255,7 @@ function chartText(){var v=getComputedStyle(document.documentElement).getPropert
 function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function noteBox(n,pad){return '<div style="font-size:13px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:'+pad+';margin-bottom:6px;white-space:pre-wrap;">Note: '+escHtml(n)+'</div>';}
 function renderDashHistory(){
+  if(histView==='maint'){renderMaintHistory();return;}
   var filter=document.getElementById("hist-body-filter").value;
   var entries=allReadings.slice();
   if(filter!=="all"){
@@ -1164,6 +1333,7 @@ async function dashDeleteEntry(id){
 }
 
 function exportDashCSV(){
+  if(histView==='maint'){exportMaintCSV();return;}
   if(!allReadings.length){alert("No readings to export.");return;}
   var filter=document.getElementById("hist-body-filter").value;
   var entries=allReadings.slice();
