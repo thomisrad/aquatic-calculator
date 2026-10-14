@@ -85,6 +85,8 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .pill.closed{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
 .pill.pending{background:var(--bg2);color:var(--text2);}
 .still{margin-top:8px;padding:8px 10px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);border-radius:var(--radius);font-size:13px;}
+.closed-out{margin-top:10px;padding:8px 10px;border-left:3px solid var(--success-text);background:var(--success-bg);color:var(--success-text);border-radius:var(--radius);font-size:13px;}
+.closed-out .entry-meta{color:inherit;}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
 .filters select{flex:1;min-width:140px;font-size:14px;}
 .empty{text-align:center;color:var(--text3);padding:2rem 1rem;font-size:14px;}
@@ -213,7 +215,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1 - Oct 7, 2026';
+var APP_VERSION='v1.1 - Oct 14, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
@@ -354,6 +356,24 @@ function openItems(list){
   var closed=new Set();
   list.forEach(function(e){if(e&&e.kind==='closeout'&&e.closes!=null)closed.add(e.closes);});
   return list.filter(function(e){return e&&e.kind!=='closeout'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
+}
+
+// Group each close-out under the entry it closes, so a repair and its close-out read as ONE job.
+function maintThreads(list){
+  var main={},closeouts={},threads=[],orphans=[];
+  list.forEach(function(e){if(e&&e.kind!=='closeout')main[e.id]=e;});
+  list.forEach(function(e){
+    if(!e||e.kind!=='closeout')return;
+    if(main[e.closes]){(closeouts[e.closes]=closeouts[e.closes]||[]).push(e);}else orphans.push(e); // original missing: show on its own
+  });
+  list.forEach(function(e){
+    if(!e||e.kind==='closeout')return;
+    var cs=(closeouts[e.id]||[]).sort(function(a,b){return a.ts-b.ts;}),act=e.ts;
+    cs.forEach(function(c){if(c.ts>act)act=c.ts;});
+    threads.push({entry:e,closeouts:cs,activity:act});
+  });
+  orphans.forEach(function(e){threads.push({entry:e,closeouts:[],activity:e.ts,orphan:true});});
+  return threads.sort(function(a,b){return b.activity-a.activity;});
 }
 function csvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function buildCSV(list){
@@ -627,21 +647,31 @@ function filtered(){
   });
 }
 function renderHistory(){
-  var list=filtered(),openSet=new Set(openItems(st.history).map(function(e){return e.id;})),closedSet=new Set();
-  st.history.forEach(function(e){if(e.kind==='closeout')closedSet.add(e.closes);});
-  if(!list.length){$('hist-list').innerHTML='<div class="empty">No entries match.</div>';return;}
+  var openSet=new Set(openItems(st.history).map(function(e){return e.id;}));
+  var threads=maintThreads(st.history).filter(function(th){
+    var e=th.entry;
+    if(st.filt.body!=='all'){var b=BODIES[+st.filt.body];if(!b||e.levelIdx!==b.levelIdx||e.bodyIdx!==b.bodyIdx)return false;}
+    if(st.filt.type!=='all'&&e.type!==st.filt.type)return false;
+    if(st.filt.status==='open'&&!openSet.has(e.id))return false;
+    return true;
+  });
+  if(!threads.length){$('hist-list').innerHTML='<div class="empty">No entries match.</div>';return;}
   var h='';
-  list.slice(0,100).forEach(function(e){
-    var closeout=e.kind==='closeout';
+  threads.slice(0,100).forEach(function(th){
+    var e=th.entry,closed=e.followUp&&th.closeouts.length>0,pending=e.synced===false||th.closeouts.some(function(c){return c.synced===false;});
     h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+esc(e.when)+'</div></div><div>'
       +'<span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'
-      +(closeout?'<span class="pill closed">Close-out</span>':'')
-      +(openSet.has(e.id)?'<span class="pill open">Open</span>':(closedSet.has(e.id)?'<span class="pill closed">Closed</span>':''))
-      +(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
+      +(e.kind==='closeout'?'<span class="pill closed">Close-out</span>':'')
+      +(openSet.has(e.id)?'<span class="pill open">Open</span>':(closed?'<span class="pill closed">Closed</span>':''))
+      +(pending?'<span class="pill pending">Pending</span>':'')+'</div></div>'
       +'<div class="entry-body">'+esc(e.description)+'</div>'
-      +(e.followUp&&e.followUpNote?'<div class="still"><b>Still needed:</b> '+esc(e.followUpNote)+'</div>':'')+metaHTML(e)+'</div>';
+      +(e.followUp&&e.followUpNote?'<div class="still"><b>Follow-up needed:</b> '+esc(e.followUpNote)+'</div>':'')+metaHTML(e);
+    th.closeouts.forEach(function(c){
+      h+='<div class="closed-out"><b>Closed out '+esc(c.when)+'</b><div class="entry-body" style="margin-top:2px;">'+esc(c.description)+'</div>'+metaHTML(c)+'</div>';
+    });
+    h+='</div>';
   });
-  if(list.length>100)h+='<div class="empty">Showing the newest 100 of '+list.length+'. Export CSV for everything.</div>';
+  if(threads.length>100)h+='<div class="empty">Showing the newest 100 of '+threads.length+'. Export CSV for everything.</div>';
   $('hist-list').innerHTML=h;
 }
 function exportCSV(){
