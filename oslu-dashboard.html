@@ -199,6 +199,10 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .hist-switch{display:flex;gap:8px;margin-bottom:1rem;}
 .maint-co{margin-top:8px;padding:8px 10px;border-left:3px solid var(--success-text);background:var(--success-bg);color:var(--success-text);border-radius:var(--radius);font-size:13px;word-break:break-word;}
 .maint-pill.open{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.maint-item{padding:7px 0;}
+.maint-item-text.clamp,.maint-co.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.maint-more{display:block;background:none;border:none;color:var(--info-text);font-size:13px;font-weight:500;padding:8px 0 2px;cursor:pointer;text-decoration:underline;}
+.maint-ref{font-family:ui-monospace,Consolas,monospace;font-weight:600;color:var(--text);font-size:12px;}
 </style>
 </head>
 <body>
@@ -230,7 +234,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.29 - Oct 14, 2026</span>
+        <span class="version">v1.30 - Oct 14, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -344,7 +348,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   <!-- HISTORY TAB -->
   <div id="tab-history-content" style="display:none;">
-    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button></div>
+    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><input type="search" id="hist-search" placeholder="Search reference (AM-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
       <div>
         <div id="hist-title" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
@@ -404,6 +408,20 @@ function maintThreads(list){
   orphans.forEach(function(e){threads.push({entry:e,closeouts:[],activity:e.ts,orphan:true});});
   return threads.sort(function(a,b){return b.activity-a.activity;});
 }
+
+// Reference numbers: AM-0001, AM-0002... assigned when an entry syncs (inside the same safe write), so they are unique across devices.
+var REF_PREFIX='AM-';
+function refLabel(n){return(n==null||isNaN(n))?'':REF_PREFIX+String(n).padStart(4,'0');}
+function maintMatches(th,q){ // History search: reference number ("AM-0007", "7") or any text on the job
+  q=(q||'').trim().toLowerCase();if(!q)return true;
+  var e=th.entry,digits=q.replace(/^am-?/,'');
+  if(/^\d+$/.test(digits)&&e.refNo!=null&&Number(digits)===e.refNo)return true;
+  var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).join(' ').toLowerCase();
+  return hay.indexOf(q)>=0;
+}
+function maintRefHTML(e){var r=refLabel(e.refNo);return r?'<span class="maint-ref">'+escHtml(r)+'</span> - ':'';}
+var MAINT_VISIBLE=4,maintShowAllRecent=false,maintShowAllOpen=false;
+function toggleMaintMore(which){if(which==='recent')maintShowAllRecent=!maintShowAllRecent;else maintShowAllOpen=!maintShowAllOpen;renderMaint();}
 function maintTypeLabel(t){return t==='pm'?'PM':'Repair';}
 function maintBodyLabel(e){var l=LEVELS[e.levelIdx],b=l&&l.bodies[e.bodyIdx];return b?b.name+' ('+l.short+')':(e.body||'Unknown');}
 function maintWho(e){return escHtml(e.performedBy||'Unknown')+(e.company?' ('+escHtml(e.company)+')':'');}
@@ -425,6 +443,7 @@ function setHistView(v){
   document.getElementById('hv-readings').classList.toggle('active',v==='readings');
   document.getElementById('hv-maint').classList.toggle('active',v==='maint');
   document.getElementById('hist-title').textContent=v==='maint'?'Aquatic maintenance log':'All readings';
+  document.getElementById('hist-search').style.display=v==='maint'?'block':'none';
   renderDashHistory();
 }
 function renderMaintHistory(){
@@ -435,13 +454,14 @@ function renderMaintHistory(){
   }
   var threads=maintThreads(maintRecords);
   if(filter!=='all'){var p=filter.split('-');threads=threads.filter(function(t){return t.entry.levelIdx===parseInt(p[0])&&t.entry.bodyIdx===parseInt(p[1]);});}
+  var q=document.getElementById('hist-search').value;threads=threads.filter(function(t){return maintMatches(t,q);});
   if(summary)summary.textContent=threads.length+' entr'+(threads.length!==1?'ies':'y')+(filter==='all'?' across all bodies':' for selected body')+(maintState==='stale'?' (last copy loaded - refresh failed)':'');
   if(!threads.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">No aquatic maintenance entries found.</div>';return;}
   var openSet=new Set(maintOpenItems(maintRecords).map(function(e){return e.id;})),h='';
   function metaOf(e){var m=['Performed by '+maintWho(e)];if(e.loggedBy&&e.loggedBy!==e.performedBy)m.push('logged by '+escHtml(e.loggedBy));if(e.parts)m.push('Parts: '+escHtml(e.parts));if(e.minutes!=null)m.push(escHtml(e.minutes)+' min');return m.join(' - ');}
   threads.slice(0,300).forEach(function(th){
     var e=th.entry,isOpen=openSet.has(e.id),closed=e.followUp&&th.closeouts.length>0;
-    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</div><div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div></div>'
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</div><div class="dash-hist-when" style="text-align:left;">'+maintRefHTML(e)+escHtml(e.when)+'</div></div>'
       +'<div style="white-space:nowrap;"><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'
       +(e.kind==='closeout'?'<span class="maint-pill closed">Close-out</span>':'')+(isOpen?'<span class="maint-pill open">Open</span>':(closed?'<span class="maint-pill closed">Closed</span>':''))+'</div></div>'
       +'<div class="maint-item-text" style="font-size:14px;color:var(--text);white-space:pre-wrap;margin-top:6px;">'+escHtml(e.description)+'</div>'
@@ -494,11 +514,12 @@ async function dashDeleteMaint(id){
 }
 function maintCsvCell(v){if(v==null)return '';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportMaintCSV(){
-  var rows=[['Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'].join(',')];
+  var ref={};maintRecords.forEach(function(e){if(e&&e.kind!=='closeout')ref[e.id]=e.refNo;});
+  var rows=[['Reference','Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'].join(',')];
   maintRecords.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
-    rows.push([e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(maintCsvCell).join(','));
+    rows.push([e.kind==='closeout'?refLabel(ref[e.closes]):refLabel(e.refNo),e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(maintCsvCell).join(','));
   });
-  var d=new Date(),stamp=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+  var dd=new Date(),stamp=dd.getFullYear()+'-'+('0'+(dd.getMonth()+1)).slice(-2)+'-'+('0'+dd.getDate()).slice(-2);
   var blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-maintenance-'+stamp+'.csv';
   document.body.appendChild(a);a.click();a.remove();
@@ -506,30 +527,38 @@ function exportMaintCSV(){
 function renderMaint(){
   var el=document.getElementById('maint-section');if(!el)return;
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
-  var open=maintOpenItems(maintRecords),recent=maintThreads(maintRecords).slice(0,8),openSet=new Set(open.map(function(e){return e.id;})),h='<div class="maint-panels">';
+  var open=maintOpenItems(maintRecords),threads=maintThreads(maintRecords),openSet=new Set(open.map(function(e){return e.id;})),h='<div class="maint-panels">';
+  function more(which,total,shown,expanded){
+    if(total<=MAINT_VISIBLE)return '';
+    return '<button class="maint-more" onclick="toggleMaintMore(\''+which+'\')">'+(expanded?'Show fewer':'Show all '+total)+'</button>'
+      +(expanded&&which==='recent'&&total>shown?'<div class="maint-empty">Showing the latest '+shown+'. See History for older entries.</div>':'');
+  }
   h+='<div class="visual-card"><div class="visual-title">Open repairs'+(maintState==='unknown'?'':' <span class="maint-count'+(open.length?'':' zero')+'">'+open.length+'</span>')+'</div><div class="visual-sub">Follow-ups not yet closed out, oldest first</div>'+warn;
   if(maintState!=='unknown'){
     if(!open.length)h+='<div class="maint-empty">No open repairs.</div>';
-    open.slice(0,6).forEach(function(e){
+    var oShown=maintShowAllOpen?open.length:Math.min(open.length,MAINT_VISIBLE);
+    open.slice(0,oShown).forEach(function(e){
       var d=Math.max(0,Math.floor((Date.now()-e.ts)/86400000));
       h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span></div>'
-        +'<div class="maint-item-sub">Open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+' - performed by '+maintWho(e)+'</div>'
-        +'<div class="maint-item-text"><b>Still needed:</b> '+escHtml(maintClip(e.followUpNote,140))+'</div></div>';
+        +'<div class="maint-item-sub">'+maintRefHTML(e)+'Open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text clamp"><b>Still needed:</b> '+escHtml(e.followUpNote)+'</div></div>';
     });
-    if(open.length>6)h+='<div class="maint-empty">+ '+(open.length-6)+' more open</div>';
+    h+=more('open',open.length,oShown,maintShowAllOpen);
   }
   h+='</div><div class="visual-card"><div class="visual-title">Recent aquatic maintenance</div><div class="visual-sub">Latest work logged, with who did it</div>'+(open.length||maintState==='unknown'?'':warn);
   if(maintState!=='unknown'){
-    if(!recent.length)h+='<div class="maint-empty">No maintenance logged yet.</div>';
-    recent.forEach(function(th){
+    if(!threads.length)h+='<div class="maint-empty">No maintenance logged yet.</div>';
+    var rShown=maintShowAllRecent?Math.min(threads.length,12):Math.min(threads.length,MAINT_VISIBLE);
+    threads.slice(0,rShown).forEach(function(th){
       var e=th.entry,isOpen=openSet.has(e.id),closed=e.followUp&&th.closeouts.length>0;
       h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'
         +(e.kind==='closeout'?'<span class="maint-pill closed">Close-out</span>':'')+(isOpen?'<span class="maint-pill open">Open</span>':(closed?'<span class="maint-pill closed">Closed</span>':''))+'</span></div>'
-        +'<div class="maint-item-sub">'+escHtml(maintShortDate(e.ts))+' - performed by '+maintWho(e)+'</div>'
-        +'<div class="maint-item-text">'+escHtml(maintClip(e.description,120))+'</div>';
-      th.closeouts.forEach(function(c){h+='<div class="maint-co"><b>Closed out '+escHtml(maintShortDate(c.ts))+'</b> by '+maintWho(c)+': '+escHtml(maintClip(c.description,120))+'</div>';});
+        +'<div class="maint-item-sub">'+maintRefHTML(e)+escHtml(maintShortDate(e.ts))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text clamp">'+escHtml(e.description)+'</div>';
+      th.closeouts.forEach(function(c){h+='<div class="maint-co clamp"><b>Closed out '+escHtml(maintShortDate(c.ts))+'</b> by '+maintWho(c)+': '+escHtml(c.description)+'</div>';});
       h+='</div>';
     });
+    h+=more('recent',threads.length,rShown,maintShowAllRecent);
   }
   el.innerHTML=h+'</div></div>';
 }

@@ -53,7 +53,7 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .field{margin-bottom:14px;}
 .field label,.slabel{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
 .field .hint{font-size:12px;color:var(--text3);margin-top:4px;}
-.field input[type=text],.field input[type=number],.field input[type=datetime-local],.field select,.field textarea,.filters select{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
+.field input[type=text],.field input[type=number],.field input[type=datetime-local],.field select,.field textarea,.filters select,.filters input{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
 .field textarea{min-height:88px;resize:vertical;line-height:1.4;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:480px){.row2{grid-template-columns:1fr;}}
@@ -88,7 +88,9 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .closed-out{margin-top:10px;padding:8px 10px;border-left:3px solid var(--success-text);background:var(--success-bg);color:var(--success-text);border-radius:var(--radius);font-size:13px;}
 .closed-out .entry-meta{color:inherit;}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
-.filters select{flex:1;min-width:140px;font-size:14px;}
+.filters select,.filters input{flex:1;min-width:140px;font-size:14px;}
+.ref{font-family:ui-monospace,Consolas,monospace;font-weight:600;color:var(--text);font-size:12px;}
+.ref.pending{font-family:var(--font);font-weight:400;color:var(--text3);}
 .empty{text-align:center;color:var(--text3);padding:2rem 1rem;font-size:14px;}
 .eq-group{margin-bottom:14px;}
 .eq-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);}
@@ -188,6 +190,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
   <!-- HISTORY -->
   <div id="page-history" style="display:none;">
     <div class="filters">
+      <input type="search" id="f-q" placeholder="Search reference (AM-0007) or text" oninput="onFilter()" style="flex:2;min-width:200px;"/>
       <select id="f-body" onchange="onFilter()"></select>
       <select id="f-type" onchange="onFilter()"><option value="all">All types</option><option value="pm">Preventive maintenance</option><option value="repair">Repairs</option></select>
       <select id="f-status" onchange="onFilter()"><option value="all">All entries</option><option value="open">Open follow-ups only</option></select>
@@ -215,7 +218,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1.1 - Oct 14, 2026';
+var APP_VERSION='v1.2 - Oct 14, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
@@ -375,12 +378,24 @@ function maintThreads(list){
   orphans.forEach(function(e){threads.push({entry:e,closeouts:[],activity:e.ts,orphan:true});});
   return threads.sort(function(a,b){return b.activity-a.activity;});
 }
+
+// Reference numbers: AM-0001, AM-0002... assigned when an entry syncs (inside the same safe write), so they are unique across devices.
+var REF_PREFIX='AM-';
+function refLabel(n){return(n==null||isNaN(n))?'':REF_PREFIX+String(n).padStart(4,'0');}
+function maintMatches(th,q){ // History search: reference number ("AM-0007", "7") or any text on the job
+  q=(q||'').trim().toLowerCase();if(!q)return true;
+  var e=th.entry,digits=q.replace(/^am-?/,'');
+  if(/^\d+$/.test(digits)&&e.refNo!=null&&Number(digits)===e.refNo)return true;
+  var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).join(' ').toLowerCase();
+  return hay.indexOf(q)>=0;
+}
 function csvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function buildCSV(list){
-  var head=['Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'];
+  var ref={};list.forEach(function(e){if(e&&e.kind!=='closeout')ref[e.id]=e.refNo;});
+  var head=['Reference','Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'];
   var rows=[head.join(',')];
   list.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
-    rows.push([e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(csvCell).join(','));
+    rows.push([e.kind==='closeout'?refLabel(ref[e.closes]):refLabel(e.refNo),e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(csvCell).join(','));
   });
   return rows.join('\r\n');
 }
@@ -473,8 +488,11 @@ async function doSync(){
     var have=new Set(remote.map(function(e){return e.id;}));
     var add=batch.filter(function(e){return!have.has(e.id);});
     if(!add.length)return null; // already on GitHub (an earlier PUT landed but the reply was lost)
-    add.sort(function(a,b){return b.ts-a.ts;});
-    return{list:add.map(stripLocal).concat(remote),added:add.length,removed:0};
+    var maxRef=0;remote.forEach(function(e){if(e&&typeof e.refNo==='number'&&e.refNo>maxRef)maxRef=e.refNo;});
+    var next=maxRef,numbered=add.slice().sort(function(a,b){return(a.loggedAt||a.ts)-(b.loggedAt||b.ts);}).map(function(e){
+      var c=stripLocal(e);if(c.kind!=='closeout'&&c.refNo==null){next++;c.refNo=next;}return c;});
+    numbered.sort(function(a,b){return b.ts-a.ts;});
+    return{list:numbered.concat(remote),added:add.length,removed:0};
   },'Sync '+batch.length+' aquatic maintenance entr'+(batch.length!==1?'ies':'y'));
   if(!res.ok){updatePendingBadge(res.reason);return{ok:false,reason:res.reason};}
   outbox=outbox.filter(function(e){return!seen.has(e.id);});
@@ -571,8 +589,8 @@ async function saveWork(){
   var err=validateWork(f);if(err){toast('err',err);return;}
   saving=true;$('btn-save').disabled=true;setSyncBadge('syncing','Saving...');
   try{
-    var rec=buildWork(f),ok=await submitEntry(rec);
-    toast(ok?'ok':'warn',ok?'Saved and synced. Visible to everyone.':'Weak or no signal - saved on this device. It stays queued and syncs automatically.');
+    var rec=buildWork(f),ok=await submitEntry(rec),saved=st.history.filter(function(e){return e.id===rec.id;})[0],rl=saved?refLabel(saved.refNo):'';
+    toast(ok?'ok':'warn',ok?'Saved and synced'+(rl?' as '+rl:'')+'. Visible to everyone.':'Weak or no signal - saved on this device. It syncs automatically and gets its reference number then.');
     if(!ok)updatePendingBadge();
     resetForm();renderAll();
   }finally{saving=false;$('btn-save').disabled=false;}
@@ -594,6 +612,7 @@ function renderAll(){
   else if(st.page==='history')renderHistory();
   else if(st.page==='equip')renderEquip();
 }
+function refSub(e){return e.refNo!=null?'<span class="ref">'+esc(refLabel(e.refNo))+'</span> - ':(e.kind!=='closeout'&&e.synced===false?'<span class="ref pending">Number assigned when synced</span> - ':'');}
 function whoText(e){return 'Performed by '+esc(e.performedBy)+(e.company?' ('+esc(e.company)+')':'')+(e.loggedBy&&e.loggedBy!==e.performedBy?' - logged by '+esc(e.loggedBy):'');}
 function metaHTML(e){
   var m=['<span>'+whoText(e)+'</span>'];
@@ -607,7 +626,7 @@ function renderOpen(){
   if(!items.length){$('open-list').innerHTML='<div class="empty">No open repairs. Everything logged has been closed out.</div>';return;}
   items.forEach(function(e){
     var d=daysOpen(e);
-    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+esc(e.when)+' - open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+'</div></div><div><span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'+(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
+    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+refSub(e)+esc(e.when)+' - open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+'</div></div><div><span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'+(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
       +'<div class="entry-body">'+esc(e.description)+'</div><div class="still"><b>Still needed:</b> '+esc(e.followUpNote)+'</div>'+metaHTML(e);
     if(st.closingId===e.id){
       h+='<div class="followup-box" style="margin-top:12px;"><div class="field"><label for="co-desc">What was done to close this out?</label><textarea id="co-desc" maxlength="1000" style="width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--warn-border);border-radius:var(--radius);background:var(--bg);color:var(--text);min-height:72px;"></textarea></div>'
@@ -631,12 +650,12 @@ async function saveClose(id){
   saving=true;setSyncBadge('syncing','Saving...');
   try{
     var ok=await submitEntry(buildCloseout(orig,f));
-    toast(ok?'ok':'warn',ok?'Closed out and synced.':'Closed out - saved on this device and will sync when signal returns.');
+    toast(ok?'ok':'warn',ok?'Closed out '+(refLabel(orig.refNo)||'repair')+' and synced.':'Closed out - saved on this device and will sync when signal returns.');
     if(!ok)updatePendingBadge();
     st.closingId=null;renderAll();
   }finally{saving=false;}
 }
-function onFilter(){st.filt={body:$('f-body').value,type:$('f-type').value,status:$('f-status').value};renderHistory();}
+function onFilter(){st.filt={body:$('f-body').value,type:$('f-type').value,status:$('f-status').value,q:$('f-q').value};renderHistory();}
 function filtered(){
   var openSet=new Set(openItems(st.history).map(function(e){return e.id;}));
   return st.history.filter(function(e){
@@ -653,13 +672,13 @@ function renderHistory(){
     if(st.filt.body!=='all'){var b=BODIES[+st.filt.body];if(!b||e.levelIdx!==b.levelIdx||e.bodyIdx!==b.bodyIdx)return false;}
     if(st.filt.type!=='all'&&e.type!==st.filt.type)return false;
     if(st.filt.status==='open'&&!openSet.has(e.id))return false;
-    return true;
+    return maintMatches(th,st.filt.q);
   });
   if(!threads.length){$('hist-list').innerHTML='<div class="empty">No entries match.</div>';return;}
   var h='';
   threads.slice(0,100).forEach(function(th){
     var e=th.entry,closed=e.followUp&&th.closeouts.length>0,pending=e.synced===false||th.closeouts.some(function(c){return c.synced===false;});
-    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+esc(e.when)+'</div></div><div>'
+    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+refSub(e)+esc(e.when)+'</div></div><div>'
       +'<span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'
       +(e.kind==='closeout'?'<span class="pill closed">Close-out</span>':'')
       +(openSet.has(e.id)?'<span class="pill open">Open</span>':(closed?'<span class="pill closed">Closed</span>':''))
