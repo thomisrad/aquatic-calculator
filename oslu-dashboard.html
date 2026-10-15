@@ -234,7 +234,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.30 - Oct 14, 2026</span>
+        <span class="version">v1.31 - Oct 14, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -348,7 +348,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   <!-- HISTORY TAB -->
   <div id="tab-history-content" style="display:none;">
-    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><input type="search" id="hist-search" placeholder="Search reference (AM-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
+    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><input type="search" id="hist-search" placeholder="Search reference (AQ-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
       <div>
         <div id="hist-title" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
@@ -409,12 +409,12 @@ function maintThreads(list){
   return threads.sort(function(a,b){return b.activity-a.activity;});
 }
 
-// Reference numbers: AM-0001, AM-0002... assigned when an entry syncs (inside the same safe write), so they are unique across devices.
-var REF_PREFIX='AM-';
+// Reference numbers: AQ-0001, AQ-0002... assigned when an entry syncs (inside the same safe write), so they are unique across devices.
+var REF_PREFIX='AQ-';  // display only: entries store just the number, so this can be changed at any time
 function refLabel(n){return(n==null||isNaN(n))?'':REF_PREFIX+String(n).padStart(4,'0');}
-function maintMatches(th,q){ // History search: reference number ("AM-0007", "7") or any text on the job
+function maintMatches(th,q){ // History search: reference number ("AQ-0007", "7") or any text on the job
   q=(q||'').trim().toLowerCase();if(!q)return true;
-  var e=th.entry,digits=q.replace(/^am-?/,'');
+  var e=th.entry,pfx=REF_PREFIX.toLowerCase().replace('-',''),digits=q.indexOf(pfx)===0?q.slice(pfx.length).replace(/^-/,''):q;
   if(/^\d+$/.test(digits)&&e.refNo!=null&&Number(digits)===e.refNo)return true;
   var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).join(' ').toLowerCase();
   return hay.indexOf(q)>=0;
