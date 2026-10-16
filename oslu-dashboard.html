@@ -215,6 +215,8 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .pu-msg{font-size:13px;}
 .pu-msg.ok{color:var(--success-text);}
 .pu-msg.err{color:var(--danger-text);}
+.un-step{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--text);}
+.un-step label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
 @media(min-width:900px){#spend-card{grid-column:span 2;}}
 .sp-i{white-space:nowrap;}
 /* Tests by person */
@@ -257,7 +259,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.34 - Oct 16, 2026</span>
+        <span class="version">v1.35 - Oct 16, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -403,7 +405,18 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   </div>
 
   <div id="tab-history-content" style="display:none;">
-    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><input type="search" id="hist-search" placeholder="Search reference (AQ-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
+    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><button class="dash-del-btn" id="unnamed-btn" style="display:none;margin-left:12px;font-size:13px;padding:8px 14px;" onclick="toggleUnnamedPanel()"></button><input type="search" id="hist-search" placeholder="Search reference (AQ-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
+    <div id="unnamed-panel" class="visual-card" style="display:none;margin-bottom:14px;">
+      <div class="visual-title">Clean up unnamed tests</div>
+      <div id="un-info" style="font-size:14px;color:var(--text);margin:6px 0 12px;line-height:1.5;"></div>
+      <div class="un-step"><b>1.</b> <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="downloadReadingsBackup()">Download a backup of all readings</button> <span id="un-bk" class="pu-msg err">not downloaded yet</span></div>
+      <div class="un-step"><b>2.</b> <label><input type="radio" name="un-act" value="delete" checked onchange="onUnChange()"/> Delete them</label>
+        <label><input type="radio" name="un-act" value="rename" onchange="onUnChange()"/> Keep them and label them as</label>
+        <input class="pu-input" id="un-name" maxlength="30" placeholder="e.g. Earlier tests" style="max-width:190px;display:inline-block;" oninput="onUnChange()" disabled/></div>
+      <div class="un-step"><b>3.</b> Type <b id="un-n"></b> to confirm <input class="pu-input" id="un-confirm" inputmode="numeric" style="width:80px;display:inline-block;" oninput="onUnChange()"/>
+        <button class="dash-del-btn" id="un-apply" style="font-size:14px;padding:8px 16px;" disabled onclick="applyUnnamed()">Delete</button></div>
+      <div id="un-msg" class="pu-msg"></div>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
       <div>
         <div id="hist-title" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
@@ -775,6 +788,77 @@ function renderTestersCard(filtered,windowLabel){
       +'<span class="tp-val"><b>'+escHtml(pctLabel(r))+'</b> '+r.count+' test'+(r.count!==1?'s':'')+'</span></div>';
   });
   el.innerHTML=h+'</div>';
+}
+
+// ---- Clean up unnamed tests (batch delete, or keep and label) ----
+function isUnnamed(r){var k=testerKey(r&&r.tester);return k===''||k==='unknown';}
+function unnamedTests(list){return list.filter(function(r){return isTest(r)&&isUnnamed(r);});}
+function unnamedSummary(list){
+  var u=unnamedTests(list),s={n:u.length,first:null,last:null,backwash:0,notes:0};
+  u.forEach(function(r){if(s.first==null||r.ts<s.first)s.first=r.ts;if(s.last==null||r.ts>s.last)s.last=r.ts;if(r.backwash===true)s.backwash++;if(r.notes)s.notes++;});
+  return s;
+}
+// Acts on a FRESH copy of the file and ONLY on the records previewed (ids) that are still unnamed tests: a named test can never be touched.
+async function batchFixUnnamed(ids,action,newName){
+  var idset=new Set(ids),blocked=false;
+  var res=await ghMutate(function(remote){
+    var targets=remote.filter(function(e){return idset.has(e.id)&&isTest(e)&&isUnnamed(e);});
+    if(!targets.length)return null;                       // nothing left to do
+    if(targets.length>ids.length){blocked=true;return null;}
+    var tset=new Set(targets);
+    if(action==='delete')return{list:remote.filter(function(e){return!tset.has(e);}),added:0,removed:targets.length};
+    return{list:remote.map(function(e){return tset.has(e)?Object.assign({},e,{tester:newName}):e;}),added:targets.length,removed:targets.length};
+  },action==='delete'?'Deleted '+ids.length+' unnamed tests':'Labelled '+ids.length+' unnamed tests as '+newName);
+  return{ok:res.ok&&!blocked,res:res,blocked:blocked,changed:!!res.changed};
+}
+var unIds=[];
+function fmtDay(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function updateUnnamedButton(){
+  var btn=document.getElementById('unnamed-btn');if(!btn)return;
+  var n=unnamedTests(allReadings).length;
+  btn.style.display=(histView==='readings'&&n>0)?'inline-block':'none';
+  btn.textContent='Clean up unnamed tests ('+n+')';
+  if(!n)document.getElementById('unnamed-panel').style.display='none';
+}
+function toggleUnnamedPanel(){
+  var p=document.getElementById('unnamed-panel');
+  if(p.style.display!=='none'){p.style.display='none';return;}
+  var s=unnamedSummary(allReadings);unIds=unnamedTests(allReadings).map(function(r){return r.id;});
+  document.getElementById('un-info').innerHTML='<b>'+s.n+' test'+(s.n!==1?'s':'')+'</b> have no tester name, recorded '+escHtml(fmtDay(s.first))+' to '+escHtml(fmtDay(s.last))+'. '
+    +(s.backwash?'<b>'+s.backwash+'</b> include a backwash record (deleting them changes the Last backwash card). ':'')+(s.notes?'<b>'+s.notes+'</b> have notes. ':'')
+    +'Out-of-service entries and named tests are never touched.';
+  document.getElementById('un-n').textContent=s.n;document.getElementById('un-confirm').value='';document.getElementById('un-bk').textContent='not downloaded yet';document.getElementById('un-bk').className='pu-msg err';
+  document.getElementById('un-msg').textContent='';unBackedUp=false;p.style.display='block';onUnChange();
+}
+var unBackedUp=false;
+function downloadReadingsBackup(){
+  var blob=new Blob([JSON.stringify(allReadings)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-readings-backup-'+todayStr()+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  unBackedUp=true;var el=document.getElementById('un-bk');el.textContent='downloaded ('+allReadings.length+' readings)';el.className='pu-msg ok';onUnChange();
+}
+function unAction(){var r=document.querySelector('input[name="un-act"]:checked');return r?r.value:'delete';}
+function unNameOk(){var n=document.getElementById('un-name').value.trim();return n.length>=2&&!isUnnamed({tester:n});}
+function onUnChange(){
+  var rename=unAction()==='rename';document.getElementById('un-name').disabled=!rename;
+  var ok=unBackedUp&&document.getElementById('un-confirm').value.trim()===String(unIds.length)&&(!rename||unNameOk());
+  var b=document.getElementById('un-apply');b.disabled=!ok;b.textContent=rename?'Label '+unIds.length+' tests':'Delete '+unIds.length+' tests';
+}
+async function applyUnnamed(){
+  var action=unAction(),name=document.getElementById('un-name').value.trim(),msg=document.getElementById('un-msg');
+  if(action==='rename'&&!unNameOk()){msg.className='pu-msg err';msg.textContent='Enter a name of at least 2 characters (not "Unknown").';return;}
+  if(!confirm((action==='delete'?'Permanently delete ':'Label ')+unIds.length+' unnamed tests'+(action==='delete'?'? This cannot be undone (you have a backup).':' as "'+name+'"?')))return;
+  document.getElementById('un-apply').disabled=true;setSyncBadge('syncing',action==='delete'?'Deleting...':'Saving...');
+  var r=await batchFixUnnamed(unIds,action,name);
+  if(r.ok){
+    var gone=unIds.length;allReadings=r.res.list;unIds=[];
+    setSyncBadge('ok',(action==='delete'?'Deleted ':'Labelled ')+gone+' tests - '+allReadings.length+' readings remain (GitHub)');
+    document.getElementById('unnamed-panel').style.display='none';
+    renderDashHistory();renderDashboard();
+  }else{
+    setSyncBadge('err','Cleanup failed');msg.className='pu-msg err';
+    msg.textContent='Nothing was changed ('+(r.blocked?'safety check':(r.res.reason||'unknown'))+'). Try again with a connection.';onUnChange();
+  }
 }
 function renderMaint(){
   var el=document.getElementById('maint-section');if(!el)return;
@@ -1564,6 +1648,7 @@ function chartText(){var v=getComputedStyle(document.documentElement).getPropert
 function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function noteBox(n,pad){return '<div style="font-size:13px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:'+pad+';margin-bottom:6px;white-space:pre-wrap;">Note: '+escHtml(n)+'</div>';}
 function renderDashHistory(){
+  updateUnnamedButton();
   if(histView==='maint'){renderMaintHistory();return;}
   var filter=document.getElementById("hist-body-filter").value;
   var entries=allReadings.slice();
