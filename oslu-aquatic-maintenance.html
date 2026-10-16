@@ -247,7 +247,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1.4 - Oct 14, 2026';
+var APP_VERSION='v1.5 - Oct 16, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
@@ -355,6 +355,8 @@ var outbox=[],lastRemote=[],syncPromise=null,saving=false;
 function bodyOf(l,b){for(var i=0;i<BODIES.length;i++){if(BODIES[i].levelIdx===l&&BODIES[i].bodyIdx===b)return BODIES[i];}return null;}
 function bodyName(e){var b=bodyOf(e.levelIdx,e.bodyIdx);return b?b.body+' ('+b.lv+')':(e.body||'?');}
 function newId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+// Whole CALENDAR days between a past time and now (not elapsed 24-hour blocks): 9:22 AM Wednesday viewed at 8:30 AM Friday is 2 days ago, not "yesterday".
+function calDaysAgo(ts,nowTs){var n=new Date(nowTs==null?Date.now():nowTs),t=new Date(ts);return Math.round((Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())-Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);}
 function fmtWhen(ts){var d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
@@ -823,7 +825,7 @@ function metaHTML(e){
   if(e.minutes!=null)m.push('<span>'+esc(e.minutes)+' min</span>');
   return '<div class="entry-meta">'+m.join('')+'</div>';
 }
-function daysOpen(e){return Math.max(0,Math.floor((Date.now()-e.ts)/86400000));}
+function daysOpen(e){return Math.max(0,calDaysAgo(e.ts));}
 function renderOpen(){
   var items=openItems(st.history),h='';
   if(!items.length){$('open-list').innerHTML='<div class="empty">No open repairs. Everything logged has been closed out.</div>';return;}

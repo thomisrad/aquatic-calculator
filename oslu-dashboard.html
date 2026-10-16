@@ -248,7 +248,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.32 - Oct 14, 2026</span>
+        <span class="version">v1.33 - Oct 16, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -733,7 +733,7 @@ function renderMaint(){
     if(!open.length)h+='<div class="maint-empty">No open repairs.</div>';
     var oShown=maintShowAllOpen?open.length:Math.min(open.length,MAINT_VISIBLE);
     open.slice(0,oShown).forEach(function(e){
-      var d=Math.max(0,Math.floor((Date.now()-e.ts)/86400000));
+      var d=Math.max(0,calDaysAgo(e.ts));
       h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span></div>'
         +'<div class="maint-item-sub">'+maintRefHTML(e)+'Open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+' - performed by '+maintWho(e)+'</div>'
         +'<div class="maint-item-text clamp"><b>Still needed:</b> '+escHtml(e.followUpNote)+'</div></div>';
@@ -1360,6 +1360,8 @@ function renderTimeline(allLatest){
 
 
 
+// Whole CALENDAR days between a past time and now (not elapsed 24-hour blocks): 9:22 AM Wednesday viewed at 8:30 AM Friday is 2 days ago, not "yesterday".
+function calDaysAgo(ts,nowTs){var n=new Date(nowTs==null?Date.now():nowTs),t=new Date(ts);return Math.round((Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())-Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);}
 function renderBackwash(allLatest){
   var wrap=document.getElementById('backwash-rows');
   if(!wrap)return;
@@ -1370,7 +1372,7 @@ function renderBackwash(allLatest){
       return r.levelIdx===item.li&&r.bodyIdx===item.bi&&r.backwash===true;
     });
     var lastBW=bwReadings.length?bwReadings.reduce(function(a,b){return a.ts>b.ts?a:b;}):null;
-    var age=lastBW?Math.floor((Date.now()-lastBW.ts)/(1000*60*60*24)):null;
+    var age=lastBW?calDaysAgo(lastBW.ts):null;
     // Colour: green 0-7 days, amber 8-14 days, red 15+ days, grey never
     var color=age===null?'#6b7280':age<=7?'#22c55e':age<=14?'#f97316':'#ef4444';
     var pct=age===null?0:Math.max(5,Math.min(100,100-Math.min(100,(age/21)*100)));
@@ -1379,7 +1381,7 @@ function renderBackwash(allLatest){
     html+='<div class="tl-row">'
       +'<span class="tl-label" title="'+name+'">'+name+'</span>'
       +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
-      +'<span class="tl-age">'+ageText+'</span>'
+      +'<span class="tl-age" title="'+(lastBW?escHtml('Backwash logged '+(lastBW.when||new Date(lastBW.ts).toLocaleString('en-US'))):'')+'">'+ageText+'</span>'
       +'</div>';
   });
   wrap.innerHTML=html;
@@ -1554,6 +1556,7 @@ function renderDashHistory(){
       +(r.ta!=null?'<div class="dash-hist-param">TA <span>'+r.ta+' ppm</span></div>':'')
       +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
       +'</div>'
+      +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">Backwash performed</span></div>':'')
       +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
       +'</div>';
   }).join("");
