@@ -217,6 +217,15 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .pu-msg.err{color:var(--danger-text);}
 @media(min-width:900px){#spend-card{grid-column:span 2;}}
 .sp-i{white-space:nowrap;}
+/* Tests by person */
+.tp-row{display:flex;align-items:center;gap:12px;padding:5px 0;}
+.tp-name{width:130px;flex:none;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tp-track{flex:1;height:16px;background:var(--bg3);border-radius:8px;overflow:hidden;}
+.tp-fill{height:100%;background:var(--info-text);border-radius:8px;min-width:4px;}
+.tp-fill.other{background:var(--text3);}
+.tp-val{width:120px;flex:none;text-align:right;font-size:14px;color:var(--text2);white-space:nowrap;}
+.tp-val b{color:var(--text);font-weight:500;font-size:15px;}
+@media(max-width:600px){.tp-name{width:90px;}.tp-val{width:96px;}}
 </style>
 </head>
 <body>
@@ -248,7 +257,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.33 - Oct 16, 2026</span>
+        <span class="version">v1.34 - Oct 16, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -311,6 +320,9 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   </div>
 
   <!-- Visual panels -->
+  <!-- Tests by person -->
+  <div class="visual-panels" id="testers-section"></div>
+
   <div class="visual-panels">
 
     <!-- 1a. Pools donut -->
@@ -719,6 +731,51 @@ function exportPurchCSV(){
 }
 var puFormReady=false;
 function resetPurchFormOnce(){if(puFormReady)return;puFormReady=true;fillPurchBodySelect();resetPurchForm();}
+
+// ---- Tests by person (share of real chemical tests; out-of-service / return-to-service events are not tests) ----
+function isTest(r){
+  if(!r||r.outOfService||r.returnedToService)return false;
+  var x=r.readings;if(!x)return false;
+  return Object.keys(x).some(function(k){return x[k]!=null&&x[k]!=='';});
+}
+function testerKey(n){return String(n==null?'':n).replace(/\s+/g,' ').trim().toLowerCase();}
+function testsByPerson(list,maxRows){
+  maxRows=maxRows||8;
+  var groups={},order=[],total=0;
+  list.forEach(function(r){
+    if(!isTest(r))return;
+    var raw=String(r.tester==null?'':r.tester).replace(/\s+/g,' ').trim(),key=testerKey(raw)||'unknown';
+    if(!groups[key]){groups[key]={count:0,names:{}};order.push(key);}
+    groups[key].count++;total++;
+    var nm=raw||'Unknown';groups[key].names[nm]=(groups[key].names[nm]||0)+1;
+  });
+  var rows=order.map(function(k){
+    var g=groups[k],best=null;for(var n in g.names){if(best===null||g.names[n]>g.names[best])best=n;}
+    return{name:best,count:g.count};
+  }).sort(function(a,b){return(b.count-a.count)||a.name.localeCompare(b.name);});
+  if(rows.length>maxRows){ // fold the long tail into one row so the card stays compact
+    var rest=rows.slice(maxRows-1),sum=rest.reduce(function(s,r){return s+r.count;},0);
+    rows=rows.slice(0,maxRows-1);rows.push({name:'Others ('+rest.length+' people)',count:sum,other:true});
+  }
+  // whole percentages that always add up to exactly 100 (largest-remainder method)
+  var exact=rows.map(function(r){return total?r.count*100/total:0;}),pct=exact.map(Math.floor),left=total?100-pct.reduce(function(a,b){return a+b;},0):0;
+  exact.map(function(e,i){return{i:i,f:e-Math.floor(e)};}).sort(function(a,b){return(b.f-a.f)||(a.i-b.i);}).slice(0,left).forEach(function(x){pct[x.i]++;});
+  rows.forEach(function(r,i){r.pct=pct[i];});
+  return{total:total,rows:rows};
+}
+function pctLabel(r){return(r.pct===0&&r.count>0)?'<1%':r.pct+'%';} // never show 0% next to someone who did tests
+function renderTestersCard(filtered,windowLabel){
+  var el=document.getElementById('testers-section');if(!el)return;
+  var res=testsByPerson(filtered),h='<div class="visual-card tests-card"><div class="visual-title">Tests by person</div>';
+  if(!res.total){el.innerHTML=h+'<div class="visual-sub">'+(windowLabel==='all time'?'No tests recorded yet.':'No tests in the '+escHtml(windowLabel)+'.')+'</div></div>';return;}
+  h+='<div class="visual-sub">Share of '+res.total+' test'+(res.total!==1?'s':'')+', '+escHtml(windowLabel)+'</div>';
+  res.rows.forEach(function(r){
+    h+='<div class="tp-row" role="img" aria-label="'+escHtml(r.name)+': '+(r.pct===0?'under 1':r.pct)+' percent, '+r.count+' test'+(r.count!==1?'s':'')+'"><span class="tp-name" title="'+escHtml(r.name)+'">'+escHtml(r.name)+'</span>'
+      +'<div class="tp-track"><div class="tp-fill'+(r.other?' other':'')+'" style="width:'+r.pct+'%;"></div></div>'
+      +'<span class="tp-val"><b>'+escHtml(pctLabel(r))+'</b> '+r.count+' test'+(r.count!==1?'s':'')+'</span></div>';
+  });
+  el.innerHTML=h+'</div>';
+}
 function renderMaint(){
   var el=document.getElementById('maint-section');if(!el)return;
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
@@ -1031,10 +1088,12 @@ function renderDashboard(){
   // Summary strip
   var windowLabel=windowDays===0?'all time':'last '+windowDays+' days';
   document.getElementById('s-window').textContent=windowLabel;
-  document.getElementById('s-total').textContent=filtered.length;
+  var tests=filtered.filter(isTest);
+  document.getElementById('s-total').textContent=tests.length;
+  renderTestersCard(filtered,windowLabel==='all time'?'all time':windowLabel);
 
   var bodiesTested=new Set();
-  filtered.forEach(function(r){bodiesTested.add(r.levelIdx+'-'+r.bodyIdx);});
+  tests.forEach(function(r){bodiesTested.add(r.levelIdx+'-'+r.bodyIdx);});
   document.getElementById('s-bodies').textContent=bodiesTested.size;
 
   var shockCount=filtered.filter(function(r){return r.readings&&r.readings.cc!=null&&r.readings.cc>0&&r.readings.fc!=null&&r.readings.fc>0&&r.readings.cc>=r.readings.fc*0.5;}).length;
