@@ -45,7 +45,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .version-label{font-size:12px;color:var(--text3);text-align:right;margin-top:4px;}
 button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-select:none;touch-action:manipulation;-webkit-appearance:none;appearance:none;}
 .page-btns{display:flex;gap:8px;margin-bottom:1.25rem;}
-.page-btn{flex:1;padding:10px 4px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;min-height:44px;}
+.page-btn{flex:1;white-space:nowrap;padding:10px 2px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:13px;min-height:44px;}
 .page-btn.active{background:var(--bg2);color:var(--text);font-weight:500;}
 .count-pill{display:inline-block;min-width:20px;padding:1px 6px;margin-left:4px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-size:12px;font-weight:500;}
 .count-pill.zero{background:var(--bg2);color:var(--text3);border-color:var(--border);}
@@ -53,7 +53,7 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .field{margin-bottom:14px;}
 .field label,.slabel{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
 .field .hint{font-size:12px;color:var(--text3);margin-top:4px;}
-.field input[type=text],.field input[type=number],.field input[type=datetime-local],.field select,.field textarea,.filters select,.filters input{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
+.field input[type=text],.field input[type=number],.field input[type=date],.field input[type=datetime-local],.field select,.field textarea,.filters select,.filters input{width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
 .field textarea{min-height:88px;resize:vertical;line-height:1.4;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 @media(max-width:480px){.row2{grid-template-columns:1fr;}}
@@ -136,7 +136,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
   <div class="app-header">
     <div>
       <h1>OSLU Aquatic Maintenance Log</h1>
-      <p>Preventive maintenance and repairs - aquatic equipment</p>
+      <p>Preventive maintenance, repairs and purchases - aquatic equipment</p>
     </div>
     <div>
       <div id="sync-badge" class="sync-badge">Starting...</div>
@@ -148,6 +148,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
     <button class="page-btn active" id="pb-log" onclick="showPage('log')">Log work</button>
     <button class="page-btn" id="pb-open" onclick="showPage('open')">Open<span class="count-pill zero" id="open-count">0</span></button>
     <button class="page-btn" id="pb-history" onclick="showPage('history')">History</button>
+    <button class="page-btn" id="pb-purch" onclick="showPage('purch')">Purchases</button>
     <button class="page-btn" id="pb-equip" onclick="showPage('equip')">Equipment</button>
   </div>
 
@@ -199,6 +200,34 @@ button:active{box-shadow:none;transform:translateY(1px);}
     <div style="margin-top:8px;"><button class="btn small" onclick="exportCSV()">Export CSV</button></div>
   </div>
 
+  <!-- PURCHASES -->
+  <div id="page-purch" style="display:none;">
+    <div class="card">
+      <div class="field" style="margin-bottom:10px;"><label for="pu-month">Month</label><select id="pu-month" onchange="onPurchMonth()"></select></div>
+      <div id="pu-sum"></div>
+    </div>
+    <div class="card">
+      <div class="slabel">Add a purchase</div>
+      <div class="row2">
+        <div class="field"><label for="pu-date">Date purchased</label><input type="date" id="pu-date"/></div>
+        <div class="field"><label for="pu-cat">Category</label><select id="pu-cat"><option value="">Choose...</option><option value="chemicals">Chemicals</option><option value="equipment">Equipment</option><option value="parts">Parts</option></select></div>
+      </div>
+      <div class="field"><label for="pu-item">What was bought</label><input type="text" id="pu-item" maxlength="120" placeholder="e.g. 2 x 15 gal sodium hypochlorite 12.5%"/></div>
+      <div class="row2">
+        <div class="field"><label for="pu-amount">Amount (USD)</label><input type="text" id="pu-amount" inputmode="decimal" placeholder="125.50"/><div class="hint">Total paid, including tax and shipping</div></div>
+        <div class="field"><label for="pu-vendor">Vendor</label><input type="text" id="pu-vendor" maxlength="60" placeholder="Optional"/></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="pu-body">Body of water</label><select id="pu-body"></select></div>
+        <div class="field"><label for="pu-ref">Related reference</label><input type="text" id="pu-ref" maxlength="12" placeholder="Optional, e.g. AQ-0007"/></div>
+      </div>
+      <div class="field"><label for="pu-note">Note</label><input type="text" id="pu-note" maxlength="200" placeholder="Optional"/></div>
+      <button class="btn primary" id="pu-save" onclick="savePurchase()">Save purchase</button>
+    </div>
+    <div id="pu-list"></div>
+    <div style="margin-top:8px;"><button class="btn small" onclick="exportPurchCSV()">Export CSV</button></div>
+  </div>
+
   <!-- EQUIPMENT -->
   <div id="page-equip" style="display:none;">
     <div class="card">
@@ -218,12 +247,13 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1.3 - Oct 14, 2026';
+var APP_VERSION='v1.4 - Oct 14, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
 var GH_API=ghUrl('aquatic-maintenance.json');   // default file for the shared core
 var EQUIP_API=ghUrl('aquatic-equipment.json');  // small aquatic equipment list, edited online only
+var PURCH_API=ghUrl('aquatic-purchases.json');  // purchases: chemicals, equipment, parts
 
 // ===== GH CORE BEGIN (shared by calculator + dashboard + maintenance) =====
 // url is optional everywhere and defaults to GH_API, so one core can serve several data files.
@@ -400,6 +430,126 @@ function buildCSV(list){
   return rows.join('\r\n');
 }
 
+// ===== PURCH LOGIC BEGIN (identical in the maintenance app and the dashboard) =====
+// Purchases live in aquatic-purchases.json. Money is stored as whole cents, never as floating point dollars.
+var PURCH_CATS={chemicals:'Chemicals',equipment:'Equipment',parts:'Parts'};
+function pad2(n){return(n<10?'0':'')+n;}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function monthOf(s){return String(s).slice(0,7);}
+function prevMonth(m){var y=+m.slice(0,4),mo=+m.slice(5,7)-1;if(mo<1){y--;mo=12;}return y+'-'+pad2(mo);}
+function monthLabel(m){return new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function fmtMoney(c,whole){return(c/100).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:whole?0:2,maximumFractionDigits:whole?0:2});}
+function purchNewId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function parseAmountCents(s){ // "125.5", "$1,250.00" -> cents; anything else (negative, 3 decimals, text, zero) -> null
+  s=String(s==null?'':s).trim().replace(/^\$/,'');
+  if(s.indexOf(',')>=0){if(!/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(s))return null;s=s.replace(/,/g,'');} // commas only as thousands separators: "12,50" is rejected, never read as $1,250
+  if(!/^\d{1,7}(\.\d{1,2})?$/.test(s))return null;
+  var p=s.split('.'),c=parseInt(p[0],10)*100+(p[1]?parseInt((p[1]+'0').slice(0,2),10):0);
+  return c>0?c:null;
+}
+function parseRefNo(s){ // optional link to a maintenance reference: "AQ-0007", "aq7", "7" -> 7
+  s=String(s==null?'':s).trim().toLowerCase();if(!s)return{ok:true,value:null};
+  var pf=REF_PREFIX.toLowerCase().replace('-',''),m=s.indexOf(pf)===0?s.slice(pf.length).replace(/^-/,''):s;
+  return/^\d{1,6}$/.test(m)?{ok:true,value:Number(m)}:{ok:false,value:null};
+}
+function validatePurchase(f){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(f.date||''))return 'Choose the purchase date.';
+  if(f.date>todayStr())return 'The purchase date is in the future.';
+  if(!PURCH_CATS[f.category])return 'Choose Chemicals, Equipment or Parts.';
+  if(!f.item||f.item.trim().length<2)return 'Describe what was bought.';
+  if(parseAmountCents(f.amountText)==null)return 'Enter the amount in dollars, for example 125.50.';
+  if(!parseRefNo(f.refText).ok)return 'Reference should look like '+REF_PREFIX+'0007.';
+  return null;
+}
+function buildPurchase(f){
+  var ts=Date.parse(f.date+'T12:00:00');
+  return{id:purchNewId(),ts:ts,loggedAt:Date.now(),date:f.date,
+    when:new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    category:f.category,item:f.item.trim(),vendor:(f.vendor||'').trim()||null,amountCents:parseAmountCents(f.amountText),
+    levelIdx:f.body?f.body.levelIdx:null,bodyIdx:f.body?f.body.bodyIdx:null,level:f.body?f.body.level:null,body:f.body?f.body.body:null,
+    relatedRef:parseRefNo(f.refText).value,note:(f.note||'').trim()||null,enteredBy:f.enteredBy};
+}
+function purchSort(list){return list.slice().sort(function(a,b){return(b.ts-a.ts)||((b.loggedAt||0)-(a.loggedAt||0));});}
+function purchSummary(list,month){ // month 'YYYY-MM'; falsy = all time
+  var s={total:0,count:0,byCat:{chemicals:0,equipment:0,parts:0}};
+  list.forEach(function(p){
+    if(!p||(month&&monthOf(p.date)!==month))return;
+    s.total+=p.amountCents||0;s.count++;if(s.byCat[p.category]!=null)s.byCat[p.category]+=p.amountCents||0;
+  });
+  return s;
+}
+function purchMonths(list){var set={};set[monthOf(todayStr())]=1;list.forEach(function(p){if(p&&p.date)set[monthOf(p.date)]=1;});return Object.keys(set).sort().reverse();}
+function purchCsvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function buildPurchCSV(list){
+  var rows=[['Date','Month','Category','Item','Vendor','Amount (USD)','Level','Body','Related reference','Note','Entered by','Entry ID'].join(',')];
+  purchSort(list).forEach(function(p){
+    rows.push([p.date,monthOf(p.date),PURCH_CATS[p.category]||p.category,p.item,p.vendor,(p.amountCents/100).toFixed(2),p.level,p.body,p.relatedRef!=null?REF_PREFIX+String(p.relatedRef).padStart(4,'0'):'',p.note,p.enteredBy,p.id].map(purchCsvCell).join(','));
+  });
+  return rows.join('\r\n');
+}
+// ===== PURCH LOGIC END =====
+
+// ===== PURCH SYNC BEGIN (maintenance app: offline outbox for purchases, same rules as the log) =====
+var PKEY='oslu_purch_outbox_v1',PCKEY='oslu_purch_cache_v1';
+var pOutbox=[],pRemote=[],pSyncPromise=null,pSaving=false;
+st.purch=[];st.purchMonth=null;
+function hasPending(){return outbox.length+pOutbox.length>0;}
+function savePOutbox(){try{localStorage.setItem(PKEY,JSON.stringify(pOutbox));return true;}catch(e){console.error('purchase outbox save failed',e);return false;}}
+function savePurchCache(){try{localStorage.setItem(PCKEY,JSON.stringify(pRemote.map(stripLocal)));}catch(e){}}
+function loadPurchLocal(){
+  var cache=[];try{var h=localStorage.getItem(PCKEY);if(h)cache=JSON.parse(h);}catch(e){}
+  if(!Array.isArray(cache))cache=[];
+  try{var o=localStorage.getItem(PKEY);pOutbox=o?JSON.parse(o):[];if(!Array.isArray(pOutbox))pOutbox=[];}catch(e){pOutbox=[];}
+  pRemote=cache;rebuildPurch();
+}
+function rebuildPurch(){
+  var ids=new Set(pOutbox.map(function(e){return e.id;}));
+  var rem=pRemote.filter(function(e){return!ids.has(e.id);});
+  rem.forEach(function(e){e.synced=true;});pOutbox.forEach(function(e){e.synced=false;});
+  st.purch=purchSort(pOutbox.concat(rem));
+}
+async function submitPurchase(rec){ // persist FIRST, then try to sync
+  rec.synced=false;
+  if(!pOutbox.some(function(e){return e.id===rec.id;}))pOutbox.unshift(rec);
+  savePOutbox();rebuildPurch();
+  await syncPurchases();
+  return !pOutbox.some(function(e){return e.id===rec.id;});
+}
+async function syncPurchases(){
+  while(pSyncPromise){try{await pSyncPromise;}catch(e){}}
+  if(!pOutbox.length)return{ok:true,n:0};
+  pSyncPromise=doSyncPurch();
+  try{return await pSyncPromise;}finally{pSyncPromise=null;}
+}
+async function doSyncPurch(){
+  if(!GH_TOKEN){updatePendingBadge('token');return{ok:false,reason:'token'};}
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){updatePendingBadge('offline');return{ok:false,reason:'offline'};}
+  var seen=new Set(),batch=pOutbox.filter(function(e){if(seen.has(e.id))return false;seen.add(e.id);return true;});
+  setSyncBadge('syncing','Syncing '+batch.length+' purchase'+(batch.length!==1?'s':'')+'...');
+  var res=await ghMutate(function(remote){
+    var have=new Set(remote.map(function(e){return e.id;}));
+    var add=batch.filter(function(e){return!have.has(e.id);});
+    if(!add.length)return null; // already on GitHub (an earlier PUT landed but the reply was lost)
+    return{list:purchSort(add.map(stripLocal)).concat(remote),added:add.length,removed:0};
+  },'Sync '+batch.length+' aquatic purchase'+(batch.length!==1?'s':''),PURCH_API);
+  if(!res.ok){updatePendingBadge(res.reason);return{ok:false,reason:res.reason};}
+  pOutbox=pOutbox.filter(function(e){return!seen.has(e.id);});
+  savePOutbox();pRemote=res.list;rebuildPurch();savePurchCache();
+  if(hasPending())setSyncBadge('syncing',(outbox.length+pOutbox.length)+' still to sync...');
+  else setSyncBadge('ok','Synced '+batch.length+' purchase'+(batch.length!==1?'s':'')+' -- all up to date');
+  if(typeof renderAll==='function')renderAll();
+  return{ok:true,n:batch.length};
+}
+async function loadPurchRemote(){
+  var rem=await ghFetchRemote(PURCH_API);
+  if(!rem.ok)return false;
+  pRemote=rem.list;rebuildPurch();savePurchCache();
+  if(typeof renderAll==='function')renderAll();
+  return true;
+}
+async function syncAll(){await syncOutbox();await syncPurchases();}
+// ===== PURCH SYNC END =====
+
 // ---- equipment registry (small, online-only edits through the same safe write) ----
 function equipForBody(l,b){return st.equip.filter(function(e){return e.active!==false&&e.levelIdx===l&&e.bodyIdx===b;}).sort(function(a,b){return String(a.name).localeCompare(String(b.name));});}
 function cacheEquip(){try{localStorage.setItem(EKEY,JSON.stringify(st.equip));}catch(e){}}
@@ -457,7 +607,7 @@ function rebuildHistory(){
 }
 function pendingCount(){return outbox.length;}
 function updatePendingBadge(reason){
-  var n=outbox.length;if(!n)return;
+  var n=outbox.length+(typeof pOutbox!=='undefined'?pOutbox.length:0);if(!n)return;
   var msg=n+' entr'+(n!==1?'ies':'y')+' saved on this device -- ';
   if(reason==='offline'||reason==='network')msg+='will sync when signal returns';
   else if(reason==='auth')msg+='GitHub token rejected, change token';
@@ -512,6 +662,7 @@ async function ghLoad(isRetry,skipAutoSync){
     else setSyncBadge('ok','Shared - '+lastRemote.length+' entr'+(lastRemote.length!==1?'ies':'y')+' (GitHub)');
     if(typeof renderAll==='function')renderAll();
     loadEquipRemote();
+    if(pOutbox.length)syncPurchases();else loadPurchRemote();
     return;
   }
   if(rem.reason==='auth'){setSyncBadge('err','GitHub token rejected -- change token');return;}
@@ -519,7 +670,7 @@ async function ghLoad(isRetry,skipAutoSync){
   if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','GitHub offline - using local data');
   if(typeof renderAll==='function')renderAll();
 }
-async function autoSync(){if(!outbox.length){return ghLoad(false,true);}await syncOutbox();}
+async function autoSync(){if(!outbox.length){return ghLoad(false,true);}await syncOutbox();if(pOutbox.length)await syncPurchases();else loadPurchRemote();}
 // ===== MAINT LOGIC END =====
 
 // ===== UI =====
@@ -600,9 +751,60 @@ function resetForm(){
   $('followup').checked=false;onFollowChange();setType(null);$('sel-equip').value='';onEquipPick();$('when').value=nowLocal();$('when').max=nowLocal();
 }
 
+
+// ---- Purchases page ----
+function fillPurchForm(){
+  var h='<option value="">Not specific</option>';BODIES.forEach(function(b,i){h+='<option value="'+i+'">'+esc(b.lv+' - '+b.body)+'</option>';});
+  $('pu-body').innerHTML=h;resetPurchForm();
+}
+function resetPurchForm(){
+  ['pu-item','pu-amount','pu-vendor','pu-ref','pu-note'].forEach(function(i){$(i).value='';});
+  $('pu-cat').value='';$('pu-body').value='';$('pu-date').value=todayStr();$('pu-date').max=todayStr();
+}
+function onPurchMonth(){st.purchMonth=$('pu-month').value;renderPurch();}
+function purchCatPill(c){return '<span class="pill '+(c==='chemicals'?'pm':(c==='equipment'?'repair':'closed'))+'">'+esc(PURCH_CATS[c]||c)+'</span>';}
+function renderPurch(){
+  var months=purchMonths(st.purch);if(!st.purchMonth||(st.purchMonth!=='all'&&months.indexOf(st.purchMonth)<0))st.purchMonth=months[0];
+  var sel=$('pu-month'),opts='';months.forEach(function(m){opts+='<option value="'+m+'"'+(m===st.purchMonth?' selected':'')+'>'+esc(monthLabel(m))+'</option>';});
+  opts+='<option value="all"'+(st.purchMonth==='all'?' selected':'')+'>All time</option>';
+  if(sel.innerHTML!==opts)sel.innerHTML=opts;sel.value=st.purchMonth;
+  var m=st.purchMonth==='all'?null:st.purchMonth,s=purchSummary(st.purch,m);
+  $('pu-sum').innerHTML='<div style="font-size:28px;font-weight:500;">'+esc(fmtMoney(s.total))+'</div><div class="entry-sub" style="margin-bottom:6px;">'+s.count+' purchase'+(s.count!==1?'s':'')+(m?' in '+esc(monthLabel(m)):' all time')+'</div>'
+    +'<div class="entry-meta"><span>Chemicals '+esc(fmtMoney(s.byCat.chemicals))+'</span><span>Equipment '+esc(fmtMoney(s.byCat.equipment))+'</span><span>Parts '+esc(fmtMoney(s.byCat.parts))+'</span></div>';
+  var list=st.purch.filter(function(p){return!m||monthOf(p.date)===m;}),h='';
+  if(!list.length)h='<div class="empty">No purchases logged for this period.</div>';
+  list.slice(0,100).forEach(function(p){
+    var meta=[];if(p.body)meta.push(esc(p.body+' ('+(bodyOf(p.levelIdx,p.bodyIdx)||{lv:''}).lv+')'));
+    if(p.relatedRef!=null)meta.push('Ref '+esc(refLabel(p.relatedRef)));if(p.note)meta.push(esc(p.note));meta.push('Entered by '+esc(p.enteredBy));
+    h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(p.item)+'</div><div class="entry-sub">'+esc(p.when)+(p.vendor?' - '+esc(p.vendor):'')+'</div></div>'
+      +'<div style="text-align:right;"><div class="entry-title">'+esc(fmtMoney(p.amountCents))+'</div>'+purchCatPill(p.category)+(p.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
+      +'<div class="entry-meta">'+meta.map(function(x){return'<span>'+x+'</span>';}).join('')+'</div></div>';
+  });
+  if(list.length>100)h+='<div class="empty">Showing the newest 100 of '+list.length+'. Export CSV for everything.</div>';
+  $('pu-list').innerHTML=h;
+}
+async function savePurchase(){
+  if(pSaving)return;
+  var bi=$('pu-body').value,f={date:$('pu-date').value,category:$('pu-cat').value,item:$('pu-item').value,amountText:$('pu-amount').value,vendor:$('pu-vendor').value,
+    body:bi===''?null:BODIES[+bi],refText:$('pu-ref').value,note:$('pu-note').value,enteredBy:getUserName()};
+  var err=validatePurchase(f);if(err){toast('err',err);return;}
+  pSaving=true;$('pu-save').disabled=true;setSyncBadge('syncing','Saving...');
+  try{
+    var rec=buildPurchase(f),ok=await submitPurchase(rec);
+    toast(ok?'ok':'warn',ok?'Saved '+fmtMoney(rec.amountCents)+' ('+PURCH_CATS[rec.category]+') and synced.':'Weak or no signal - purchase saved on this device. It syncs automatically.');
+    if(!ok)updatePendingBadge();
+    st.purchMonth=monthOf(rec.date);resetPurchForm();renderAll();
+  }finally{pSaving=false;$('pu-save').disabled=false;}
+}
+function exportPurchCSV(){
+  var blob=new Blob(['\ufeff'+buildPurchCSV(st.purch)],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-purchases-'+todayStr()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+
 function showPage(p){
   st.page=p;
-  ['log','open','history','equip'].forEach(function(x){$('page-'+x).style.display=x===p?'block':'none';$('pb-'+x).classList.toggle('active',x===p);});
+  ['log','open','history','purch','equip'].forEach(function(x){$('page-'+x).style.display=x===p?'block':'none';$('pb-'+x).classList.toggle('active',x===p);});
   if(p!=='open')st.closingId=null;
   renderAll();
 }
@@ -610,6 +812,7 @@ function renderAll(){
   var n=openItems(st.history).length,c=$('open-count');c.textContent=n;c.className='count-pill'+(n?'':' zero');
   if(st.page==='open'){if(!st.closingId)renderOpen();}
   else if(st.page==='history')renderHistory();
+  else if(st.page==='purch')renderPurch();
   else if(st.page==='equip')renderEquip();
 }
 function refSub(e){return e.refNo!=null?'<span class="ref">'+esc(refLabel(e.refNo))+'</span> - ':(e.kind!=='closeout'&&e.synced===false?'<span class="ref pending">Number assigned when synced</span> - ':'');}
@@ -726,13 +929,13 @@ async function retireEq(id){
 var wired=false;
 function startApp(){
   showScreen('main');$('version-label').textContent=APP_VERSION;
-  loadLocal();fillBodySelects();$('by').value=getUserName()==='Staff'?'':getUserName();resetForm();fillEquipSelect();renderAll();
-  if(outbox.length)updatePendingBadge('offline');
+  loadLocal();loadPurchLocal();fillBodySelects();fillPurchForm();$('by').value=getUserName()==='Staff'?'':getUserName();resetForm();fillEquipSelect();renderAll();
+  if(hasPending())updatePendingBadge('offline');
   setTimeout(function(){ghLoad(false);},400);
   if(wired)return;wired=true;
-  window.addEventListener('online',function(){if(GH_TOKEN&&outbox.length){setSyncBadge('syncing','Back online -- syncing...');setTimeout(function(){syncOutbox();},1500);}});
-  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&GH_TOKEN&&outbox.length)syncOutbox();});
-  setInterval(function(){if(GH_TOKEN&&outbox.length&&document.visibilityState==='visible'&&navigator.onLine!==false)syncOutbox();},45000);
+  window.addEventListener('online',function(){if(GH_TOKEN&&hasPending()){setSyncBadge('syncing','Back online -- syncing...');setTimeout(function(){syncAll();},1500);}});
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&GH_TOKEN&&hasPending())syncAll();});
+  setInterval(function(){if(GH_TOKEN&&hasPending()&&document.visibilityState==='visible'&&navigator.onLine!==false)syncAll();},45000);
 }
 window.onload=function(){
   loadToken();

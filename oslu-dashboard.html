@@ -203,6 +203,20 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .maint-item-text.clamp,.maint-co.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .maint-more{display:block;background:none;border:none;color:var(--info-text);font-size:13px;font-weight:500;padding:8px 0 2px;cursor:pointer;text-decoration:underline;}
 .maint-ref{font-family:ui-monospace,Consolas,monospace;font-weight:600;color:var(--text);font-size:12px;}
+/* Purchases */
+.pu-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.pu-total{font-size:30px;font-weight:500;color:var(--text);}
+.pu-sub{font-size:13px;color:var(--text2);margin-bottom:8px;}
+.pu-cats{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--text2);}
+.pu-cats b{color:var(--text);font-weight:500;}
+.pu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:8px;}
+.pu-grid label{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+.pu-input{width:100%;padding:8px 10px;font-size:14px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);}
+.pu-msg{font-size:13px;}
+.pu-msg.ok{color:var(--success-text);}
+.pu-msg.err{color:var(--danger-text);}
+@media(min-width:900px){#spend-card{grid-column:span 2;}}
+.sp-i{white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -234,7 +248,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.31 - Oct 14, 2026</span>
+        <span class="version">v1.32 - Oct 14, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -243,6 +257,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   <div class="dash-tabs">
     <button class="dash-tab active" id="tab-overview" onclick="showDashTab('overview')">Overview</button>
     <button class="dash-tab" id="tab-history" onclick="showDashTab('history')">History</button>
+    <button class="dash-tab" id="tab-purchases" onclick="showDashTab('purchases')">Purchases</button>
   </div>
 
   <div id="tab-overview-content">
@@ -287,6 +302,11 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div class="summary-label">Actions needed</div>
       <div class="summary-val" id="s-actions">--</div>
       <div class="summary-sub">latest readings</div>
+    </div>
+    <div class="summary-card" id="spend-card">
+      <div class="summary-label" id="spend-label">Spent this month</div>
+      <div class="summary-val" id="s-spend">--</div>
+      <div class="summary-sub" id="s-spend-sub">aquatic purchases</div>
     </div>
   </div>
 
@@ -347,6 +367,29 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   </div><!-- end tab-overview-content -->
 
   <!-- HISTORY TAB -->
+  <div id="tab-purchases-content" style="display:none;">
+    <div class="pu-head">
+      <div><div style="font-size:15px;font-weight:500;color:var(--text);">Aquatic purchases</div><div style="font-size:13px;color:var(--text2);">Chemicals, equipment and parts</div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><select id="pu-month" onchange="onPurchMonth()" class="pu-input" style="min-width:170px;"></select><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportPurchCSV()">Export CSV</button></div>
+    </div>
+    <div class="visual-card" style="margin-bottom:12px;"><div id="pu-sum"></div></div>
+    <div class="visual-card" style="margin-bottom:12px;">
+      <div class="visual-title">Add a purchase</div>
+      <div class="pu-grid">
+        <div><label for="pu-date">Date purchased</label><input class="pu-input" type="date" id="pu-date"/></div>
+        <div><label for="pu-cat">Category</label><select class="pu-input" id="pu-cat"><option value="">Choose...</option><option value="chemicals">Chemicals</option><option value="equipment">Equipment</option><option value="parts">Parts</option></select></div>
+        <div style="grid-column:span 2;"><label for="pu-item">What was bought</label><input class="pu-input" type="text" id="pu-item" maxlength="120" placeholder="e.g. 2 x 15 gal sodium hypochlorite 12.5%"/></div>
+        <div><label for="pu-amount">Amount (USD)</label><input class="pu-input" type="text" id="pu-amount" inputmode="decimal" placeholder="125.50"/></div>
+        <div><label for="pu-vendor">Vendor</label><input class="pu-input" type="text" id="pu-vendor" maxlength="60" placeholder="Optional"/></div>
+        <div><label for="pu-body">Body of water</label><select class="pu-input" id="pu-body"></select></div>
+        <div><label for="pu-ref">Related reference</label><input class="pu-input" type="text" id="pu-ref" maxlength="12" placeholder="Optional, e.g. AQ-0007"/></div>
+        <div style="grid-column:span 2;"><label for="pu-note">Note</label><input class="pu-input" type="text" id="pu-note" maxlength="200" placeholder="Optional"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;"><button class="dash-tab active" id="pu-add" onclick="addPurchaseDash()">Add purchase</button><div id="pu-msg" class="pu-msg"></div></div>
+    </div>
+    <div id="pu-list"></div>
+  </div>
+
   <div id="tab-history-content" style="display:none;">
     <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><input type="search" id="hist-search" placeholder="Search reference (AQ-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
@@ -524,6 +567,158 @@ function exportMaintCSV(){
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-maintenance-'+stamp+'.csv';
   document.body.appendChild(a);a.click();a.remove();
 }
+// ===== PURCH LOGIC BEGIN (identical in the maintenance app and the dashboard) =====
+// Purchases live in aquatic-purchases.json. Money is stored as whole cents, never as floating point dollars.
+var PURCH_CATS={chemicals:'Chemicals',equipment:'Equipment',parts:'Parts'};
+function pad2(n){return(n<10?'0':'')+n;}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function monthOf(s){return String(s).slice(0,7);}
+function prevMonth(m){var y=+m.slice(0,4),mo=+m.slice(5,7)-1;if(mo<1){y--;mo=12;}return y+'-'+pad2(mo);}
+function monthLabel(m){return new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function fmtMoney(c,whole){return(c/100).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:whole?0:2,maximumFractionDigits:whole?0:2});}
+function purchNewId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function parseAmountCents(s){ // "125.5", "$1,250.00" -> cents; anything else (negative, 3 decimals, text, zero) -> null
+  s=String(s==null?'':s).trim().replace(/^\$/,'');
+  if(s.indexOf(',')>=0){if(!/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(s))return null;s=s.replace(/,/g,'');} // commas only as thousands separators: "12,50" is rejected, never read as $1,250
+  if(!/^\d{1,7}(\.\d{1,2})?$/.test(s))return null;
+  var p=s.split('.'),c=parseInt(p[0],10)*100+(p[1]?parseInt((p[1]+'0').slice(0,2),10):0);
+  return c>0?c:null;
+}
+function parseRefNo(s){ // optional link to a maintenance reference: "AQ-0007", "aq7", "7" -> 7
+  s=String(s==null?'':s).trim().toLowerCase();if(!s)return{ok:true,value:null};
+  var pf=REF_PREFIX.toLowerCase().replace('-',''),m=s.indexOf(pf)===0?s.slice(pf.length).replace(/^-/,''):s;
+  return/^\d{1,6}$/.test(m)?{ok:true,value:Number(m)}:{ok:false,value:null};
+}
+function validatePurchase(f){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(f.date||''))return 'Choose the purchase date.';
+  if(f.date>todayStr())return 'The purchase date is in the future.';
+  if(!PURCH_CATS[f.category])return 'Choose Chemicals, Equipment or Parts.';
+  if(!f.item||f.item.trim().length<2)return 'Describe what was bought.';
+  if(parseAmountCents(f.amountText)==null)return 'Enter the amount in dollars, for example 125.50.';
+  if(!parseRefNo(f.refText).ok)return 'Reference should look like '+REF_PREFIX+'0007.';
+  return null;
+}
+function buildPurchase(f){
+  var ts=Date.parse(f.date+'T12:00:00');
+  return{id:purchNewId(),ts:ts,loggedAt:Date.now(),date:f.date,
+    when:new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    category:f.category,item:f.item.trim(),vendor:(f.vendor||'').trim()||null,amountCents:parseAmountCents(f.amountText),
+    levelIdx:f.body?f.body.levelIdx:null,bodyIdx:f.body?f.body.bodyIdx:null,level:f.body?f.body.level:null,body:f.body?f.body.body:null,
+    relatedRef:parseRefNo(f.refText).value,note:(f.note||'').trim()||null,enteredBy:f.enteredBy};
+}
+function purchSort(list){return list.slice().sort(function(a,b){return(b.ts-a.ts)||((b.loggedAt||0)-(a.loggedAt||0));});}
+function purchSummary(list,month){ // month 'YYYY-MM'; falsy = all time
+  var s={total:0,count:0,byCat:{chemicals:0,equipment:0,parts:0}};
+  list.forEach(function(p){
+    if(!p||(month&&monthOf(p.date)!==month))return;
+    s.total+=p.amountCents||0;s.count++;if(s.byCat[p.category]!=null)s.byCat[p.category]+=p.amountCents||0;
+  });
+  return s;
+}
+function purchMonths(list){var set={};set[monthOf(todayStr())]=1;list.forEach(function(p){if(p&&p.date)set[monthOf(p.date)]=1;});return Object.keys(set).sort().reverse();}
+function purchCsvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function buildPurchCSV(list){
+  var rows=[['Date','Month','Category','Item','Vendor','Amount (USD)','Level','Body','Related reference','Note','Entered by','Entry ID'].join(',')];
+  purchSort(list).forEach(function(p){
+    rows.push([p.date,monthOf(p.date),PURCH_CATS[p.category]||p.category,p.item,p.vendor,(p.amountCents/100).toFixed(2),p.level,p.body,p.relatedRef!=null?REF_PREFIX+String(p.relatedRef).padStart(4,'0'):'',p.note,p.enteredBy,p.id].map(purchCsvCell).join(','));
+  });
+  return rows.join('\r\n');
+}
+// ===== PURCH LOGIC END =====
+
+// ===== PURCHASES on the dashboard (read for the spend tile, add/delete in the Purchases tab) =====
+var PURCH_API=GH_API.replace(GH_FILE,'aquatic-purchases.json');
+var purchRecords=[],purchState='unknown',puMonth=null,puRetry=null; // purchState: 'ok' | 'stale' (refresh failed) | 'unknown' (never loaded)
+function renderSpend(){
+  var lab=document.getElementById('spend-label'),val=document.getElementById('s-spend'),sub=document.getElementById('s-spend-sub');if(!val)return;
+  var m=monthOf(todayStr());
+  lab.textContent='Spent in '+new Date().toLocaleDateString('en-US',{month:'long'});
+  if(purchState==='unknown'){val.textContent='--';sub.innerHTML='<span style="color:var(--warn-text);">Purchases unavailable</span>';return;}
+  var s=purchSummary(purchRecords,m),last=purchSummary(purchRecords,prevMonth(m));
+  val.textContent=fmtMoney(s.total,s.total>=100000);
+  sub.innerHTML='<span class="sp-i">Chem '+fmtMoney(s.byCat.chemicals,true)+'</span> &middot; <span class="sp-i">Equip '+fmtMoney(s.byCat.equipment,true)+'</span> &middot; <span class="sp-i">Parts '+fmtMoney(s.byCat.parts,true)+'</span>'
+    +'<br>Last month '+fmtMoney(last.total,last.total>=100000)+(purchState==='stale'?' <span style="color:var(--warn-text);">(not refreshed)</span>':'');
+}
+function puCatPill(c){return '<span class="maint-pill '+(c==='chemicals'?'pm':(c==='equipment'?'repair':'closed'))+'">'+escHtml(PURCH_CATS[c]||c)+'</span>';}
+function fillPurchBodySelect(){
+  var sel=document.getElementById('pu-body');if(sel.options.length)return;
+  var h='<option value="">Not specific</option>';
+  LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){h+='<option value="'+li+'-'+bi+'">'+escHtml(l.short+' - '+b.name)+'</option>';});});
+  sel.innerHTML=h;
+}
+function resetPurchForm(){
+  ['pu-item','pu-amount','pu-vendor','pu-ref','pu-note'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('pu-cat').value='';document.getElementById('pu-body').value='';
+  var dt=document.getElementById('pu-date');dt.value=todayStr();dt.max=todayStr();
+}
+function puMsg(kind,text){var el=document.getElementById('pu-msg');el.className='pu-msg '+kind;el.textContent=text;}
+function onPurchMonth(){puMonth=document.getElementById('pu-month').value;renderPurchTab();}
+function renderPurchTab(){
+  fillPurchBodySelect();
+  var list=document.getElementById('pu-list');
+  if(purchState==='unknown'){document.getElementById('pu-sum').innerHTML='';list.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">Purchases are unavailable. Use Refresh to try again.</div>';return;}
+  var months=purchMonths(purchRecords);if(!puMonth||(puMonth!=='all'&&months.indexOf(puMonth)<0))puMonth=months[0];
+  var sel=document.getElementById('pu-month'),opts='';months.forEach(function(m){opts+='<option value="'+m+'"'+(m===puMonth?' selected':'')+'>'+escHtml(monthLabel(m))+'</option>';});
+  opts+='<option value="all"'+(puMonth==='all'?' selected':'')+'>All time</option>';
+  if(sel.innerHTML!==opts)sel.innerHTML=opts;sel.value=puMonth;
+  var m=puMonth==='all'?null:puMonth,s=purchSummary(purchRecords,m);
+  document.getElementById('pu-sum').innerHTML='<div class="pu-total">'+escHtml(fmtMoney(s.total))+'</div><div class="pu-sub">'+s.count+' purchase'+(s.count!==1?'s':'')+(m?' in '+escHtml(monthLabel(m)):' all time')+(purchState==='stale'?' (last copy loaded - refresh failed)':'')+'</div>'
+    +'<div class="pu-cats"><span>Chemicals <b>'+escHtml(fmtMoney(s.byCat.chemicals))+'</b></span><span>Equipment <b>'+escHtml(fmtMoney(s.byCat.equipment))+'</b></span><span>Parts <b>'+escHtml(fmtMoney(s.byCat.parts))+'</b></span></div>';
+  var rows=purchSort(purchRecords).filter(function(p){return!m||monthOf(p.date)===m;}),h='';
+  if(!rows.length)h='<div class="maint-empty" style="text-align:center;padding:2rem;">No purchases for this period.</div>';
+  rows.slice(0,300).forEach(function(p){
+    var meta=[];if(p.body){var lv=LEVELS[p.levelIdx];meta.push(escHtml(p.body+(lv?' ('+lv.short+')':'')));}
+    if(p.relatedRef!=null)meta.push('Ref '+escHtml(refLabel(p.relatedRef)));if(p.note)meta.push(escHtml(p.note));meta.push('Entered by '+escHtml(p.enteredBy));
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(p.item)+'</div><div class="dash-hist-when" style="text-align:left;">'+escHtml(p.when)+(p.vendor?' - '+escHtml(p.vendor):'')+'</div></div>'
+      +'<div style="text-align:right;white-space:nowrap;"><div class="dash-hist-who">'+escHtml(fmtMoney(p.amountCents))+'</div>'+puCatPill(p.category)+'</div></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+meta.join(' - ')+'</div><button class="dash-del-btn" onclick="deletePurchase('+p.id+')">Delete</button></div></div>';
+  });
+  if(rows.length>300)h+='<div class="maint-empty" style="text-align:center;">Showing the newest 300 of '+rows.length+'. Export CSV for everything.</div>';
+  list.innerHTML=h;
+}
+async function addPurchaseDash(){
+  var bv=document.getElementById('pu-body').value,body=null;
+  if(bv){var p=bv.split('-'),l=LEVELS[+p[0]];body={levelIdx:+p[0],bodyIdx:+p[1],level:l.name,body:l.bodies[+p[1]].name};}
+  var f={date:document.getElementById('pu-date').value,category:document.getElementById('pu-cat').value,item:document.getElementById('pu-item').value,amountText:document.getElementById('pu-amount').value,
+    vendor:document.getElementById('pu-vendor').value,body:body,refText:document.getElementById('pu-ref').value,note:document.getElementById('pu-note').value,enteredBy:(function(){try{return localStorage.getItem('aquatic_user_name')||'Dashboard';}catch(e){return 'Dashboard';}})()};
+  var err=validatePurchase(f);if(err){puMsg('err',err);return;}
+  var rec=buildPurchase(f);
+  // if the last attempt may have landed (timeout), re-use its id so a retry can never double-count
+  if(puRetry&&puRetry.item===rec.item&&puRetry.amountCents===rec.amountCents&&puRetry.date===rec.date&&puRetry.category===rec.category)rec.id=puRetry.id;
+  document.getElementById('pu-add').disabled=true;setSyncBadge('syncing','Saving purchase...');
+  var res=await ghMutate(function(remote){
+    if(remote.some(function(e){return e.id===rec.id;}))return null; // already saved
+    return{list:[rec].concat(remote),added:1,removed:0};
+  },'Add aquatic purchase',PURCH_API);
+  document.getElementById('pu-add').disabled=false;
+  if(res.ok){
+    purchRecords=res.list;purchState='ok';puRetry=null;puMonth=monthOf(rec.date);resetPurchForm();
+    setSyncBadge('ok','Saved '+fmtMoney(rec.amountCents)+' - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' (GitHub)');
+    puMsg('ok','Saved '+fmtMoney(rec.amountCents)+' ('+PURCH_CATS[rec.category]+').');renderPurchTab();renderSpend();
+  }else{
+    puRetry=rec;setSyncBadge('err','Purchase not saved');
+    puMsg('err','Could not save ('+res.reason+'). It needs a connection; click Add again to retry.');
+  }
+}
+async function deletePurchase(id){
+  var numId=Number(id);
+  if(!confirm('Delete this purchase? This cannot be undone.'))return;
+  setSyncBadge('syncing','Deleting...');
+  var res=await ghMutate(function(remote){
+    var kept=remote.filter(function(e){return e.id!==numId;});
+    if(kept.length===remote.length)return null; // already gone
+    return{list:kept,added:0,removed:remote.length-kept.length};
+  },'Deleted aquatic purchase',PURCH_API);
+  if(res.ok){purchRecords=res.list;purchState='ok';setSyncBadge('ok','Deleted - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' remaining (GitHub)');renderPurchTab();renderSpend();}
+  else{setSyncBadge('err','Delete failed');alert('Delete failed ('+res.reason+'). Nothing was changed. Try again.');}
+}
+function exportPurchCSV(){
+  var blob=new Blob(['\ufeff'+buildPurchCSV(purchRecords)],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-purchases-'+todayStr()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+var puFormReady=false;
+function resetPurchFormOnce(){if(puFormReady)return;puFormReady=true;fillPurchBodySelect();resetPurchForm();}
 function renderMaint(){
   var el=document.getElementById('maint-section');if(!el)return;
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
@@ -683,8 +878,10 @@ async function ghMutate(mutator,message,url){
 
 async function loadData(){
   setSyncBadge('syncing','Loading...');
-  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API)]); // readings + maintenance, in parallel
-  var rem=both[0],mrem=both[1];
+  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API),ghFetchRemote(PURCH_API)]); // readings + maintenance + purchases, in parallel
+  var rem=both[0],mrem=both[1],prem=both[2];
+  if(prem.ok){purchRecords=prem.list;purchState='ok';}
+  else{purchState=(purchState==='ok'||purchState==='stale')?'stale':'unknown';} // a purchases failure never blocks the pool/spa views
   if(mrem.ok){maintRecords=mrem.list;maintState='ok';}
   else{maintState=(maintState==='ok'||maintState==='stale')?'stale':'unknown';} // a maintenance failure never blocks the pool/spa views
   if(rem.ok){
@@ -693,6 +890,7 @@ async function loadData(){
     document.getElementById('last-updated').textContent='Last updated: '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSyncBadge('ok',rem.missing?'Connected - no readings yet':'Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
     renderDashboard();
+    if(document.getElementById('tab-purchases-content').style.display!=='none')renderPurchTab();
     startAutoRefresh();
     return;
   }
@@ -1001,6 +1199,7 @@ function renderDashboard(){
 
   document.getElementById('level-sections').innerHTML=html;
   renderMaint();
+  renderSpend();
 
   // Render mini charts after DOM update
   setTimeout(function(){
@@ -1268,7 +1467,7 @@ function renderVisuals(filtered){
 }
 
 function showDashTab(tab){
-  ["overview","history"].forEach(function(t){
+  ["overview","history","purchases"].forEach(function(t){
     document.getElementById("tab-"+t+"-content").style.display=t===tab?"block":"none";
     document.getElementById("tab-"+t).classList.toggle("active",t===tab);
   });
@@ -1276,6 +1475,7 @@ function showDashTab(tab){
     populateDashHistFilter();
     renderDashHistory();
   }
+  if(tab==="purchases"){resetPurchFormOnce();renderPurchTab();}
 }
 
 function populateDashHistFilter(){
