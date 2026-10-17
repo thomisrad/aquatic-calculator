@@ -17,6 +17,7 @@
   --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:rgba(163,45,45,0.25);
   --radius:8px;--radius-lg:12px;
   --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
+  --c-chem:#1F4E9A;--c-equip:#D35400;--c-parts:#17A589;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
 @media(prefers-color-scheme:dark){
@@ -29,6 +30,7 @@
     --warn-bg:#412402;--warn-text:#ef9f27;--warn-border:rgba(239,159,39,0.2);
     --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.2);
     --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
+    --c-chem:#4B8DE3;--c-equip:#E8962A;--c-parts:#62E5C2;
   }
 }
 body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;}
@@ -228,6 +230,30 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .tp-val{width:120px;flex:none;text-align:right;font-size:14px;color:var(--text2);white-space:nowrap;}
 .tp-val b{color:var(--text);font-weight:500;font-size:15px;}
 @media(max-width:600px){.tp-name{width:90px;}.tp-val{width:96px;}}
+/* Purchases trend */
+.hist-switch{flex-wrap:wrap;}
+.pu-trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.tr-legend{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0 10px;font-size:14px;color:var(--text);}
+.tr-key{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--text);}
+.tr-key b{font-weight:500;}
+.tr-keysub{color:var(--text3);font-size:13px;}
+#pu-chart{width:100%;}
+.tr-svg{display:block;max-width:100%;height:auto;}
+.tr-grid{stroke:var(--border);stroke-width:1;}
+.tr-base{stroke:var(--border2);stroke-width:1;}
+.tr-axis{fill:var(--text2);font-size:12px;font-family:var(--font);}
+.tr-line{stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;}
+.tr-line.chem{stroke:var(--c-chem);}.tr-line.equip{stroke:var(--c-equip);}.tr-line.parts{stroke:var(--c-parts);}
+.tr-mk.chem{fill:var(--c-chem);}.tr-mk.equip{fill:var(--c-equip);}.tr-mk.parts{fill:var(--c-parts);}
+.tr-mk{stroke:var(--bg);stroke-width:1.5;}
+.tr-pt:hover .tr-mk{stroke:var(--text);stroke-width:2;}
+.tr-details{margin-top:12px;font-size:14px;color:var(--text);}
+.tr-details summary{cursor:pointer;color:var(--info-text);font-weight:500;}
+.tr-table{border-collapse:collapse;margin-top:8px;font-size:13px;min-width:100%;}
+.tr-table th,.tr-table td{padding:5px 7px;text-align:right;white-space:nowrap;border-bottom:0.5px solid var(--border);}
+.tr-table th:first-child,.tr-table td:first-child{text-align:left;}
+.tr-table th{color:var(--text2);font-weight:500;font-size:12px;}
+.tr-total td{font-weight:500;border-top:1px solid var(--border2);}
 </style>
 </head>
 <body>
@@ -259,7 +285,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.36 - Oct 17, 2026</span>
+        <span class="version">v1.37 - Oct 17, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -382,10 +408,12 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
   <!-- HISTORY TAB -->
   <div id="tab-purchases-content" style="display:none;">
+    <div class="hist-switch"><button class="dash-tab active" id="pu-v-entries" onclick="setPuView('entries')">Entries</button><button class="dash-tab" id="pu-v-trend" onclick="setPuView('trend')">Trend</button></div>
     <div class="pu-head">
       <div><div style="font-size:15px;font-weight:500;color:var(--text);">Aquatic purchases</div><div style="font-size:13px;color:var(--text2);">Chemicals, equipment and parts</div></div>
       <div style="display:flex;gap:8px;align-items:center;"><select id="pu-month" onchange="onPurchMonth()" class="pu-input" style="min-width:170px;"></select><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportPurchCSV()">Export CSV</button></div>
     </div>
+    <div id="pu-entries-view">
     <div class="visual-card" style="margin-bottom:12px;"><div id="pu-sum"></div></div>
     <div class="visual-card" style="margin-bottom:12px;">
       <div class="visual-title">Add a purchase</div>
@@ -402,6 +430,17 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div style="display:flex;align-items:center;gap:12px;margin-top:12px;"><button class="dash-tab active" id="pu-add" onclick="addPurchaseDash()">Add purchase</button><div id="pu-msg" class="pu-msg"></div></div>
     </div>
     <div id="pu-list"></div>
+    </div>
+    <div id="pu-trend-view" style="display:none;">
+      <div class="visual-card">
+        <div class="pu-trend-head"><div><div class="visual-title">Spending trend by category</div><div class="visual-sub" id="pu-trend-sub"></div></div>
+          <select id="pu-range" class="pu-input" style="width:auto;min-width:160px;" onchange="onPuRange()"><option value="6">Last 6 months</option><option value="12" selected>Last 12 months</option><option value="all">All time</option></select></div>
+        <div id="pu-legend" class="tr-legend"></div>
+        <div id="pu-chart"></div>
+        <div id="pu-trend-note"></div>
+        <div id="pu-trend-table"></div>
+      </div>
+    </div>
   </div>
 
   <div id="tab-history-content" style="display:none;">
@@ -678,6 +717,82 @@ function resetPurchForm(){
 }
 function puMsg(kind,text){var el=document.getElementById('pu-msg');el.className='pu-msg '+kind;el.textContent=text;}
 function onPurchMonth(){puMonth=document.getElementById('pu-month').value;renderPurchTab();}
+
+// ---- Purchases trend: monthly spending per category, drawn as inline SVG (no chart library, works offline) ----
+var puView='entries',puRange='12';
+var TREND_CATS=[{key:'chemicals',label:'Chemicals',cls:'chem',shape:'circle'},{key:'equipment',label:'Equipment',cls:'equip',shape:'square'},{key:'parts',label:'Parts',cls:'parts',shape:'diamond'}];
+function trendMonths(list,range){ // months (YYYY-MM, oldest first) from the first month with data (or the range limit) to the current month
+  var first=null;list.forEach(function(p){if(p&&p.date){var m=monthOf(p.date);if(first===null||m<first)first=m;}});
+  if(first===null)return[];
+  var cap=range==='all'?600:parseInt(range,10),cur=monthOf(todayStr()),m=cur,out=[];
+  for(var i=0;i<cap;i++){out.unshift(m);if(m<=first)break;m=prevMonth(m);}
+  return out;
+}
+function trendSeries(list,months){ // dollars-in-cents per category per month, zero-filled
+  return TREND_CATS.map(function(c){return{key:c.key,label:c.label,cls:c.cls,shape:c.shape,values:months.map(function(m){return purchSummary(list,m).byCat[c.key];})};});
+}
+function niceScale(maxDollars){ // axis top and step on a 1-2-5 grid, never more than 5 intervals
+  if(!(maxDollars>0))return{max:100,step:25};
+  var base=Math.pow(10,Math.floor(Math.log10(maxDollars))-1),mult=[1,2,5,10,20,50];
+  for(var i=0;i<mult.length;i++){var s=base*mult[i];if(Math.ceil(maxDollars/s-1e-9)<=5)return{max:Math.ceil(maxDollars/s-1e-9)*s,step:s};}
+  return{max:maxDollars,step:maxDollars/4};
+}
+function fmtAxis(v){return v>=1000?'$'+(Math.round(v/100)/10).toString().replace(/\.0$/,'')+'k':'$'+v;}
+function fmtTight(c){return c%100===0?fmtMoney(c,true):fmtMoney(c);} // table cells: drop ".00" on round amounts so 14 columns fit
+function trendMonthLabel(m,withYear){var d=new Date(+m.slice(0,4),+m.slice(5,7)-1,1);return d.toLocaleDateString('en-US',{month:'short'})+(withYear?" '"+m.slice(2,4):'');}
+function shapeSVG(shape,x,y,r,attrs){
+  if(shape==='square')return '<rect x="'+(x-r)+'" y="'+(y-r)+'" width="'+(2*r)+'" height="'+(2*r)+'" '+attrs+'/>';
+  if(shape==='diamond')return '<polygon points="'+x+','+(y-r-1)+' '+(x+r+1)+','+y+' '+x+','+(y+r+1)+' '+(x-r-1)+','+y+'" '+attrs+'/>';
+  return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" '+attrs+'/>';
+}
+function buildTrendSVG(series,months,W){
+  var H=300,L=58,R=18,T=14,B=36,pw=W-L-R,ph=H-T-B,n=months.length;
+  var maxC=0;series.forEach(function(s){s.values.forEach(function(v){if(v>maxC)maxC=v;});});
+  var sc=niceScale(maxC/100),svg='<svg class="tr-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Monthly spending by category">';
+  function X(i){return n===1?L+pw/2:L+i*pw/(n-1);}function Y(c){return T+ph-(c/100)/sc.max*ph;}
+  var ticks=Math.round(sc.max/sc.step);
+  for(var k=0;k<=ticks;k++){var v=k*sc.step,y=Y(v*100);svg+='<line class="tr-grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="tr-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+fmtAxis(v)+'</text>';}
+  var every=Math.max(1,Math.ceil(48/(n===1?pw:pw/(n-1))));
+  var lastYear=null;
+  months.forEach(function(m,i){if((n-1-i)%every!==0)return;var yr=m.slice(0,4);svg+='<text class="tr-axis" x="'+X(i)+'" y="'+(H-12)+'" text-anchor="middle">'+trendMonthLabel(m,yr!==lastYear)+'</text>';lastYear=yr;}); // the year shows on the first label and wherever it changes
+  svg+='<line class="tr-base" x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'"/>';
+  series.forEach(function(s){
+    if(n>1)svg+='<polyline class="tr-line '+s.cls+'" points="'+s.values.map(function(c,i){return X(i)+','+Y(c);}).join(' ')+'" fill="none"/>';
+    s.values.forEach(function(c,i){
+      svg+='<g class="tr-pt '+s.cls+'">'+shapeSVG(s.shape,X(i),Y(c),4.5,'class="tr-mk '+s.cls+'"')+'<title>'+escHtml(monthLabel(months[i])+' - '+s.label+': '+fmtMoney(c))+'</title></g>';
+    });
+  });
+  return svg+'</svg>';
+}
+function setPuView(v){
+  puView=v;
+  document.getElementById('pu-v-entries').classList.toggle('active',v==='entries');
+  document.getElementById('pu-v-trend').classList.toggle('active',v==='trend');
+  document.getElementById('pu-entries-view').style.display=v==='entries'?'block':'none';
+  document.getElementById('pu-trend-view').style.display=v==='trend'?'block':'none';
+  document.getElementById('pu-month').style.display=v==='entries'?'block':'none';
+  renderPurchView();
+}
+function onPuRange(){puRange=document.getElementById('pu-range').value;renderPurchTrend();}
+function renderPurchView(){if(puView==='trend')renderPurchTrend();else renderPurchTab();}
+function renderPurchTrend(){
+  var chart=document.getElementById('pu-chart'),legend=document.getElementById('pu-legend'),note=document.getElementById('pu-trend-note'),tbl=document.getElementById('pu-trend-table'),sub=document.getElementById('pu-trend-sub');
+  legend.innerHTML='';note.innerHTML='';tbl.innerHTML='';chart.innerHTML='';
+  if(purchState==='unknown'){sub.textContent='';chart.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">Purchases are unavailable. Use Refresh to try again.</div>';return;}
+  var months=trendMonths(purchRecords,puRange);
+  if(!months.length){sub.textContent='';chart.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">No purchases yet. The trend appears once some are logged.</div>';return;}
+  var series=trendSeries(purchRecords,months),W=Math.max(320,Math.floor(chart.clientWidth||900));
+  sub.textContent='Monthly spending, '+trendMonthLabel(months[0],true)+(months.length>1?' to '+trendMonthLabel(months[months.length-1],true):'')+(purchState==='stale'?' (last copy loaded - refresh failed)':'');
+  legend.innerHTML=series.map(function(s){var tot=s.values.reduce(function(a,b){return a+b;},0);
+    return '<span class="tr-key"><svg width="16" height="16" viewBox="0 0 16 16">'+shapeSVG(s.shape,8,8,5,'class="tr-mk '+s.cls+'"')+'</svg><b>'+escHtml(s.label)+'</b> '+escHtml(fmtMoney(tot,tot>=100000))+' <span class="tr-keysub">in this period</span></span>';}).join('');
+  chart.innerHTML=buildTrendSVG(series,months,W);
+  if(months.length===1)note.innerHTML='<div class="maint-empty">Only one month of purchases so far, so there is no line yet. Markers show this month\'s spending.</div>';
+  var rows='<table class="tr-table"><tr><th></th>'+months.map(function(m){return '<th>'+escHtml(trendMonthLabel(m,m===months[0]||m.slice(5)==='01'))+'</th>';}).join('')+'<th>Total</th></tr>';
+  series.forEach(function(s){rows+='<tr><td><span class="tr-key"><svg width="14" height="14" viewBox="0 0 16 16">'+shapeSVG(s.shape,8,8,5,'class="tr-mk '+s.cls+'"')+'</svg>'+escHtml(s.label)+'</span></td>'+s.values.map(function(c){return '<td>'+escHtml(fmtTight(c))+'</td>';}).join('')+'<td><b>'+escHtml(fmtTight(s.values.reduce(function(a,b){return a+b;},0)))+'</b></td></tr>';});
+  rows+='<tr class="tr-total"><td>All categories</td>'+months.map(function(m,i){return '<td>'+escHtml(fmtTight(series.reduce(function(a,s){return a+s.values[i];},0)))+'</td>';}).join('')+'<td><b>'+escHtml(fmtTight(series.reduce(function(a,s){return a+s.values.reduce(function(x,y){return x+y;},0);},0)))+'</b></td></tr></table>';
+  tbl.innerHTML='<details class="tr-details"><summary>Show the numbers</summary><div style="overflow-x:auto;">'+rows+'</div></details>';
+}
+var trendResizeTimer=null;window.addEventListener('resize',function(){clearTimeout(trendResizeTimer);trendResizeTimer=setTimeout(function(){if(puView==='trend'&&document.getElementById('tab-purchases-content').style.display!=='none')renderPurchTrend();},150);});
 function renderPurchTab(){
   fillPurchBodySelect();
   var list=document.getElementById('pu-list');
@@ -1031,7 +1146,7 @@ async function loadData(){
     document.getElementById('last-updated').textContent='Last updated: '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     setSyncBadge('ok',rem.missing?'Connected - no readings yet':'Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
     renderDashboard();
-    if(document.getElementById('tab-purchases-content').style.display!=='none')renderPurchTab();
+    if(document.getElementById('tab-purchases-content').style.display!=='none')renderPurchView();
     startAutoRefresh();
     return;
   }
@@ -1620,7 +1735,7 @@ function showDashTab(tab){
     populateDashHistFilter();
     renderDashHistory();
   }
-  if(tab==="purchases"){resetPurchFormOnce();renderPurchTab();}
+  if(tab==="purchases"){resetPurchFormOnce();renderPurchView();}
 }
 
 function populateDashHistFilter(){
