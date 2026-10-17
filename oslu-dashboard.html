@@ -259,7 +259,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.35 - Oct 16, 2026</span>
+        <span class="version">v1.36 - Oct 17, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -302,7 +302,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="summary-card">
       <div class="summary-label">Shock alerts</div>
       <div class="summary-val" id="s-shocks" style="color:var(--danger-text);">--</div>
-      <div class="summary-sub">CC exceeds 50% of FC</div>
+      <div class="summary-sub">bodies with CC over 50% of FC</div>
     </div>
     <div class="summary-card">
       <div class="summary-label">ORP issues</div>
@@ -1102,6 +1102,8 @@ function ccStatus(reading){
   return'ok';
 }
 
+// One rule, used by the tile AND the alert bar: city limit is CC < 50% of FC, so CC >= 50% of FC needs shock.
+function needsShock(r){var x=r&&r.readings;return!!(x&&x.cc!=null&&x.cc>0&&x.fc!=null&&x.fc>0&&x.cc>=x.fc*0.5);}
 function getActions(reading){
   if(!reading)return[];
   var actions=[];
@@ -1111,11 +1113,9 @@ function getActions(reading){
   var fc=r.fc,cc=r.cc,pH=r.pH,orp=r.orp,orpSP=r.orpSetpoint;
 
   // CC / shock check using current city rule: CC must be < 50% of FC
-  if(cc!=null&&cc>0&&fc!=null&&fc>0){
+  if(needsShock(reading)){
     var ccLimit=fc*0.5;
-    if(cc>=ccLimit){
-      actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)',urgent:true});
-    }
+    actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)',urgent:true});
   }
 
   // ORP check
@@ -1180,10 +1180,7 @@ function renderDashboard(){
   tests.forEach(function(r){bodiesTested.add(r.levelIdx+'-'+r.bodyIdx);});
   document.getElementById('s-bodies').textContent=bodiesTested.size;
 
-  var shockCount=filtered.filter(function(r){return r.readings&&r.readings.cc!=null&&r.readings.cc>0&&r.readings.fc!=null&&r.readings.fc>0&&r.readings.cc>=r.readings.fc*0.5;}).length;
-  document.getElementById('s-shocks').textContent=shockCount;
-  document.getElementById('s-shocks').style.color=shockCount>0?'var(--danger-text)':'var(--success-text)';
-
+  var shockCount=0; // bodies whose latest reading is over the CC limit (current state, not every old reading in the window)
   var orpIssues=0;
   var actionCount=0;
   var alerts=[];
@@ -1193,6 +1190,7 @@ function renderDashboard(){
     l.bodies.forEach(function(b,bi){
       var latest=getLatestForBody(li,bi,filtered);
       if(!latest)return;
+      if(needsShock(latest))shockCount++;
       var os=orpStatus(latest);
       if(os==='alert'||os==='warn')orpIssues++;
       var actions=getActions(latest);
@@ -1205,6 +1203,8 @@ function renderDashboard(){
     });
   });
 
+  document.getElementById('s-shocks').textContent=shockCount;
+  document.getElementById('s-shocks').style.color=shockCount>0?'var(--danger-text)':'var(--success-text)';
   document.getElementById('s-orp').textContent=orpIssues;
   document.getElementById('s-orp').style.color=orpIssues>0?'var(--warn-text)':'var(--success-text)';
   document.getElementById('s-actions').textContent=actionCount;
