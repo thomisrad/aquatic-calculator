@@ -168,6 +168,14 @@ input:focus,select:focus{outline:none;border-color:var(--info-text);}
 .icard,.orp-icard,.status-card,.cc-result,.dcard,.hist-entry,.guide-section,.stat-card,.copy-preview,.token-screen{box-shadow:var(--card-shadow);}
 button:not(.copy-preview-close):not(.del-btn),.action-select-wrap select,.export-select{box-shadow:var(--btn-shadow);transition:box-shadow .12s,transform .12s;}
 button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:translateY(1px);}
+/* Quick actions: out of service / return / backwash without a reading */
+.quick-actions{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;margin-bottom:1.25rem;box-shadow:var(--card-shadow);}
+.qa-state{font-size:14px;color:var(--success-text);font-weight:500;margin-bottom:10px;}
+.qa-state.oos{color:var(--warn-text);}
+.qa-row{display:flex;gap:10px;flex-wrap:wrap;}
+.qa-btn{flex:1;min-width:140px;min-height:48px;padding:10px 12px;font-size:15px;font-weight:500;border-radius:var(--radius);border:0.5px solid var(--info-border);background:var(--info-bg);color:var(--info-text);}
+.qa-btn.warn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.qa-btn.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
 </style>
 </head>
 <body>
@@ -211,7 +219,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v40 (synced) - Oct 7, 2026</span>
+    <span class="version-label">v41 (synced) - Oct 17, 2026</span>
   </div>
 </div>
 
@@ -240,6 +248,15 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   <div class="vol-display" id="vol-display" style="display:none;">
     <span class="vol-text" id="vol-label">Volume</span>
     <span class="vol-num" id="vol-num">--</span>
+  </div>
+  <div class="quick-actions" id="quick-actions" style="display:none;">
+    <p class="slabel">Status and maintenance -- no reading needed</p>
+    <div class="qa-state" id="qa-state">In service</div>
+    <div class="qa-row">
+      <button class="qa-btn warn" id="qa-oos" onclick="markOutOfService()">Mark out of service</button>
+      <button class="qa-btn ok" id="qa-return" onclick="returnToService()" style="display:none;">Return to service</button>
+      <button class="qa-btn" id="qa-backwash" onclick="recordBackwash()">Record backwash</button>
+    </div>
   </div>
   <div class="orp-section">
     <p class="slabel">ORP Controller</p>
@@ -439,7 +456,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   </div>
   <div class="guide-section" style="text-align:center;">
     <div style="font-size:13px;color:var(--text3);line-height:1.8;">
-      OSLU Aquatic Chemical Calculator v40 (synced)<br>
+      OSLU Aquatic Chemical Calculator v41 (synced)<br>
       For water chemistry questions consult your Senior Maintenance Manager.
     </div>
   </div>
@@ -660,7 +677,11 @@ function loadLocal(){
 function saveInputsLocal(){try{localStorage.setItem(IKEY,JSON.stringify(st.inputs));}catch(e){}}
 function saveLocal(){ // offline display cache: newest 500 confirmed readings (outbox has its own key)
   saveInputsLocal();
-  try{localStorage.setItem(HKEY,JSON.stringify(lastRemote.slice().sort(function(a,b){return b.ts-a.ts;}).slice(0,500).map(stripLocal)));}catch(e){}
+  try{
+    var sorted=lastRemote.slice().sort(function(a,b){return b.ts-a.ts;}),keep=new Set(sorted.slice(0,500)),latestEv={};
+    sorted.forEach(function(r){if(r&&(r.outOfService||r.returnedToService)){var k=r.levelIdx+'-'+r.bodyIdx;if(!latestEv[k]){latestEv[k]=r;keep.add(r);}}}); // a long out-of-service must not fall out of the cache
+    localStorage.setItem(HKEY,JSON.stringify(Array.from(keep).map(stripLocal)));
+  }catch(e){}
 }
 function rebuildHistory(){
   var ids=new Set(outbox.map(function(e){return e.id;}));
@@ -668,6 +689,7 @@ function rebuildHistory(){
   rem.forEach(function(e){e.synced=true;});
   outbox.forEach(function(e){e.synced=false;});
   st.history=outbox.concat(rem).sort(function(a,b){return b.ts-a.ts;});
+  if(typeof updateOOSBanner==='function'&&typeof document!=='undefined'&&document.getElementById('calc-page'))updateOOSBanner();
 }
 function histOpen(){var p=document.getElementById('hist-page');return !!p&&p.style.display!=='none';}
 function pendingCount(){return outbox.length;}
@@ -797,6 +819,7 @@ function onLocationChange(val){
   updateCYAField();
   loadInputs();
   document.getElementById('results').classList.remove('on');
+  updateOOSBanner();
 }
 
 function updateCYAField(){
@@ -906,6 +929,7 @@ function renderCC(cc,fc,vol){
 function getOOSKey(){return 'oos_'+bkey();}
 
 function markOutOfService(){
+  if(!bodySelected()){alert('Select a body of water first.');return;}
   var b=currentBody();
   var reasons=['Equipment repair','Equipment failure','Water replacement','Scheduled maintenance','Health/safety closure','Other'];
   var reasonList=reasons.map(function(r,i){return (i+1)+'. '+r;}).join('\n');
@@ -929,7 +953,8 @@ function markOutOfService(){
     localStorage.setItem('aquatic_oos',JSON.stringify(stored));
   }catch(e){}
   setSyncBadge('syncing','Saving...');
-  submitEntry(oosEntry).then(function(ok){
+  var pOos=submitEntry(oosEntry);updateOOSBanner();
+  pOos.then(function(ok){
     if(ok)setSyncBadge('ok','Out of service status synced');else updatePendingBadge();
     updateOOSBanner();
     renderHistory();
@@ -938,6 +963,7 @@ function markOutOfService(){
 }
 
 function returnToService(){
+  if(!bodySelected()){alert('Select a body of water first.');return;}
   var b=currentBody();
   if(!confirm('Return '+b.name+' ('+LEVELS[st.level].name+') to service?'))return;
   try{
@@ -955,7 +981,8 @@ function returnToService(){
     readings:{},doses:[]
   };
   setSyncBadge('syncing','Saving...');
-  submitEntry(returnEntry).then(function(ok){
+  var pRet=submitEntry(returnEntry);updateOOSBanner();
+  pRet.then(function(ok){
     if(ok)setSyncBadge('ok','Return to service synced');else updatePendingBadge();
     updateOOSBanner();
     renderHistory();
@@ -963,32 +990,75 @@ function returnToService(){
   alert(b.name+' returned to service.');
 }
 
+function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
+function isStatusRec(r){return!!(r&&(r.outOfService||r.returnedToService||r.backwashOnly));} // status / maintenance entries are not chemical tests
+function bodySelected(){var s=document.getElementById('location-select');return!!(s&&s.value);}
+// A body's status comes from its latest out-of-service / return-to-service entry in the shared history (all devices, incl. pending ones).
+function statusFromHistory(li,bi){
+  var ev=null;
+  st.history.forEach(function(r){if(r&&r.levelIdx===li&&r.bodyIdx===bi&&(r.outOfService||r.returnedToService)&&(ev===null||r.ts>ev.ts))ev=r;});
+  if(!ev)return undefined; // nothing on record
+  return ev.outOfService?{reason:ev.reason||'Maintenance',since:ev.when,ts:ev.ts}:null;
+}
 function isBodyOOS(li,bi){
-  try{
+  var h=statusFromHistory(li,bi);if(h!==undefined)return h;
+  try{ // fallback for entries older than this phone's cache: the status this phone last set
     var stored=JSON.parse(localStorage.getItem('aquatic_oos')||'{}');
     return stored[li+'-'+bi]||null;
   }catch(e){return null;}
+}
+function refreshQuickActions(){
+  var card=document.getElementById('quick-actions');if(!card)return;
+  var on=bodySelected();card.style.display=on?'block':'none';if(!on)return;
+  var oos=isBodyOOS(st.level,st.body);
+  document.getElementById('qa-oos').style.display=oos?'none':'block';
+  document.getElementById('qa-return').style.display=oos?'block':'none';
+  var s=document.getElementById('qa-state');s.textContent=oos?'OUT OF SERVICE: '+oos.reason+' (since '+oos.since+')':'In service';s.className='qa-state'+(oos?' oos':'');
+}
+function recordBackwash(){ // a backwash with no reading: saved as its own entry, counted by the dashboard's Last backwash card
+  if(!bodySelected()){alert('Select a body of water first.');return;}
+  var b=currentBody();
+  var note=prompt('Record a BACKWASH for '+b.name+' ('+LEVELS[st.level].name+') as done just now?\n\nOptional note (for example "both filters"), or leave blank.\nTap OK to record, Cancel to stop.');
+  if(note===null)return;
+  var now=new Date();
+  var entry={
+    id:newId(),ts:now.getTime(),
+    level:LEVELS[st.level].name,levelIdx:st.level,bodyIdx:st.body,
+    body:b.name,volume:b.vol,
+    when:now.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}),
+    backwash:true,backwashOnly:true,notes:(note||'').trim()||null,tester:getUserName(),synced:false,
+    readings:{},doses:[]
+  };
+  setSyncBadge('syncing','Saving...');
+  var p=submitEntry(entry);
+  p.then(function(ok){
+    if(ok)setSyncBadge('ok','Backwash recorded and synced');else updatePendingBadge();
+    renderHistory();
+  });
+  alert('Backwash recorded for '+b.name+'.\nIt appears on the management dashboard (and syncs automatically if there is no signal right now).');
 }
 
 function updateOOSBanner(){
   var oos=isBodyOOS(st.level,st.body);
   var existing=document.getElementById('oos-banner');
-  if(oos){
+  var text='OUT OF SERVICE: '+escH(oos?oos.reason:'')+' (since '+escH(oos?oos.since:'')+') -- use "Return to service" below when it is back in service.';
+  if(oos&&bodySelected()){
     if(!existing){
       var banner=document.createElement('div');
       banner.id='oos-banner';
       banner.style.cssText='background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);padding:10px 14px;margin-bottom:1rem;font-size:14px;color:var(--warn-text);font-weight:500;';
-      banner.innerHTML='OUT OF SERVICE: '+oos.reason+' (since '+oos.since+') -- To return to service, use the Save or Share dropdown.';
+      banner.innerHTML=text;
       var calcPage=document.getElementById('calc-page');
       var volDisplay=document.getElementById('vol-display');
       if(volDisplay&&volDisplay.nextSibling){calcPage.insertBefore(banner,volDisplay.nextSibling);}
       else{calcPage.appendChild(banner);}
     }else{
-      existing.innerHTML='OUT OF SERVICE: '+oos.reason+' (since '+oos.since+') -- To return to service, use the Save or Share dropdown.';
+      existing.innerHTML=text;
     }
   }else{
     if(existing)existing.remove();
   }
+  refreshQuickActions();
 }
 
 function calculate(){
@@ -1135,7 +1205,7 @@ function buildReadingText(){
   if(notesVal){lines.push('');lines.push('-- NOTES --');lines.push(notesVal);}
   if(bwVal){lines.push('');lines.push('Backwash performed: Yes');}
   lines.push('');lines.push('================================');
-  lines.push('Generated by OSLU Aquatic Chemical Calculator v40');
+  lines.push('Generated by OSLU Aquatic Chemical Calculator v41');
   return lines.join('\n');
 }
 
@@ -1235,20 +1305,27 @@ function renderHistory(){
   var list=document.getElementById('hist-list');
   if(!entries.length){list.innerHTML='<div class="empty-state">No readings saved yet.<br>Run a calculation and click "Save reading to history".</div>';return;}
   list.innerHTML=entries.map(function(e){
+    var pend=(e.synced===false?'<span style="font-size:12px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending</span>':'');
     if(e.outOfService){
       return '<div class="hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
-        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+e.body+' - '+e.level+'</div>'
-        +'<div class="hist-when">'+e.when+'</div>'
-        +'<div style="font-size:13px;color:var(--warn-text);margin-top:3px;">Reason: '+e.reason+'</div></div>'
-        +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:12px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')
-        +'</div></div></div>';
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+escH(e.body)+' - '+escH(e.level)+'</div>'
+        +'<div class="hist-when">'+escH(e.when)+'</div>'
+        +'<div style="font-size:13px;color:var(--warn-text);margin-top:3px;">Reason: '+escH(e.reason)+'</div></div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'+pend+'</div></div></div>';
     }
     if(e.returnedToService){
       return '<div class="hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
-        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+e.body+' - '+e.level+'</div>'
-        +'<div class="hist-when">'+e.when+'</div></div>'
-        +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:12px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')
-        +'</div></div></div>';
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+escH(e.body)+' - '+escH(e.level)+'</div>'
+        +'<div class="hist-when">'+escH(e.when)+'</div></div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'+pend+'</div></div></div>';
+    }
+    if(e.backwashOnly){
+      return '<div class="hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escH(e.body)+' - '+escH(e.level)+'</div>'
+        +'<div class="hist-when">'+escH(e.when)+'</div>'
+        +(e.notes?'<div style="font-size:13px;color:var(--info-text);margin-top:3px;">Note: '+escH(e.notes)+'</div>':'')
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escH(e.tester)+'</div>':'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'+pend+'</div></div></div>';
     }
     return '<div class="hist-entry"><div class="hist-head"><div><div class="hist-who">'+e.body+' - '+e.level+'</div><div class="hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div>'+(e.tester?'<div style="font-size:12px;color:var(--text3);margin-top:1px;">Tested by '+e.tester+'</div>':'')+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;">'+(e.synced===false?'<span style="font-size:12px;padding:2px 7px;border-radius:20px;background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);">Pending sync</span>':'')+'<span class="hist-lsi-pill" style="'+lsiStyle(e.lsi)+'">LSI '+(e.lsi!=null?parseFloat(e.lsi).toFixed(2):'--')+'</span>'
@@ -1286,7 +1363,7 @@ function batchCopyLatest(){
     l.bodies.forEach(function(b,bi){
       // Find most recent reading for this body
       var bodyReadings=st.history.filter(function(r){
-        return r.levelIdx===li&&r.bodyIdx===bi&&r.readings&&!r.outOfService&&!r.returnedToService;
+        return r.levelIdx===li&&r.bodyIdx===bi&&r.readings&&!isStatusRec(r);
       });
       if(!bodyReadings.length){
         lines.push(b.name+' ('+b.vol.toLocaleString()+' gal): No reading on record');
@@ -1315,7 +1392,7 @@ function batchCopyLatest(){
 
   lines.push('');
   lines.push('================================');
-  lines.push('OSLU Aquatic Chemical Calculator v40');
+  lines.push('OSLU Aquatic Chemical Calculator v41');
 
   var text=lines.join('\n');
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -1329,8 +1406,8 @@ function batchCopyLatest(){
 
 function exportCSV(){
   if(!st.history.length){alert('No readings to export.');return;}
-  var rows=[['Date','Level','Body','Volume (gal)','LSI','ORP (mV)','ORP Setpoint (mV)','pH','Free Chlorine (ppm)','Combined Chlorine (ppm)','Total Alkalinity (ppm)','Calcium Hardness (ppm)','Cyanuric Acid (ppm)','Temperature (F)']];
-  st.history.forEach(function(e){rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'']);});
+  var rows=[['Date','Level','Body','Volume (gal)','LSI','ORP (mV)','ORP Setpoint (mV)','pH','Free Chlorine (ppm)','Combined Chlorine (ppm)','Total Alkalinity (ppm)','Calcium Hardness (ppm)','Cyanuric Acid (ppm)','Temperature (F)','Entry type','Reason or note','Backwash']];
+  st.history.forEach(function(e){rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'',e.outOfService?'Out of service':(e.returnedToService?'Returned to service':(e.backwashOnly?'Backwash':'Reading')),e.outOfService?(e.reason||''):(e.notes||''),e.backwash?'Yes':'']);});
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='aquatic-readings-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
@@ -1348,7 +1425,7 @@ function renderTrends(){
   var bodyVal=document.getElementById('trend-body').value;
   if(!bodyVal)return;
   var parts=bodyVal.split('-');var li=parseInt(parts[0]),bi=parseInt(parts[1]);
-  var entries=st.history.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}).slice().reverse();
+  var entries=st.history.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi&&!isStatusRec(e);}).slice().reverse();
   var statsDiv=document.getElementById('trend-stats');
   var legendDiv=document.getElementById('trend-legend');
   var selected=[];

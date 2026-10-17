@@ -163,7 +163,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dash-hist-entry{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;}
 .dash-hist-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
 .dash-hist-who{font-size:15px;font-weight:500;color:var(--text);}
-.dash-hist-when{font-size:13px;color:var(--text3);text-align:right;}
+.dash-hist-when{font-size:13px;color:var(--text3);text-align:left;}
 .dash-hist-params{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
 .dash-hist-param{font-size:14px;color:var(--text2);}
 .dash-hist-param span{color:var(--text);font-weight:500;}
@@ -285,7 +285,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.37 - Oct 17, 2026</span>
+        <span class="version">v1.39 - Oct 17, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -862,7 +862,7 @@ function resetPurchFormOnce(){if(puFormReady)return;puFormReady=true;fillPurchBo
 
 // ---- Tests by person (share of real chemical tests; out-of-service / return-to-service events are not tests) ----
 function isTest(r){
-  if(!r||r.outOfService||r.returnedToService)return false;
+  if(!r||r.outOfService||r.returnedToService||r.backwashOnly)return false;
   var x=r.readings;if(!x)return false;
   return Object.keys(x).some(function(k){return x[k]!=null&&x[k]!=='';});
 }
@@ -1180,14 +1180,14 @@ function getOOSStatus(li,bi,readings){
   return null; // most recent event is a return-to-service
 }
 
-function getLatestForBody(li,bi,readings){
-  var bodyReadings=readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi;});
+function getLatestForBody(li,bi,readings){ // the latest TEST: status entries (out of service, returned, backwash) are not readings and must not blank the body's card or reset "last tested"
+  var bodyReadings=readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi&&isTest(r);});
   if(!bodyReadings.length)return null;
   return bodyReadings.reduce(function(a,b){return a.ts>b.ts?a:b;});
 }
 
 function getBodyReadings(li,bi,readings){
-  return readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi;}).sort(function(a,b){return a.ts-b.ts;});
+  return readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi&&isTest(r);}).sort(function(a,b){return a.ts-b.ts;});
 }
 
 function orpStatus(reading){
@@ -1263,7 +1263,7 @@ function getActions(reading){
   return actions;
 }
 
-function isOOS(li,bi,filtered){return getOOSStatus(li,bi,filtered)!=null;}
+function isOOS(li,bi){return getOOSStatus(li,bi,allReadings)!=null;}
 
 function overallStatus(reading){
   if(!reading)return'none';
@@ -1350,7 +1350,7 @@ function renderDashboard(){
       var status=overallStatus(latest);
       var cardClass='body-card '+(latest?status:'no-data');
       var cardId='card-'+li+'-'+bi;
-      var oosStatus=getOOSStatus(li,bi,filtered);
+      var oosStatus=getOOSStatus(li,bi,allReadings); // all time: an out-of-service entry older than the window still counts
       if(oosStatus){cardClass='body-card warn';}
       html+='<div class="'+cardClass+'" id="'+cardId+'">';
       if(oosStatus){
@@ -1782,18 +1782,26 @@ function renderDashHistory(){
   list.innerHTML=entries.map(function(e){
     if(e.outOfService){
       return '<div class="dash-hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
-        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+e.body+' - '+e.level+'</div>'
-        +'<div class="dash-hist-when">'+e.when+'</div>'
-        +'<div style="font-size:13px;color:var(--warn-text);">Reason: '+e.reason+'</div>'
-        +(e.tester?'<div style="font-size:13px;color:var(--warn-text);">By: '+e.tester+'</div>':'')
-        +'</div></div></div>';
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +'<div style="font-size:13px;color:var(--warn-text);">Reason: '+escHtml(e.reason||'')+'</div>'
+        +(e.tester?'<div style="font-size:13px;color:var(--warn-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
     }
     if(e.returnedToService){
       return '<div class="dash-hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
-        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+e.body+' - '+e.level+'</div>'
-        +'<div class="dash-hist-when">'+e.when+'</div>'
-        +(e.tester?'<div style="font-size:13px;color:var(--success-text);">By: '+e.tester+'</div>':'')
-        +'</div></div></div>';
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.tester?'<div style="font-size:13px;color:var(--success-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
+    if(e.backwashOnly){
+      return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.notes?'<div style="font-size:13px;color:var(--info-text);">Note: '+escHtml(e.notes)+'</div>':'')
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
     }
     var r=e.readings||{};
     return '<div class="dash-hist-entry">'
@@ -1821,16 +1829,35 @@ function renderDashHistory(){
   }).join("");
 }
 
-async function dashDeleteEntry(id){
-  if(!confirm("Delete this reading? This cannot be undone."))return;
+// What deleting a status entry does to the body's out-of-service state (its latest out-of-service / return-to-service entry decides it).
+function statusDeleteMessage(entry,list){
+  var name=entry.body+' ('+entry.level+')',before=getOOSStatus(entry.levelIdx,entry.bodyIdx,list),after=getOOSStatus(entry.levelIdx,entry.bodyIdx,list.filter(function(r){return r.id!==entry.id;}));
+  var what=entry.outOfService?'out-of-service':'return-to-service';
+  var effect=(!!before===!!after)?'This will not change whether '+name+' shows as out of service.'
+    :(after?'Afterwards '+name+' will show as OUT OF SERVICE ('+(after.reason||'Maintenance')+').':'Afterwards '+name+' will no longer show as out of service.');
+  return 'Delete this '+what+' entry for '+name+'?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+function backwashDeleteMessage(entry,list){
+  function last(arr){var l=null;arr.forEach(function(r){if(r.levelIdx===entry.levelIdx&&r.bodyIdx===entry.bodyIdx&&r.backwash===true&&(l===null||r.ts>l.ts))l=r;});return l;}
+  var name=entry.body+' ('+entry.level+')',before=last(list),after=last(list.filter(function(r){return r.id!==entry.id;}));
+  var effect;
+  if(before&&before.id!==entry.id)effect='This will not change the Last backwash card for '+name+'.';
+  else if(after){var n=calDaysAgo(after.ts);effect='Afterwards the last backwash for '+name+' will show as '+(after.when||'earlier')+' ('+(n===0?'today':(n===1?'yesterday':n+' days ago'))+').';}
+  else effect='Afterwards the last backwash for '+name+' will show as "Never recorded".';
+  return 'Delete this backwash entry for '+name+'?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+async function dashDeleteEntry(id,kind){
   var numId=Number(id);
+  var target=allReadings.filter(function(r){return r.id===numId;})[0];
+  if(kind==='event'&&target){if(!confirm(target.backwashOnly?backwashDeleteMessage(target,allReadings):statusDeleteMessage(target,allReadings)))return;}
+  else if(!confirm("Delete this reading? This cannot be undone."))return;
   setSyncBadge('syncing','Deleting...');
   var res=await ghMutate(function(remote){
     var kept=remote.filter(function(e){return e.id!==numId;});
     if(kept.length===remote.length)return null;            // already gone
     if(remote.length-kept.length>1)return{list:remote,added:0,removed:0}; // duplicate IDs: refuse, change nothing
     return{list:kept,added:0,removed:1};
-  },'Deleted reading');
+  },kind==='event'?'Deleted status entry (out of service / returned to service / backwash)':'Deleted reading');
   if(res.ok){
     allReadings=res.list;
     setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":"")+" (GitHub)");
@@ -1849,10 +1876,10 @@ function exportDashCSV(){
   var entries=allReadings.slice();
   if(filter!=="all"){var p=filter.split("-");entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});}
   entries.sort(function(a,b){return b.ts-a.ts;});
-  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)"]];
+  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)","Entry type","Reason or note","Backwash"]];
   entries.forEach(function(e){
     var r=e.readings||{};
-    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||""]);
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":"Reading")),e.outOfService?(e.reason||""):(e.notes||""),e.backwash?"Yes":""]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
   var blob=new Blob([csv],{type:"text/csv"});
