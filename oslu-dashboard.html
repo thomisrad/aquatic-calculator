@@ -295,7 +295,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.42 - Oct 24, 2026</span>
+        <span class="version">v1.43 - Oct 24, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -1263,6 +1263,11 @@ function getActions(reading){
   var isSpa=reading.body.toLowerCase().indexOf('spa')>-1||reading.body.toLowerCase().indexOf('hot')>-1;
   var fcTarget=isSpa?4.0:3.0;
   var fc=r.fc,cc=r.cc,pH=r.pH,orp=r.orp,orpSP=r.orpSetpoint;
+  // When LSI is red, ONE combined line carries the readings behind it AND every dose, so a dose is never shown twice.
+  var lsi=reading.lsi!=null?parseFloat(reading.lsi):null;
+  var lsiRed=lsi!=null&&!isNaN(lsi)&&(lsi<-0.5||lsi>0.5);
+  var dTA=doseFor(reading,'TA'),dCH=doseFor(reading,'CH'),dPH=doseFor(reading,'PH');
+  var merged={TA:lsiRed&&!!dTA,CH:lsiRed&&!!dCH,PH:lsiRed&&!!dPH};   // separate lines are dropped only when the combined line carries that dose
 
   // CC / shock check using current city rule: CC must be < 50% of FC
   if(needsShock(reading)){
@@ -1293,31 +1298,33 @@ function getActions(reading){
   }
 
   // pH check
-  if(pH!=null){
-    var phd=doseFor(reading,'PH'),phs=phd?' -- '+doseLine(phd):'';
+  if(pH!=null&&!merged.PH){
+    var phd=dPH,phs=phd?' -- '+doseLine(phd):'';
     if(pH<7.2)actions.push({text:'pH '+pH+' below city minimum (7.2)'+phs,urgent:false});
     else if(pH>8.0)actions.push({text:'pH '+pH+' above city maximum (8.0)'+phs,urgent:false});
   }
 
   // Total alkalinity: city range 60-160 ppm
   var ta=r.ta;
-  if(ta!=null&&(ta<60||ta>160)){
-    var tad=doseFor(reading,'TA');
+  if(ta!=null&&(ta<60||ta>160)&&!merged.TA){
+    var tad=dTA;
     actions.push({text:'Total alkalinity '+ta+' ppm '+(ta<60?'below city minimum (60 ppm)':'above city maximum (160 ppm)')+(tad?' -- '+doseLine(tad):''),urgent:true});
   }
   // Calcium hardness: no city limit, so a dose here is a recommendation, not an emergency
-  var chd=doseFor(reading,'CH');
-  if(chd)actions.push({text:'Calcium hardness '+(r.ch!=null?r.ch+' ppm ':'')+(chd.dilute?'is above target':'is below target')+' -- '+doseLine(chd),urgent:false});
+  var chd=dCH;
+  if(chd&&!merged.CH)actions.push({text:'Calcium hardness '+(r.ch!=null?r.ch+' ppm ':'')+(chd.dilute?'is above target':'is below target')+' -- '+doseLine(chd),urgent:false});
   // Cyanuric acid: city maximum 90 ppm is urgent; below target is a recommendation
   var cyd=doseFor(reading,'CYA');
   if(cyd){var cyOver=/city max/i.test(cyd.amount);actions.push({text:'Cyanuric acid '+(r.cya!=null?r.cya+' ppm ':'')+(cyOver?'exceeds city maximum (90 ppm)':(cyd.dilute?'is above the spa range':'is below target'))+' -- '+doseLine(cyd),urgent:cyOver});}
-  // LSI: red (below -0.5 or above +0.5) shows here with the readings it came from and the doses the calculator suggested
-  var lsi=reading.lsi!=null?parseFloat(reading.lsi):null;
-  if(lsi!=null&&!isNaN(lsi)&&(lsi<-0.5||lsi>0.5)){
-    var parts=[];['TA','CH','PH'].forEach(function(p){var dd=doseFor(reading,p);if(dd)parts.push(doseLabeled(dd));});
+  // LSI: red (below -0.5 or above +0.5). One line: the readings behind it, then each dose once, with the reason for it.
+  if(lsiRed){
+    var fix=[];
+    if(dTA)fix.push(doseLine(dTA)+' for TA'+(ta!=null&&ta<60?' (below the city minimum of 60 ppm)':(ta!=null&&ta>160?' (above the city maximum of 160 ppm)':'')));
+    if(dCH)fix.push(doseLine(dCH)+' for calcium');
+    if(dPH)fix.push(doseLine(dPH)+' for pH'+(pH!=null&&pH<7.2?' (below the city minimum of 7.2)':(pH!=null&&pH>8.0?' (above the city maximum of 8.0)':'')));
     var inputs=[];if(r.pH!=null)inputs.push('pH '+r.pH);if(r.ta!=null)inputs.push('TA '+r.ta+' ppm');if(r.ch!=null)inputs.push('CH '+r.ch+' ppm');if(r.temp!=null)inputs.push(r.temp+' F');
     var advice=lsi<-0.5?'Raise alkalinity or calcium hardness to protect surfaces and equipment.':'Lower pH or alkalinity to prevent cloudy water and scale buildup.';
-    actions.push({text:'LSI '+lsi.toFixed(2)+(lsi<-0.5?' (corrosive)':' (scale forming)')+', balanced is -0.3 to +0.3. From '+inputs.join(', ')+'. '+(parts.length?'Suggested: '+parts.join('; ')+'.':advice),urgent:true});
+    actions.push({text:'LSI '+lsi.toFixed(2)+(lsi<-0.5?' (corrosive)':' (scale forming)')+', balanced is -0.3 to +0.3. From '+inputs.join(', ')+'. '+(fix.length?'To fix: '+fix.join('; ')+'.':advice),urgent:true});
   }
 
   return actions;
