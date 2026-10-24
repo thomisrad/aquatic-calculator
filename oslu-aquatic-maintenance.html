@@ -111,12 +111,12 @@ button:active{box-shadow:none;transform:translateY(1px);}
 
 <div id="token-setup" style="display:none;">
   <div class="token-screen">
-    <h2>Connect to GitHub</h2>
-    <p>Enter your GitHub personal access token to sync aquatic maintenance entries across devices. If you already use the Aquatic Calculator on this device, this step is skipped automatically.</p>
-    <label for="token-input">GitHub personal access token</label>
-    <input type="password" id="token-input" placeholder="github_pat_xxxxxxxxxxxx" autocomplete="off"/>
+    <h2>Connect to shared data</h2>
+    <p>Enter your personal access token to sync aquatic maintenance entries across devices. If you already use the Aquatic Calculator on this device, this step is skipped automatically.</p>
+    <label for="token-input">Personal access token</label>
+    <input type="password" id="token-input" placeholder="Paste your access token here" autocomplete="off"/>
     <button class="btn primary" onclick="submitToken()">Save token and connect</button>
-    <p class="note">Your token is stored only in this browser and is sent only to GitHub.</p>
+    <p class="note">Your token is stored only in this browser and is sent only to the shared data service.</p>
   </div>
 </div>
 
@@ -247,7 +247,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1.5 - Oct 16, 2026';
+var APP_VERSION='v1.6 - Oct 24, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
@@ -612,9 +612,9 @@ function updatePendingBadge(reason){
   var n=outbox.length+(typeof pOutbox!=='undefined'?pOutbox.length:0);if(!n)return;
   var msg=n+' entr'+(n!==1?'ies':'y')+' saved on this device -- ';
   if(reason==='offline'||reason==='network')msg+='will sync when signal returns';
-  else if(reason==='auth')msg+='GitHub token rejected, change token';
+  else if(reason==='auth')msg+='access token rejected, change token';
   else if(reason==='guard')msg+='sync paused by safety check, tell Tom';
-  else if(reason==='token')msg+='enter GitHub token to sync';
+  else if(reason==='token')msg+='enter your access token to sync';
   else msg+='will retry automatically';
   setSyncBadge('err',msg);
 }
@@ -661,15 +661,15 @@ async function ghLoad(isRetry,skipAutoSync){
   if(rem.ok){
     lastRemote=rem.list;rebuildHistory();saveLocal();
     if(outbox.length)updatePendingBadge();
-    else setSyncBadge('ok','Shared - '+lastRemote.length+' entr'+(lastRemote.length!==1?'ies':'y')+' (GitHub)');
+    else setSyncBadge('ok','Shared - '+lastRemote.length+' entr'+(lastRemote.length!==1?'ies':'y'));
     if(typeof renderAll==='function')renderAll();
     loadEquipRemote();
     if(pOutbox.length)syncPurchases();else loadPurchRemote();
     return;
   }
-  if(rem.reason==='auth'){setSyncBadge('err','GitHub token rejected -- change token');return;}
+  if(rem.reason==='auth'){setSyncBadge('err','Access token rejected -- change token');return;}
   if(!isRetry){setSyncBadge('syncing','Retrying -- poor signal...');setTimeout(function(){ghLoad(true,skipAutoSync);},1500);return;}
-  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','GitHub offline - using local data');
+  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','Shared data offline - using local data');
   if(typeof renderAll==='function')renderAll();
 }
 async function autoSync(){if(!outbox.length){return ghLoad(false,true);}await syncOutbox();if(pOutbox.length)await syncPurchases();else loadPurchRemote();}
@@ -694,7 +694,7 @@ function submitName(){
   if(!f||!l)return;saveName(f+' '+l+'.');startApp();
 }
 function submitToken(){
-  var t=$('token-input').value.trim();if(!t){alert('Please paste your GitHub token.');return;}
+  var t=$('token-input').value.trim();if(!t){alert('Please paste your access token.');return;}
   saveToken(t);if(!loadName())showScreen('name');else startApp();
 }
 function changeToken(){if(!confirm('Clear your saved token? Entries saved on this device stay queued.'))return;clearToken();showScreen('token');}
