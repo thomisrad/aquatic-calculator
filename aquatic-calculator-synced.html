@@ -219,7 +219,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v43 (synced) - Oct 24, 2026</span>
+    <span class="version-label">v44 (synced) - Oct 24, 2026</span>
   </div>
 </div>
 
@@ -1117,12 +1117,12 @@ function calculate(){
   var phTarget=spa?7.6:7.6,phDiff=phTarget-pH;
   if(Math.abs(phDiff)>0.1){
     if(phDiff<0){doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(phDiff)*10*vol/10000*2.6).toFixed(1)+' fl oz',note:'Lower pH from '+pH+' to ~'+phTarget+' (city max 8.0)'+(!isNaN(orp)?' -- correcting pH will also improve ORP':'')});}
-    else{doses.push({chem:'Soda ash (Na2CO3)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget+' (city min 7.2)'});}
+    else{doses.push({chem:'Sodium carbonate (soda ash)',amount:(phDiff*10*vol/10000*6).toFixed(1)+' oz',note:'Raise pH from '+pH+' to ~'+phTarget+' (city min 7.2)'});}
   }else{doses.push({chem:'pH',amount:'OK - in range',note:pH+' -- within city range (7.2-8.0)',ok:true});}
   var taTarget=110;var taDiff=taTarget-ta;
   if(!isNaN(ta)&&(ta<60||ta>160)){
     if(taDiff>0){doses.push({chem:'Sodium bicarbonate',amount:(taDiff*vol*0.0000178).toFixed(2)+' lbs',note:'Raise TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
-    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
+    else{doses.push({chem:'Muriatic acid (31.45%)',amount:(Math.abs(taDiff)/10*vol/10000*25.6).toFixed(1)+' fl oz',note:'Lower TA from '+ta+' to ~'+taTarget+' ppm (city range: 60-160 ppm)'});}
   }else if(!isNaN(ta)){doses.push({chem:'Total alkalinity',amount:'OK - in range',note:ta+' ppm -- within city range (60-160 ppm)',ok:true});}
   var chTarget=spa?150:300,chDiff=chTarget-ch;
   if(!isNaN(ch)&&Math.abs(chDiff)>25){

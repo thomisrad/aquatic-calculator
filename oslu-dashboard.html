@@ -167,6 +167,8 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dash-hist-params{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
 .dash-hist-param{font-size:14px;color:var(--text2);}
 .dash-hist-param span{color:var(--text);font-weight:500;}
+.dash-hist-suggest{font-size:13px;color:var(--text2);margin-top:6px;}
+.dash-hist-suggest b{color:var(--text);font-weight:500;}
 .dash-del-btn{background:var(--danger-bg);border:0.5px solid var(--danger-border);color:var(--danger-text);font-size:13px;padding:4px 10px;border-radius:var(--radius);cursor:pointer;font-family:var(--font);}
 .oos-overlay{position:absolute;inset:0;background:rgba(133,79,11,0.15);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;}
 .oos-badge{background:var(--warn-bg);border:1.5px solid var(--warn-border);border-radius:var(--radius);padding:12px 16px;text-align:center;max-width:200px;}
@@ -293,7 +295,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.41 - Oct 24, 2026</span>
+        <span class="version">v1.42 - Oct 24, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -1225,6 +1227,33 @@ function ccStatus(reading){
   return'ok';
 }
 
+// ---- Suggested chemical doses ----
+// The calculator saves the doses it suggested with every reading. The dashboard shows them beside the problem they fix.
+var DOSE_LABEL={FC:'chlorine',PH:'pH',TA:'TA',CH:'calcium',CYA:'CYA'};
+function cleanChem(c){return String(c||'').replace(/^\[[A-Z]+\]\s*/,'').replace(/\s*\([^)]*\)\s*$/,'').toLowerCase();}
+function pendingDoses(reading){
+  var ds=(reading&&reading.doses)||[],r=(reading&&reading.readings)||{},out=[],muriatic=[];
+  ds.forEach(function(d){
+    if(!d||d.ok)return;
+    var amt=String(d.amount==null?'':d.amount),chem=String(d.chem||'');
+    if(/controller managing/i.test(amt)||/^OK\b/i.test(amt))return;   // nothing for a person to add
+    var item={chem:cleanChem(chem),amount:amt,dilute:/dilute/i.test(amt),shock:!!d.shock||/^\[SHOCK\]/i.test(chem),startup:/^\[STARTUP\]/i.test(chem)};
+    if(/sodium hypochlorite|sodium thiosulfate/i.test(chem))item.param='FC';
+    else if(/soda ash/i.test(chem))item.param='PH';
+    else if(/muriatic/i.test(chem)){muriatic.push(item);return;}          // used for BOTH high pH and high TA: decided below
+    else if(/sodium bicarbonate/i.test(chem))item.param='TA';
+    else if(/calcium chloride|calcium hardness/i.test(chem))item.param='CH';
+    else if(/cyanuric/i.test(chem))item.param='CYA';
+    else return;
+    out.push(item);
+  });
+  var phHigh=r.pH!=null&&r.pH>7.7,taHigh=r.ta!=null&&r.ta>160;           // the calculator doses pH only when it is more than 0.1 from 7.6
+  muriatic.forEach(function(m,i){m.param=muriatic.length>1?(i===0?'PH':'TA'):((phHigh&&!taHigh)?'PH':(taHigh&&!phHigh?'TA':'PH'));out.push(m);});
+  return out;
+}
+function doseFor(reading,param){var p=pendingDoses(reading).filter(function(x){return x.param===param;});return p.length?p[0]:null;}
+function doseLine(d){return d.dilute?'partial drain and refill':'add '+d.chem+' '+d.amount;}
+function doseLabeled(d){return doseLine(d)+' ('+(DOSE_LABEL[d.param]||'')+')';}
 // One rule, used by the tile AND the alert bar: city limit is CC < 50% of FC, so CC >= 50% of FC needs shock.
 function needsShock(r){var x=r&&r.readings;return!!(x&&x.cc!=null&&x.cc>0&&x.fc!=null&&x.fc>0&&x.cc>=x.fc*0.5);}
 function getActions(reading){
@@ -1237,8 +1266,8 @@ function getActions(reading){
 
   // CC / shock check using current city rule: CC must be < 50% of FC
   if(needsShock(reading)){
-    var ccLimit=fc*0.5;
-    actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)',urgent:true});
+    var ccLimit=fc*0.5,shd=doseFor(reading,'FC');
+    actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)'+(shd&&shd.shock?' -- '+doseLine(shd):''),urgent:true});
   }
 
   // ORP check
@@ -1252,7 +1281,8 @@ function getActions(reading){
   // FC check
   if(fc!=null){
     if(fc<1.5){
-      actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)',urgent:true});
+      var fld=doseFor(reading,'FC');
+      actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)'+(fld&&!fld.shock?' -- '+doseLine(fld):''),urgent:true});
     }else if(fc>10){
       var fcExcess=parseFloat((fc-10).toFixed(1));
       var vol=reading.volume||0;
@@ -1264,8 +1294,30 @@ function getActions(reading){
 
   // pH check
   if(pH!=null){
-    if(pH<7.2)actions.push({text:'pH '+pH+' below city minimum (7.2)',urgent:false});
-    else if(pH>8.0)actions.push({text:'pH '+pH+' above city maximum (8.0)',urgent:false});
+    var phd=doseFor(reading,'PH'),phs=phd?' -- '+doseLine(phd):'';
+    if(pH<7.2)actions.push({text:'pH '+pH+' below city minimum (7.2)'+phs,urgent:false});
+    else if(pH>8.0)actions.push({text:'pH '+pH+' above city maximum (8.0)'+phs,urgent:false});
+  }
+
+  // Total alkalinity: city range 60-160 ppm
+  var ta=r.ta;
+  if(ta!=null&&(ta<60||ta>160)){
+    var tad=doseFor(reading,'TA');
+    actions.push({text:'Total alkalinity '+ta+' ppm '+(ta<60?'below city minimum (60 ppm)':'above city maximum (160 ppm)')+(tad?' -- '+doseLine(tad):''),urgent:true});
+  }
+  // Calcium hardness: no city limit, so a dose here is a recommendation, not an emergency
+  var chd=doseFor(reading,'CH');
+  if(chd)actions.push({text:'Calcium hardness '+(r.ch!=null?r.ch+' ppm ':'')+(chd.dilute?'is above target':'is below target')+' -- '+doseLine(chd),urgent:false});
+  // Cyanuric acid: city maximum 90 ppm is urgent; below target is a recommendation
+  var cyd=doseFor(reading,'CYA');
+  if(cyd){var cyOver=/city max/i.test(cyd.amount);actions.push({text:'Cyanuric acid '+(r.cya!=null?r.cya+' ppm ':'')+(cyOver?'exceeds city maximum (90 ppm)':(cyd.dilute?'is above the spa range':'is below target'))+' -- '+doseLine(cyd),urgent:cyOver});}
+  // LSI: red (below -0.5 or above +0.5) shows here with the readings it came from and the doses the calculator suggested
+  var lsi=reading.lsi!=null?parseFloat(reading.lsi):null;
+  if(lsi!=null&&!isNaN(lsi)&&(lsi<-0.5||lsi>0.5)){
+    var parts=[];['TA','CH','PH'].forEach(function(p){var dd=doseFor(reading,p);if(dd)parts.push(doseLabeled(dd));});
+    var inputs=[];if(r.pH!=null)inputs.push('pH '+r.pH);if(r.ta!=null)inputs.push('TA '+r.ta+' ppm');if(r.ch!=null)inputs.push('CH '+r.ch+' ppm');if(r.temp!=null)inputs.push(r.temp+' F');
+    var advice=lsi<-0.5?'Raise alkalinity or calcium hardness to protect surfaces and equipment.':'Lower pH or alkalinity to prevent cloudy water and scale buildup.';
+    actions.push({text:'LSI '+lsi.toFixed(2)+(lsi<-0.5?' (corrosive)':' (scale forming)')+', balanced is -0.3 to +0.3. From '+inputs.join(', ')+'. '+(parts.length?'Suggested: '+parts.join('; ')+'.':advice),urgent:true});
   }
 
   return actions;
@@ -1321,7 +1373,7 @@ function renderDashboard(){
       var status=overallStatus(latest);
       if(status==='alert'){
         var urgentActions=getActions(latest).filter(function(a){return a.urgent;});
-        urgentActions.forEach(function(a){alerts.push(b.name+' ('+l.short+'): '+a.text);});
+        urgentActions.forEach(function(a){alerts.push(escHtml(b.name+' ('+l.short+'): '+a.text));});
       }
     });
   });
@@ -1434,7 +1486,7 @@ function renderDashboard(){
           actions.forEach(function(a){
             var cls=a.urgent?'urgent':'caution';
             var dotCls=a.urgent?'dot-urgent':'dot-caution';
-            html+='<div class="action-item '+cls+'"><span class="action-dot '+dotCls+'"></span><span>'+a.text+'</span></div>';
+            html+='<div class="action-item '+cls+'"><span class="action-dot '+dotCls+'"></span><span>'+escHtml(a.text)+'</span></div>';
           });
           html+='</div>';
         }else{
@@ -1759,6 +1811,10 @@ function populateDashHistFilter(){
   });
 }
 
+function suggestedHTML(e){ // "Suggested at the time: ..." so a red LSI or a low TA in History shows what was recommended
+  var p=pendingDoses(e);if(!p.length)return '';
+  return '<div class="dash-hist-suggest"><b>Suggested:</b> '+p.map(function(x){return escHtml(doseLabeled(x));}).join('; ')+'</div>';
+}
 function lsiPill(lsi){
   if(lsi==null)return '<span style="font-size:13px;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text3);">LSI --</span>';
   var bg=lsi<-0.5?"var(--danger-bg)":lsi>0.5?"var(--warn-bg)":"var(--success-bg)";
@@ -1829,8 +1885,11 @@ function renderDashHistory(){
       +(r.fc!=null?'<div class="dash-hist-param">FC <span>'+r.fc+' ppm</span></div>':'')
       +(r.cc!=null?'<div class="dash-hist-param">CC <span>'+r.cc+' ppm</span></div>':'')
       +(r.ta!=null?'<div class="dash-hist-param">TA <span>'+r.ta+' ppm</span></div>':'')
+      +(r.ch!=null?'<div class="dash-hist-param">CH <span>'+r.ch+' ppm</span></div>':'')
+      +(r.cya!=null?'<div class="dash-hist-param">CYA <span>'+r.cya+' ppm</span></div>':'')
       +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
       +'</div>'
+      +suggestedHTML(e)
       +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">Backwash performed</span></div>':'')
       +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
       +'</div>';
