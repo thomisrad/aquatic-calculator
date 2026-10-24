@@ -34,7 +34,7 @@
   }
 }
 body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;}
-.wrap{max-width:1100px;margin:0 auto;padding:1.5rem 1rem;}
+.wrap{max-width:2600px;margin:0 auto;padding:1.5rem clamp(16px,2.5vw,56px);}
 
 /* Header */
 .dash-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;}
@@ -254,6 +254,14 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .tr-table th:first-child,.tr-table td:first-child{text-align:left;}
 .tr-table th{color:var(--text2);font-weight:500;font-size:12px;}
 .tr-total td{font-weight:500;border-top:1px solid var(--border2);}
+/* Wide monitors (1500px and up): use the whole screen */
+@media(min-width:1500px){
+  #level-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px;align-items:start;}   /* Level 1 | Level 2 | Level 13, like the building */
+  #level-sections .body-cards{grid-template-columns:1fr;}
+  #dash-hist-list,#pu-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start;}
+  #dash-hist-list>*,#pu-list>*{margin-bottom:0;}
+  #dash-hist-list>:not(.dash-hist-entry),#pu-list>:not(.dash-hist-entry){grid-column:1/-1;}
+}
 </style>
 </head>
 <body>
@@ -285,7 +293,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.39 - Oct 17, 2026</span>
+        <span class="version">v1.40 - Oct 24, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -746,7 +754,7 @@ function shapeSVG(shape,x,y,r,attrs){
   return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" '+attrs+'/>';
 }
 function buildTrendSVG(series,months,W){
-  var H=300,L=58,R=18,T=14,B=36,pw=W-L-R,ph=H-T-B,n=months.length;
+  var H=Math.min(440,Math.max(300,Math.round(W*0.22))),L=58,R=18,T=14,B=36,pw=W-L-R,ph=H-T-B,n=months.length;
   var maxC=0;series.forEach(function(s){s.values.forEach(function(v){if(v>maxC)maxC=v;});});
   var sc=niceScale(maxC/100),svg='<svg class="tr-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Monthly spending by category">';
   function X(i){return n===1?L+pw/2:L+i*pw/(n-1);}function Y(c){return T+ph-(c/100)/sc.max*ph;}
