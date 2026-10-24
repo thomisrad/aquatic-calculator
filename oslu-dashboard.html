@@ -271,12 +271,12 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 <div id="token-setup" style="display:none;">
   <div class="token-screen">
     <h2>OSLU Aquatics Dashboard</h2>
-    <p>Enter your GitHub personal access token to load shared readings data. The token is saved to this browser only.</p>
-    <label>GitHub personal access token</label>
-    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+    <p>Enter your personal access token to load shared readings data. The token is saved to this browser only.</p>
+    <label>Personal access token</label>
+    <input type="password" id="token-input" placeholder="Paste your access token here"/>
     <select class="token-select" onchange="if(this.value==='save'){submitToken();this.value='';}">
       <option value="">-- Tap to connect --</option>
-      <option value="save">Connect to GitHub</option>
+      <option value="save">Connect</option>
     </select>
     <p class="token-note">Same token used in the OSLU Aquatic Chemical Calculator. Contact your Senior Maintenance Manager if you need access.</p>
   </div>
@@ -293,7 +293,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.40 - Oct 24, 2026</span>
+        <span class="version">v1.41 - Oct 24, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -620,7 +620,7 @@ async function dashDeleteMaint(id){
   },'Deleted aquatic maintenance entry',MAINT_API);
   if(res.ok&&!blocked){
     maintRecords=res.list;maintState='ok';
-    setSyncBadge('ok','Deleted - '+maintRecords.length+' maintenance entr'+(maintRecords.length!==1?'ies':'y')+' remaining (GitHub)');
+    setSyncBadge('ok','Deleted - '+maintRecords.length+' maintenance entr'+(maintRecords.length!==1?'ies':'y')+' remaining');
     renderDashHistory();renderDashboard();
   }else{
     setSyncBadge('err','Delete failed');
@@ -841,7 +841,7 @@ async function addPurchaseDash(){
   document.getElementById('pu-add').disabled=false;
   if(res.ok){
     purchRecords=res.list;purchState='ok';puRetry=null;puMonth=monthOf(rec.date);resetPurchForm();
-    setSyncBadge('ok','Saved '+fmtMoney(rec.amountCents)+' - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' (GitHub)');
+    setSyncBadge('ok','Saved '+fmtMoney(rec.amountCents)+' - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':''));
     puMsg('ok','Saved '+fmtMoney(rec.amountCents)+' ('+PURCH_CATS[rec.category]+').');renderPurchTab();renderSpend();
   }else{
     puRetry=rec;setSyncBadge('err','Purchase not saved');
@@ -857,7 +857,7 @@ async function deletePurchase(id){
     if(kept.length===remote.length)return null; // already gone
     return{list:kept,added:0,removed:remote.length-kept.length};
   },'Deleted aquatic purchase',PURCH_API);
-  if(res.ok){purchRecords=res.list;purchState='ok';setSyncBadge('ok','Deleted - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' remaining (GitHub)');renderPurchTab();renderSpend();}
+  if(res.ok){purchRecords=res.list;purchState='ok';setSyncBadge('ok','Deleted - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' remaining');renderPurchTab();renderSpend();}
   else{setSyncBadge('err','Delete failed');alert('Delete failed ('+res.reason+'). Nothing was changed. Try again.');}
 }
 function exportPurchCSV(){
@@ -975,7 +975,7 @@ async function applyUnnamed(){
   var r=await batchFixUnnamed(unIds,action,name);
   if(r.ok){
     var gone=unIds.length;allReadings=r.res.list;unIds=[];
-    setSyncBadge('ok',(action==='delete'?'Deleted ':'Labelled ')+gone+' tests - '+allReadings.length+' readings remain (GitHub)');
+    setSyncBadge('ok',(action==='delete'?'Deleted ':'Labelled ')+gone+' tests - '+allReadings.length+' readings remain');
     document.getElementById('unnamed-panel').style.display='none';
     renderDashHistory();renderDashboard();
   }else{
@@ -1047,7 +1047,7 @@ function showTokenSetup(){document.getElementById('token-setup').style.display='
 function showDashboard(){document.getElementById('token-setup').style.display='none';document.getElementById('dashboard').style.display='block';}
 function submitToken(){
   var t=document.getElementById('token-input').value.trim();
-  if(!t){alert('Please enter your GitHub token.');return;}
+  if(!t){alert('Please enter your access token.');return;}
   saveToken(t);showDashboard();loadData();
 }
 
@@ -1868,7 +1868,7 @@ async function dashDeleteEntry(id,kind){
   },kind==='event'?'Deleted status entry (out of service / returned to service / backwash)':'Deleted reading');
   if(res.ok){
     allReadings=res.list;
-    setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":"")+" (GitHub)");
+    setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":""));
     renderDashHistory();
     renderDashboard();
   }else{

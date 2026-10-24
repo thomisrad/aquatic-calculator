@@ -184,15 +184,15 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
 <!-- TOKEN SETUP SCREEN -->
 <div id="token-setup" style="display:none;">
   <div class="token-screen">
-    <h2>Connect to GitHub</h2>
-    <p>To sync readings across all staff devices, enter your GitHub personal access token. It will be saved to this device only and never uploaded anywhere.</p>
-    <label>GitHub personal access token</label>
-    <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"/>
+    <h2>Connect to shared data</h2>
+    <p>To sync readings across all staff devices, enter your personal access token. It will be saved to this device only and never uploaded anywhere.</p>
+    <label>Personal access token</label>
+    <input type="password" id="token-input" placeholder="Paste your access token here"/>
     <select style="width:100%;padding:10px;font-size:14px;border:0.5px solid var(--info-border);border-radius:var(--radius);background:var(--info-bg);color:var(--info-text);font-weight:500;font-family:var(--font);" onchange="if(this.value==='save'){submitToken();this.value='';}">
       <option value="">-- Tap to save token and connect --</option>
       <option value="save">Save token and connect</option>
     </select>
-    <p class="note">Your token is stored only in this browser. It is never sent to anyone except GitHub to sync your readings. This is a stand-in for Microsoft Azure AD authentication -- your IT team can replace it with your existing Microsoft 365 login.</p>
+    <p class="note">Your token is stored only in this browser. It is never sent to anyone except the shared data service to sync your readings. This is a stand-in for Microsoft Azure AD authentication -- your IT team can replace it with your existing Microsoft 365 login.</p>
   </div>
 </div>
 
@@ -219,7 +219,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v41 (synced) - Oct 17, 2026</span>
+    <span class="version-label">v43 (synced) - Oct 24, 2026</span>
   </div>
 </div>
 
@@ -356,7 +356,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
     <select class="export-select" onchange="if(this.value==='csv'){exportCSV();this.value='';}else if(this.value==='refresh'){ghLoad(false);this.value='';}else if(this.value==='sync'){autoSync();this.value='';}else if(this.value==='reset'){resetToken();this.value='';}">
       <option value="">Actions</option>
       <option value="sync">Sync offline readings now</option>
-      <option value="refresh">Refresh from GitHub</option>
+      <option value="refresh">Refresh shared history</option>
       <option value="csv">Export CSV</option>
       <option value="reset">Change token</option>
     </select>
@@ -395,7 +395,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
 <div id="info-page" style="display:none;">
   <div class="guide-section">
     <div class="guide-title">Welcome to the OSLU Aquatic Chemical Calculator</div>
-    <div class="guide-body">This app helps you test water chemistry, calculate chemical dosages, and track readings over time across all 7 bodies of water at OSLU. All readings sync automatically across staff devices via GitHub.</div>
+    <div class="guide-body">This app helps you test water chemistry, calculate chemical dosages, and track readings over time across all 7 bodies of water at OSLU. All readings sync automatically across staff devices.</div>
   </div>
   <div class="guide-section">
     <div class="guide-step-label">Step 1</div>
@@ -442,13 +442,13 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
     <div class="guide-step-label">Step 5</div>
     <div class="guide-title">Save and share the reading</div>
     <div class="guide-table">
-      <div class="guide-row"><span>Save to history</span><span>Syncs reading to GitHub -- visible to all staff</span></div>
+      <div class="guide-row"><span>Save to history</span><span>Syncs reading to the shared history -- visible to all staff</span></div>
       <div class="guide-row"><span>Copy to clipboard</span><span>Paste a formatted report into Teams or email</span></div>
     </div>
   </div>
   <div class="guide-section">
     <div class="guide-title">History and Trends tabs</div>
-    <div class="guide-body">History shows all shared readings from all staff, filterable by body of water. Trends charts any parameter over time. Use Refresh in History Actions to pull the latest data from GitHub.</div>
+    <div class="guide-body">History shows all shared readings from all staff, filterable by body of water. Trends charts any parameter over time. Use Refresh in History Actions to pull the latest shared data.</div>
   </div>
   <div class="guide-section">
     <div class="guide-title">Important reminders</div>
@@ -534,7 +534,7 @@ function showTokenSetup(){document.getElementById('token-setup').style.display='
 function hideTokenSetup(){document.getElementById('token-setup').style.display='none';document.getElementById('main-app').style.display='block';}
 function submitToken(){
   var t=document.getElementById('token-input').value.trim();
-  if(!t){alert('Please paste your GitHub token.');return;}
+  if(!t){alert('Please paste your access token.');return;}
   saveToken(t);
   hideTokenSetup();
   if(!loadName()){showNameSetup();}
@@ -698,9 +698,9 @@ function updatePendingBadge(reason){
   var n=outbox.length;if(!n)return;
   var msg=n+' reading'+(n!==1?'s':'')+' saved on this device -- ';
   if(reason==='offline'||reason==='network')msg+='will sync when signal returns';
-  else if(reason==='auth')msg+='GitHub token rejected, reset token';
+  else if(reason==='auth')msg+='access token rejected, change token';
   else if(reason==='guard')msg+='sync paused by safety check, tell Tom';
-  else if(reason==='token')msg+='enter GitHub token to sync';
+  else if(reason==='token')msg+='enter your access token to sync';
   else msg+='will retry automatically';
   setSyncBadge('err',msg);
 }
@@ -753,14 +753,14 @@ async function ghLoad(isRetry,skipAutoSync){
   if(rem.ok){
     lastRemote=rem.list;rebuildHistory();saveLocal();ghSynced=true;
     if(outbox.length)updatePendingBadge();
-    else setSyncBadge('ok','Shared - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' (GitHub)');
+    else setSyncBadge('ok','Shared - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':''));
     if(histOpen())renderHistory();
     return;
   }
-  if(rem.reason==='auth'){setSyncBadge('err','GitHub token rejected -- reset token');return;}
+  if(rem.reason==='auth'){setSyncBadge('err','Access token rejected -- change token');return;}
   if(!isRetry){setSyncBadge('syncing','Retrying -- poor signal...');setTimeout(function(){ghLoad(true,skipAutoSync);},1500);return;}
   ghSynced=false;
-  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','GitHub offline - using local data');
+  if(outbox.length)updatePendingBadge(rem.reason);else setSyncBadge('err','Shared data offline - using local data');
   if(histOpen())renderHistory();
 }
 
@@ -1250,7 +1250,7 @@ async function saveToHistoryInner(){
   setSyncBadge('syncing','Saving...');
   var ok=await submitEntry(entry);
   if(ok){
-    setSyncBadge('ok','Saved - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' (GitHub)');
+    setSyncBadge('ok','Saved - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':''));
     alert('Saved and synced -- visible to all staff.');
   }else{
     updatePendingBadge();
@@ -1266,8 +1266,8 @@ async function deleteEntry(id){
   if(!confirm('Delete this reading? This cannot be undone.'))return;
   setSyncBadge('syncing','Deleting...');
   var ok=await ghDelete(id);
-  if(ok){setSyncBadge('ok','Deleted - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' remaining (GitHub)');}
-  else{setSyncBadge('err','Delete failed -- needs signal. Nothing was changed.');alert('Could not delete: no signal or GitHub busy. Nothing was changed. Try again with a connection.');}
+  if(ok){setSyncBadge('ok','Deleted - '+lastRemote.length+' reading'+(lastRemote.length!==1?'s':'')+' remaining');}
+  else{setSyncBadge('err','Delete failed -- needs signal. Nothing was changed.');alert('Could not delete: no signal or the shared data is busy. Nothing was changed. Try again with a connection.');}
   renderHistory();
 }
 
@@ -1290,7 +1290,7 @@ function renderHistory(){
       badge.textContent=pending+' reading'+(pending!==1?'s':'')+' pending sync | '+st.history.length+' total';
       badge.style.color='var(--warn-text)';
     }else if(ghSynced){
-      badge.textContent='Synced - '+st.history.length+' reading'+(st.history.length!==1?'s':'')+' (GitHub)';
+      badge.textContent='Synced - '+st.history.length+' reading'+(st.history.length!==1?'s':'');
       badge.style.color='var(--success-text)';
     }else{
       badge.textContent='Local only - '+st.history.length+' reading'+(st.history.length!==1?'s':'');
