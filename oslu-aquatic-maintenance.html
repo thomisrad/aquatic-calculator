@@ -104,6 +104,14 @@ button{cursor:pointer;font-family:var(--font);-webkit-user-select:none;user-sele
 .card,.token-screen{box-shadow:var(--card-shadow);}
 button:not(.page-btn.active){box-shadow:var(--btn-shadow);transition:box-shadow .12s,transform .12s;}
 button:active{box-shadow:none;transform:translateY(1px);}
+.btn-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.updates{margin-top:10px;padding:8px 10px;border-left:3px solid var(--info-text);background:var(--info-bg);color:var(--info-text);border-radius:var(--radius);font-size:13px;}
+.upd-title{font-weight:500;margin-bottom:4px;}
+.upd-more{margin-bottom:4px;opacity:1;}
+.upd{padding:5px 0;border-top:0.5px solid var(--info-border);}
+.upd:first-of-type{border-top:none;}
+.followup-box.update-box{background:var(--info-bg);border-color:var(--info-border);}
+.followup-box.update-box label{color:var(--info-text);}
 </style>
 </head>
 <body>
@@ -247,7 +255,7 @@ button:active{box-shadow:none;transform:translateY(1px);}
 </div>
 
 <script>
-var APP_VERSION='v1.6 - Oct 24, 2026';
+var APP_VERSION='v1.7 - Oct 24, 2026';
 var TKEY='aquatic_gh_token',NKEY='aquatic_user_name'; // shared with the Aquatic Calculator (same site), so staff enter them once
 var GH_TOKEN='',GH_OWNER='thomisrad',GH_REPO='aquatic-calculator',GH_BRANCH='data';
 function ghUrl(f){return 'https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+f+'?ref='+GH_BRANCH;}
@@ -349,7 +357,7 @@ var BODIES=[
   {levelIdx:2,bodyIdx:1,level:'Level 13 - Outdoor',lv:'L13',body:'Hot tub'}];
 var GENERIC_EQUIP=['Circulation pump','Filter','Heater','ORP / chemical controller','Chemical feed pump'];
 var OKEY='oslu_maint_outbox_v1',HKEY='oslu_maint_cache_v1',EKEY='oslu_equip_cache_v1';
-var st={page:'log',history:[],equip:[],closingId:null,type:null,filt:{body:'all',type:'all',status:'all'}};
+var st={page:'log',history:[],equip:[],closingId:null,updatingId:null,type:null,filt:{body:'all',type:'all',status:'all'}};
 var outbox=[],lastRemote=[],syncPromise=null,saving=false;
 
 function bodyOf(l,b){for(var i=0;i<BODIES.length;i++){if(BODIES[i].levelIdx===l&&BODIES[i].bodyIdx===b)return BODIES[i];}return null;}
@@ -386,28 +394,46 @@ function buildCloseout(orig,f){
     performedBy:f.performedBy.trim(),company:(f.company||'').trim()||null,parts:(f.parts||'').trim()||null,
     minutes:f.minutes==null?null:f.minutes,followUp:false,followUpNote:null,loggedBy:f.loggedBy};
 }
+// An update is a progress note on an open item (parts ordered, vendor booked...). It is a NEW entry attached to the item, never an edit.
+function validateUpdate(f){
+  if(!f.note||f.note.trim().length<3)return 'Describe the update.';
+  if(!f.performedBy||!f.performedBy.trim())return 'Enter who is giving the update.';
+  if(f.needText!=null&&f.needText.trim().length<3)return 'Say what still needs to be done, or use Close out if it is finished.';
+  if(f.minutes!=null&&(isNaN(f.minutes)||f.minutes<0))return 'Time spent must be a number of minutes.';
+  return null;
+}
+function buildUpdate(orig,f){
+  return{id:newId(),kind:'update',updates:orig.id,type:orig.type,ts:f.ts,loggedAt:Date.now(),when:fmtWhen(f.ts),
+    levelIdx:orig.levelIdx,bodyIdx:orig.bodyIdx,level:orig.level,body:orig.body,
+    equipmentId:orig.equipmentId||null,equipment:orig.equipment,description:f.note.trim(),
+    performedBy:f.performedBy.trim(),company:(f.company||'').trim()||null,parts:(f.parts||'').trim()||null,
+    minutes:f.minutes==null?null:f.minutes,followUp:false,followUpNote:(f.stillNeeded||'').trim()||null,loggedBy:f.loggedBy};
+}
+// What still needs doing = the newest update that restated it, otherwise what was written when the item was logged.
+function threadNeed(th){var n=th.entry.followUpNote;(th.updates||[]).forEach(function(u){if(u.followUpNote)n=u.followUpNote;});return n;}
 // An open repair is a follow-up that no later close-out refers to.
 function openItems(list){
   var closed=new Set();
   list.forEach(function(e){if(e&&e.kind==='closeout'&&e.closes!=null)closed.add(e.closes);});
-  return list.filter(function(e){return e&&e.kind!=='closeout'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
+  return list.filter(function(e){return e&&e.kind!=='closeout'&&e.kind!=='update'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
 }
 
-// Group each close-out under the entry it closes, so a repair and its close-out read as ONE job.
+// Group each close-out and update under the entry it belongs to, so one job reads as ONE job.
 function maintThreads(list){
-  var main={},closeouts={},threads=[],orphans=[];
-  list.forEach(function(e){if(e&&e.kind!=='closeout')main[e.id]=e;});
+  var main={},closeouts={},updates={},threads=[],orphans=[];
+  list.forEach(function(e){if(e&&e.kind!=='closeout'&&e.kind!=='update')main[e.id]=e;});
   list.forEach(function(e){
-    if(!e||e.kind!=='closeout')return;
-    if(main[e.closes]){(closeouts[e.closes]=closeouts[e.closes]||[]).push(e);}else orphans.push(e); // original missing: show on its own
+    if(!e)return;
+    if(e.kind==='closeout'){if(main[e.closes]){(closeouts[e.closes]=closeouts[e.closes]||[]).push(e);}else orphans.push(e);}   // original missing: show on its own
+    else if(e.kind==='update'){if(main[e.updates]){(updates[e.updates]=updates[e.updates]||[]).push(e);}else orphans.push(e);}
   });
   list.forEach(function(e){
-    if(!e||e.kind==='closeout')return;
-    var cs=(closeouts[e.id]||[]).sort(function(a,b){return a.ts-b.ts;}),act=e.ts;
-    cs.forEach(function(c){if(c.ts>act)act=c.ts;});
-    threads.push({entry:e,closeouts:cs,activity:act});
+    if(!e||e.kind==='closeout'||e.kind==='update')return;
+    var byTime=function(a,b){return a.ts-b.ts;},cs=(closeouts[e.id]||[]).sort(byTime),us=(updates[e.id]||[]).sort(byTime),act=e.ts;
+    cs.concat(us).forEach(function(c){if(c.ts>act)act=c.ts;});
+    threads.push({entry:e,closeouts:cs,updates:us,activity:act});
   });
-  orphans.forEach(function(e){threads.push({entry:e,closeouts:[],activity:e.ts,orphan:true});});
+  orphans.forEach(function(e){threads.push({entry:e,closeouts:[],updates:[],activity:e.ts,orphan:true});});
   return threads.sort(function(a,b){return b.activity-a.activity;});
 }
 
@@ -418,16 +444,16 @@ function maintMatches(th,q){ // History search: reference number ("AQ-0007", "7"
   q=(q||'').trim().toLowerCase();if(!q)return true;
   var e=th.entry,pfx=REF_PREFIX.toLowerCase().replace('-',''),digits=q.indexOf(pfx)===0?q.slice(pfx.length).replace(/^-/,''):q;
   if(/^\d+$/.test(digits)&&e.refNo!=null&&Number(digits)===e.refNo)return true;
-  var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).join(' ').toLowerCase();
+  var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).concat((th.updates||[]).map(function(u){return u.description+' '+u.performedBy+' '+(u.followUpNote||'');})).join(' ').toLowerCase();
   return hay.indexOf(q)>=0;
 }
 function csvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function buildCSV(list){
-  var ref={};list.forEach(function(e){if(e&&e.kind!=='closeout')ref[e.id]=e.refNo;});
-  var head=['Reference','Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID'];
+  var ref={};list.forEach(function(e){if(e&&e.kind!=='closeout'&&e.kind!=='update')ref[e.id]=e.refNo;});
+  var head=['Reference','Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID','Updates entry ID'];
   var rows=[head.join(',')];
   list.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
-    rows.push([e.kind==='closeout'?refLabel(ref[e.closes]):refLabel(e.refNo),e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':'Work',e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id].map(csvCell).join(','));
+    rows.push([e.kind==='closeout'?refLabel(ref[e.closes]):(e.kind==='update'?refLabel(ref[e.updates]):refLabel(e.refNo)),e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':(e.kind==='update'?'Update':'Work'),e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id,e.updates].map(csvCell).join(','));
   });
   return rows.join('\r\n');
 }
@@ -642,7 +668,7 @@ async function doSync(){
     if(!add.length)return null; // already on GitHub (an earlier PUT landed but the reply was lost)
     var maxRef=0;remote.forEach(function(e){if(e&&typeof e.refNo==='number'&&e.refNo>maxRef)maxRef=e.refNo;});
     var next=maxRef,numbered=add.slice().sort(function(a,b){return(a.loggedAt||a.ts)-(b.loggedAt||b.ts);}).map(function(e){
-      var c=stripLocal(e);if(c.kind!=='closeout'&&c.refNo==null){next++;c.refNo=next;}return c;});
+      var c=stripLocal(e);if(c.kind!=='closeout'&&c.kind!=='update'&&c.refNo==null){next++;c.refNo=next;}return c;});
     numbered.sort(function(a,b){return b.ts-a.ts;});
     return{list:numbered.concat(remote),added:add.length,removed:0};
   },'Sync '+batch.length+' aquatic maintenance entr'+(batch.length!==1?'ies':'y'));
@@ -807,17 +833,17 @@ function exportPurchCSV(){
 function showPage(p){
   st.page=p;
   ['log','open','history','purch','equip'].forEach(function(x){$('page-'+x).style.display=x===p?'block':'none';$('pb-'+x).classList.toggle('active',x===p);});
-  if(p!=='open')st.closingId=null;
+  if(p!=='open'){st.closingId=null;st.updatingId=null;}
   renderAll();
 }
 function renderAll(){
   var n=openItems(st.history).length,c=$('open-count');c.textContent=n;c.className='count-pill'+(n?'':' zero');
-  if(st.page==='open'){if(!st.closingId)renderOpen();}
+  if(st.page==='open'){if(!st.closingId&&!st.updatingId)renderOpen();}   // never redraw under someone who is typing
   else if(st.page==='history')renderHistory();
   else if(st.page==='purch')renderPurch();
   else if(st.page==='equip')renderEquip();
 }
-function refSub(e){return e.refNo!=null?'<span class="ref">'+esc(refLabel(e.refNo))+'</span> - ':(e.kind!=='closeout'&&e.synced===false?'<span class="ref pending">Number assigned when synced</span> - ':'');}
+function refSub(e){return e.refNo!=null?'<span class="ref">'+esc(refLabel(e.refNo))+'</span> - ':(e.kind!=='closeout'&&e.kind!=='update'&&e.synced===false?'<span class="ref pending">Number assigned when synced</span> - ':'');}
 function whoText(e){return 'Performed by '+esc(e.performedBy)+(e.company?' ('+esc(e.company)+')':'')+(e.loggedBy&&e.loggedBy!==e.performedBy?' - logged by '+esc(e.loggedBy):'');}
 function metaHTML(e){
   var m=['<span>'+whoText(e)+'</span>'];
@@ -825,25 +851,64 @@ function metaHTML(e){
   if(e.minutes!=null)m.push('<span>'+esc(e.minutes)+' min</span>');
   return '<div class="entry-meta">'+m.join('')+'</div>';
 }
+
+function updatesHTML(th,all){
+  if(!th||!th.updates||!th.updates.length)return '';
+  var ups=th.updates,shown=all?ups:ups.slice(-3),more=ups.length-shown.length,h='<div class="updates"><div class="upd-title">'+(ups.length===1?'1 update':ups.length+' updates')+'</div>';
+  if(more>0)h+='<div class="upd-more">'+more+' earlier update'+(more!==1?'s':'')+' in History</div>';
+  shown.forEach(function(u){
+    h+='<div class="upd"><b>'+esc(u.when)+' - '+esc(u.performedBy)+(u.company?' ('+esc(u.company)+')':'')+'</b>'+(u.synced===false?' <span class="pill pending">Pending</span>':'')
+      +'<div class="entry-body" style="margin-top:2px;color:inherit;">'+esc(u.description)+'</div>'
+      +((u.parts||u.minutes!=null)?'<div class="entry-meta" style="color:inherit;">'+(u.parts?'<span>Parts: '+esc(u.parts)+'</span>':'')+(u.minutes!=null?'<span>'+esc(u.minutes)+' min</span>':'')+'</div>':'')+'</div>';
+  });
+  return h+'</div>';
+}
+function updateFormHTML(e,th){
+  var need=threadNeed(th||{entry:e,updates:[]}),ta='width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--info-border);border-radius:var(--radius);background:var(--bg);color:var(--text);min-height:72px;';
+  return '<div class="followup-box update-box" style="margin-top:12px;">'
+    +'<div class="field"><label for="up-note">What is the update?</label><textarea id="up-note" maxlength="1000" placeholder="e.g. Parts ordered, arriving Friday" style="'+ta+'"></textarea></div>'
+    +'<div class="field"><label for="up-need">What still needs to be done?</label><textarea id="up-need" maxlength="500" style="'+ta+'">'+esc(need)+'</textarea><div class="hint">Change this only if the remaining work has changed.</div></div>'
+    +'<div class="row2"><div class="field"><label for="up-by">Updated by</label><input type="text" id="up-by" maxlength="60" value="'+esc(getUserName())+'"/></div><div class="field"><label for="up-company">Company (if outside vendor)</label><input type="text" id="up-company" maxlength="60"/></div></div>'
+    +'<div class="row2"><div class="field"><label for="up-parts">Parts used</label><input type="text" id="up-parts" maxlength="200" placeholder="Optional"/></div><div class="field"><label for="up-min">Time spent (minutes)</label><input type="number" id="up-min" min="0" step="5" inputmode="numeric"/></div></div>'
+    +'<div style="display:flex;gap:8px;"><button class="btn primary" onclick="saveUpdate('+e.id+')">Save update</button><button class="btn" onclick="cancelUpdate()">Cancel</button></div></div>';
+}
+function startUpdate(id){st.updatingId=id;st.closingId=null;renderOpen();var t=$('up-note');if(t)t.focus();}
+function cancelUpdate(){st.updatingId=null;renderOpen();}
+async function saveUpdate(id){
+  if(saving)return;
+  var th=maintThreads(st.history).filter(function(t){return t.entry.id===id;})[0],orig=openItems(st.history).filter(function(e){return e.id===id;})[0];
+  if(!orig||!th){toast('err','That item is already closed.');st.updatingId=null;renderAll();return;}
+  var cur=threadNeed(th),need=$('up-need').value;
+  var f={note:$('up-note').value,needText:need,stillNeeded:need.trim()!==String(cur||'').trim()?need:'',performedBy:$('up-by').value,company:$('up-company').value,parts:$('up-parts').value,minutes:numOrNull($('up-min').value),ts:Date.now(),loggedBy:getUserName()};
+  var err=validateUpdate(f);if(err){toast('err',err);return;}
+  saving=true;setSyncBadge('syncing','Saving...');
+  try{
+    var ok=await submitEntry(buildUpdate(orig,f));
+    toast(ok?'ok':'warn',ok?'Update added to '+(refLabel(orig.refNo)||'the repair')+' and synced. It stays open.':'Update saved on this device and will sync when signal returns. It stays open.');
+    if(!ok)updatePendingBadge();
+    st.updatingId=null;renderAll();
+  }finally{saving=false;}
+}
 function daysOpen(e){return Math.max(0,calDaysAgo(e.ts));}
 function renderOpen(){
-  var items=openItems(st.history),h='';
+  var items=openItems(st.history),h='',thById={};maintThreads(st.history).forEach(function(t){thById[t.entry.id]=t;});
   if(!items.length){$('open-list').innerHTML='<div class="empty">No open repairs. Everything logged has been closed out.</div>';return;}
   items.forEach(function(e){
     var d=daysOpen(e);
     h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+refSub(e)+esc(e.when)+' - open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+'</div></div><div><span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'+(e.synced===false?'<span class="pill pending">Pending</span>':'')+'</div></div>'
-      +'<div class="entry-body">'+esc(e.description)+'</div><div class="still"><b>Still needed:</b> '+esc(e.followUpNote)+'</div>'+metaHTML(e);
+      +'<div class="entry-body">'+esc(e.description)+'</div><div class="still"><b>Still needed:</b> '+esc(threadNeed(thById[e.id]||{entry:e,updates:[]}))+'</div>'+metaHTML(e)+updatesHTML(thById[e.id]);
     if(st.closingId===e.id){
       h+='<div class="followup-box" style="margin-top:12px;"><div class="field"><label for="co-desc">What was done to close this out?</label><textarea id="co-desc" maxlength="1000" style="width:100%;padding:10px 12px;font-size:16px;font-family:var(--font);border:0.5px solid var(--warn-border);border-radius:var(--radius);background:var(--bg);color:var(--text);min-height:72px;"></textarea></div>'
         +'<div class="row2"><div class="field"><label for="co-by">Performed by</label><input type="text" id="co-by" maxlength="60" value="'+esc(getUserName())+'"/></div><div class="field"><label for="co-company">Company (if outside vendor)</label><input type="text" id="co-company" maxlength="60"/></div></div>'
         +'<div class="field"><label for="co-min">Time spent (minutes)</label><input type="number" id="co-min" min="0" step="5" inputmode="numeric"/></div>'
         +'<div style="display:flex;gap:8px;"><button class="btn primary" onclick="saveClose('+e.id+')">Close out</button><button class="btn" onclick="cancelClose()">Cancel</button></div></div>';
-    }else h+='<div style="margin-top:12px;"><button class="btn small warn" onclick="startClose('+e.id+')">Close out</button></div>';
+    }else if(st.updatingId===e.id){h+=updateFormHTML(e,thById[e.id]);}
+    else h+='<div class="btn-row"><button class="btn small" onclick="startUpdate('+e.id+')">Update</button><button class="btn small warn" onclick="startClose('+e.id+')">Close out</button></div>';
     h+='</div>';
   });
   $('open-list').innerHTML=h;
 }
-function startClose(id){st.closingId=id;renderOpen();var t=$('co-desc');if(t)t.focus();}
+function startClose(id){st.closingId=id;st.updatingId=null;renderOpen();var t=$('co-desc');if(t)t.focus();}
 function cancelClose(){st.closingId=null;renderOpen();}
 async function saveClose(id){
   if(saving)return;
@@ -882,14 +947,14 @@ function renderHistory(){
   if(!threads.length){$('hist-list').innerHTML='<div class="empty">No entries match.</div>';return;}
   var h='';
   threads.slice(0,100).forEach(function(th){
-    var e=th.entry,closed=e.followUp&&th.closeouts.length>0,pending=e.synced===false||th.closeouts.some(function(c){return c.synced===false;});
+    var e=th.entry,closed=e.followUp&&th.closeouts.length>0,pending=e.synced===false||th.closeouts.some(function(c){return c.synced===false;})||th.updates.some(function(u){return u.synced===false;});
     h+='<div class="card"><div class="entry-head"><div><div class="entry-title">'+esc(bodyName(e))+' - '+esc(e.equipment)+'</div><div class="entry-sub">'+refSub(e)+esc(e.when)+'</div></div><div>'
       +'<span class="pill '+(e.type==='pm'?'pm':'repair')+'">'+(e.type==='pm'?'PM':'Repair')+'</span>'
       +(e.kind==='closeout'?'<span class="pill closed">Close-out</span>':'')
       +(openSet.has(e.id)?'<span class="pill open">Open</span>':(closed?'<span class="pill closed">Closed</span>':''))
       +(pending?'<span class="pill pending">Pending</span>':'')+'</div></div>'
       +'<div class="entry-body">'+esc(e.description)+'</div>'
-      +(e.followUp&&e.followUpNote?'<div class="still"><b>Follow-up needed:</b> '+esc(e.followUpNote)+'</div>':'')+metaHTML(e);
+      +(e.followUp&&e.followUpNote?'<div class="still"><b>Follow-up needed:</b> '+esc(threadNeed(th))+'</div>':'')+metaHTML(e)+updatesHTML(th,true);
     th.closeouts.forEach(function(c){
       h+='<div class="closed-out"><b>Closed out '+esc(c.when)+'</b><div class="entry-body" style="margin-top:2px;">'+esc(c.description)+'</div>'+metaHTML(c)+'</div>';
     });
