@@ -157,7 +157,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 
 /* Frequency chart */
 .freq-label-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-top:4px;}
-.dash-tabs{display:flex;gap:8px;margin-bottom:1.25rem;}
+.dash-tabs{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
 .dash-tab{padding:10px 20px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:15px;cursor:pointer;font-family:var(--font);}
 .dash-tab.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
 .dash-hist-entry{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;}
@@ -260,15 +260,26 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 @media(min-width:1500px){
   #level-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px;align-items:start;}   /* Level 1 | Level 2 | Level 13, like the building */
   #level-sections .body-cards{grid-template-columns:1fr;}
-  #dash-hist-list,#pu-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start;}
-  #dash-hist-list>*,#pu-list>*{margin-bottom:0;}
-  #dash-hist-list>:not(.dash-hist-entry),#pu-list>:not(.dash-hist-entry){grid-column:1/-1;}
+  #dash-hist-list,#pu-list,#bar-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start;}
+  #dash-hist-list>*,#pu-list>*,#bar-list>*{margin-bottom:0;}
+  #dash-hist-list>:not(.dash-hist-entry),#pu-list>:not(.dash-hist-entry),#bar-list>:not(.dash-hist-entry){grid-column:1/-1;}
 }
 .maint-up{margin-top:8px;padding:8px 10px;border-left:3px solid var(--info-text);background:var(--info-bg);color:var(--info-text);border-radius:var(--radius);font-size:13px;word-break:break-word;}
 .maint-hold{margin-top:6px;padding:6px 8px;background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);color:var(--warn-text);}
 .maint-hold-title{font-size:13px;color:var(--warn-text);}
 .maint-hold .maint-item-text{color:var(--warn-text);margin-top:2px;}
 .maint-hold .maint-up{margin-top:4px;}
+/* Chemical barrels */
+.bar-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
+.bar-table th{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;text-align:left;padding:6px 10px;border-bottom:0.5px solid var(--border2);white-space:nowrap;}
+.bar-table td{padding:8px 10px;border-bottom:0.5px solid var(--border);vertical-align:top;color:var(--text);}
+.bar-table td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
+.bar-pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;background:var(--bg2);color:var(--text2);}
+.bar-pill.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.bar-pill.soon{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.bar-pill.overdue{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.bar-pill.tracking{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.bar-note{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -300,7 +311,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.45 - Oct 24, 2026</span>
+        <span class="version">v1.46 - Oct 24, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -310,6 +321,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <button class="dash-tab active" id="tab-overview" onclick="showDashTab('overview')">Overview</button>
     <button class="dash-tab" id="tab-history" onclick="showDashTab('history')">History</button>
     <button class="dash-tab" id="tab-purchases" onclick="showDashTab('purchases')">Purchases</button>
+    <button class="dash-tab" id="tab-barrels" onclick="showDashTab('barrels')">Barrels</button>
   </div>
 
   <div id="tab-overview-content">
@@ -409,6 +421,9 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   <!-- Aquatic maintenance (from aquatic-maintenance.json) -->
   <div id="maint-section"></div>
 
+  <!-- Chemical barrels -->
+  <div id="barrels-section"></div>
+
   <!-- Parameter heatmap -->
   <div class="heatmap-card">
     <div class="visual-title">Parameter health heatmap</div>
@@ -456,6 +471,24 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
         <div id="pu-trend-table"></div>
       </div>
     </div>
+  </div>
+
+  <div id="tab-barrels-content" style="display:none;">
+    <div class="pu-head">
+      <div><div style="font-size:15px;font-weight:500;color:var(--text);">Chemical barrels</div><div style="font-size:13px;color:var(--text2);">Record when a chlorine or acid barrel is changed</div></div>
+      <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportBarrelsCSV()">Export CSV</button>
+    </div>
+    <div class="visual-card" style="margin-bottom:12px;">
+      <div class="visual-title">Record a barrel change</div>
+      <div class="pu-grid">
+        <div style="grid-column:span 2;"><label for="bar-key">Barrel</label><select class="pu-input" id="bar-key"></select></div>
+        <div><label for="bar-date">Date changed</label><input class="pu-input" type="date" id="bar-date"/></div>
+        <div><label for="bar-note">Note</label><input class="pu-input" type="text" id="bar-note" maxlength="120" placeholder="Optional"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;"><button class="dash-tab active" id="bar-add" onclick="addBarrelChange()">Record change</button><div id="bar-msg" class="pu-msg"></div></div>
+      <div class="bar-note">To start tracking, enter the date each barrel was last changed. Staff can also record a change from the calculator, in the same place as the backwash and out of service buttons.</div>
+    </div>
+    <div id="bar-list"></div>
   </div>
 
   <div id="tab-history-content" style="display:none;">
@@ -901,7 +934,7 @@ function resetPurchFormOnce(){if(puFormReady)return;puFormReady=true;fillPurchBo
 
 // ---- Tests by person (share of real chemical tests; out-of-service / return-to-service events are not tests) ----
 function isTest(r){
-  if(!r||r.outOfService||r.returnedToService||r.backwashOnly)return false;
+  if(!r||r.outOfService||r.returnedToService||r.backwashOnly||r.barrelChange)return false;
   var x=r.readings;if(!x)return false;
   return Object.keys(x).some(function(k){return x[k]!=null&&x[k]!=='';});
 }
@@ -1013,6 +1046,145 @@ async function applyUnnamed(){
     setSyncBadge('err','Cleanup failed');msg.className='pu-msg err';
     msg.textContent='Nothing was changed ('+(r.blocked?'safety check':(r.res.reason||'unknown'))+'). Try again with a connection.';onUnChange();
   }
+}
+// ===== BARREL LOGIC BEGIN (identical in the calculator and the dashboard) =====
+// Chemical barrels. A barrel can feed several bodies of water. A "change" is saved as a small event record
+// ({barrelChange:true, barrelKey, date:'YYYY-MM-DD'}) alongside the readings, so it syncs offline-safely like backwash entries.
+// Duration of use = days from one recorded change to the next (the day a barrel is swapped counts as the day it ran out).
+var BARREL_LEVELS=['Level 1 - Indoor','Level 2 - Outdoor','Level 13 - Outdoor'];
+var BARRELS=[
+  {key:'L1-CL-POOL',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Pool chlorine',serves:'L1 Pool',bodies:['0-0']},
+  {key:'L1-CL-SPAS',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Hot spa + Cold spa chlorine',serves:'L1 Hot spa and Cold spa',bodies:['0-1','0-2']},
+  {key:'L1-ACID',levelIdx:0,chem:'acid',gal:15,label:'L1 acid (Pool, Hot spa, Cold spa)',serves:'L1 Pool, Hot spa and Cold spa',bodies:['0-0','0-1','0-2']},
+  {key:'L2-CL',levelIdx:1,chem:'chlorine',gal:30,label:'L2 chlorine (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L2-ACID',levelIdx:1,chem:'acid',gal:15,label:'L2 acid (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L13-CL',levelIdx:2,chem:'chlorine',gal:53,label:'L13 chlorine (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']},
+  {key:'L13-ACID',levelIdx:2,chem:'acid',gal:15,label:'L13 acid (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']}];
+function barrelByKey(k){for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].key===k)return BARRELS[i];}return null;}
+function barrelFor(levelIdx,bodyIdx,chem){var k=levelIdx+'-'+bodyIdx;for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].chem===chem&&BARRELS[i].bodies.indexOf(k)>=0)return BARRELS[i];}return null;}
+function barrelTitle(b){return b.label+' - '+b.gal+' gal';}
+function barrelP2(n){return(n<10?'0':'')+n;}
+function barrelToday(){var d=new Date();return d.getFullYear()+'-'+barrelP2(d.getMonth()+1)+'-'+barrelP2(d.getDate());}
+function barrelDayNum(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return null;var n=Math.round(Date.UTC(+m[1],+m[2]-1,+m[3])/86400000);return isNaN(n)?null:n;}
+function barrelDaysBetween(a,b){var x=barrelDayNum(a),y=barrelDayNum(b);return(x==null||y==null)?null:y-x;}
+function barrelDateFromDayNum(n){return new Date(n*86400000).toISOString().slice(0,10);}
+function barrelDateLabel(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):String(s||'');}
+function barrelAgo(n){return n===0?'today':(n===1?'yesterday':n+' days ago');}
+function validateBarrelChange(key,date,list){
+  if(!barrelByKey(key))return 'Choose a barrel.';
+  if(barrelDayNum(date)==null)return 'Choose the date it was changed.';
+  if(barrelDaysBetween(date,barrelToday())<0)return 'The date is in the future.';
+  if((list||[]).some(function(e){return e&&e.barrelChange&&e.barrelKey===key&&e.date===date;}))return 'That barrel already has a change recorded on '+barrelDateLabel(date)+'.';
+  return null;
+}
+function buildBarrelChange(b,date,by,note){
+  return{id:Date.now()*1000+Math.floor(Math.random()*1000),ts:Date.parse(date+'T12:00:00'),date:date,when:barrelDateLabel(date),
+    barrelChange:true,barrelKey:b.key,chem:b.chem,barrelGal:b.gal,barrelLabel:b.label,
+    levelIdx:b.levelIdx,bodyIdx:null,level:BARREL_LEVELS[b.levelIdx],body:null,
+    tester:by||null,notes:(note||'').trim()||null,readings:{},doses:[]};
+}
+function barrelChanges(list,key){ // one record per date, oldest first
+  var seen={},out=[];
+  (list||[]).forEach(function(e){if(e&&e.barrelChange&&e.barrelKey===key&&barrelDayNum(e.date)!=null&&!seen[e.date]){seen[e.date]=1;out.push(e);}});
+  return out.sort(function(a,b){return barrelDayNum(a.date)-barrelDayNum(b.date);});
+}
+function barrelStats(list,key,today){
+  var b=barrelByKey(key),ch=barrelChanges(list,key),s={key:key,barrel:b,changes:ch.length,current:null,daysIn:null,done:[],lastDays:null,avgDays:null,galPerDay:null,estEmpty:null,daysLeft:null,status:'none'};
+  if(!ch.length)return s;
+  var last=ch[ch.length-1];s.current=last;s.daysIn=barrelDaysBetween(last.date,today);
+  for(var i=1;i<ch.length;i++){var d=barrelDaysBetween(ch[i-1].date,ch[i].date);s.done.push({from:ch[i-1],to:ch[i],days:d,galPerDay:d>0?b.gal/d:null});}
+  if(!s.done.length){s.status='tracking';return s;}   // first barrel on record: no duration to learn from yet
+  var recent=s.done.slice(-5),sum=0;recent.forEach(function(x){sum+=x.days;});
+  s.lastDays=s.done[s.done.length-1].days;s.avgDays=Math.max(1,Math.round(sum/recent.length));s.galPerDay=b.gal/s.avgDays;
+  s.estEmpty=barrelDateFromDayNum(barrelDayNum(last.date)+s.avgDays);s.daysLeft=s.avgDays-s.daysIn;
+  s.status=s.daysIn>s.avgDays?'overdue':(s.daysIn>=s.avgDays*0.85?'soon':'ok');
+  return s;
+}
+// ===== BARREL LOGIC END =====
+
+// ---- Chemical barrels on the dashboard ----
+var BAR_PILL={none:['none','No record'],tracking:['tracking','Tracking'],ok:['ok','OK'],soon:['soon','Due soon'],overdue:['overdue','Past usual']};
+function barrelUserName(){try{return localStorage.getItem('aquatic_user_name')||'Dashboard';}catch(e){return 'Dashboard';}}
+function barrelIn(n){return n===0?'today':(n>0?'in '+n+' day'+(n!==1?'s':''):Math.abs(n)+' day'+(Math.abs(n)!==1?'s':'')+' past');}
+function renderBarrels(){ // Overview card
+  var el=document.getElementById('barrels-section');if(!el)return;
+  var today=barrelToday(),h='<div class="visual-card" style="margin-bottom:1.25rem;"><div class="pu-trend-head"><div><div class="visual-title">Chemical barrels</div><div class="visual-sub">How long each barrel lasts, and when the one in use is likely to run out</div></div><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="showDashTab(\'barrels\')">Record a change</button></div>'
+    +'<div style="overflow-x:auto;"><table class="bar-table"><tr><th>Barrel</th><th>In use since</th><th>In use</th><th>Last barrel lasted</th><th>Average</th><th>Estimated empty</th><th>Status</th></tr>';
+  BARRELS.forEach(function(b){
+    var s=barrelStats(allReadings,b.key,today),pill='<span class="bar-pill '+BAR_PILL[s.status][0]+'">'+BAR_PILL[s.status][1]+'</span>';
+    h+='<tr><td><b>'+escHtml(b.label)+'</b><small>'+b.gal+' gal, '+escHtml(b.chem)+'</small></td>';
+    if(!s.current){h+='<td colspan="5" style="color:var(--text3);">No change recorded yet</td>';}
+    else{
+      h+='<td>'+escHtml(barrelDateLabel(s.current.date))+'</td><td>'+s.daysIn+' day'+(s.daysIn!==1?'s':'')+'</td>';
+      if(s.status==='tracking')h+='<td colspan="3" style="color:var(--text3);">Needs one more change to estimate</td>';
+      else h+='<td>'+s.lastDays+' days</td><td>'+s.avgDays+' days<small>'+(Math.round(s.galPerDay*10)/10)+' gal/day</small></td><td>'+escHtml(barrelDateLabel(s.estEmpty))+'<small>'+escHtml(barrelIn(s.daysLeft))+'</small></td>';
+    }
+    h+='<td>'+pill+'</td></tr>';
+  });
+  el.innerHTML=h+'</table></div><div class="bar-note">A barrel counts as used up on the day it is swapped. The average covers the last 5 completed barrels. "Due soon" means 85% of the usual life; "Past usual" means longer than average.</div></div>';
+}
+var barFormReady=false;
+function initBarrelForm(){
+  if(barFormReady)return;barFormReady=true;
+  var sel=document.getElementById('bar-key'),h='<option value="">Choose a barrel...</option>';
+  BARREL_LEVELS.forEach(function(lv,li){h+='<optgroup label="'+escHtml(lv)+'">';BARRELS.filter(function(b){return b.levelIdx===li;}).forEach(function(b){h+='<option value="'+b.key+'">'+escHtml(barrelTitle(b))+'</option>';});h+='</optgroup>';});
+  sel.innerHTML=h;
+  var dt=document.getElementById('bar-date');dt.max=barrelToday();dt.value=barrelToday();
+}
+function barMsg(kind,text){var el=document.getElementById('bar-msg');el.className='pu-msg '+kind;el.textContent=text;}
+function renderBarrelsTab(){
+  initBarrelForm();
+  var list=document.getElementById('bar-list'),ev=allReadings.filter(function(e){return e&&e.barrelChange;}).sort(function(a,b){return(barrelDayNum(b.date)||0)-(barrelDayNum(a.date)||0)||(b.loggedAt||b.ts)-(a.loggedAt||a.ts);});
+  if(!ev.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">No barrel changes recorded yet. Record the date each barrel was last changed to start tracking.</div>';return;}
+  var prevOf={};BARRELS.forEach(function(b){var ch=barrelChanges(allReadings,b.key);ch.forEach(function(e,i){prevOf[e.id]=i?ch[i-1]:null;});});
+  var h='';
+  ev.slice(0,300).forEach(function(e){
+    var b=barrelByKey(e.barrelKey),prev=prevOf[e.id],days=prev?barrelDaysBetween(prev.date,e.date):null,note='';
+    if(prev&&days>0&&b)note='The previous barrel lasted '+days+' day'+(days!==1?'s':'')+' ('+(Math.round(b.gal/days*10)/10)+' gal/day)';
+    else note='First change on record for this barrel';
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(b?barrelTitle(b):e.barrelLabel)+'</div><div class="dash-hist-when">'+escHtml(barrelDateLabel(e.date))+' - '+escHtml(note)+'</div></div>'
+      +'<span class="maint-pill '+(e.chem==='acid'?'repair':'pm')+'">'+escHtml(e.chem==='acid'?'Acid':'Chlorine')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+escHtml(e.tester?'Recorded by '+e.tester:'')+(e.notes?' - '+escHtml(e.notes):'')+'</div>'
+      +'<button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+  });
+  list.innerHTML=h;
+}
+async function addBarrelChange(){
+  var key=document.getElementById('bar-key').value,date=document.getElementById('bar-date').value,note=document.getElementById('bar-note').value;
+  var err=validateBarrelChange(key,date,allReadings);if(err){barMsg('err',err);return;}
+  var b=barrelByKey(key),rec=buildBarrelChange(b,date,barrelUserName(),note),dup=false;
+  document.getElementById('bar-add').disabled=true;setSyncBadge('syncing','Saving barrel change...');
+  var res=await ghMutate(function(remote){
+    if(remote.some(function(e){return e.id===rec.id;}))return null;
+    if(remote.some(function(e){return e&&e.barrelChange&&e.barrelKey===key&&e.date===date;})){dup=true;return null;} // already there (another device, or a retry that landed)
+    return{list:[rec].concat(remote),added:1,removed:0};
+  },'Barrel change: '+b.label);
+  document.getElementById('bar-add').disabled=false;
+  if(res.ok){
+    allReadings=res.list;
+    if(dup){barMsg('err','That barrel already has a change recorded on '+barrelDateLabel(date)+'.');setSyncBadge('ok','Connected');}
+    else{document.getElementById('bar-note').value='';barMsg('ok','Recorded: '+b.label+', '+barrelDateLabel(date)+'.');setSyncBadge('ok','Barrel change recorded');}
+    renderBarrelsTab();renderBarrels();
+  }else{setSyncBadge('err','Barrel change not saved');barMsg('err','Could not save ('+res.reason+'). It needs a connection; try again.');}
+}
+function barrelDeleteMessage(entry,list){
+  var b=barrelByKey(entry.barrelKey),name=b?b.label:entry.barrelLabel,ch=barrelChanges(list,entry.barrelKey),i=-1;
+  for(var k=0;k<ch.length;k++){if(ch[k].id===entry.id){i=k;break;}}
+  var effect;
+  if(i<0)effect='This will not change any durations.';
+  else if(i===ch.length-1&&ch.length===1)effect='Afterwards no change will be recorded for this barrel.';
+  else if(i===ch.length-1)effect='Afterwards the barrel in use will show as changed on '+barrelDateLabel(ch[i-1].date)+'.';
+  else if(i===0)effect='The first recorded change will then be '+barrelDateLabel(ch[1].date)+'.';
+  else effect='The two barrels either side of it will then count as one barrel lasting '+barrelDaysBetween(ch[i-1].date,ch[i+1].date)+' days.';
+  return 'Delete this barrel change ('+name+', '+barrelDateLabel(entry.date)+')?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+function exportBarrelsCSV(){
+  var rows=[['Date','Barrel','Chemical','Gallons','Days since previous change','Gallons per day','Recorded by','Note']];
+  BARRELS.forEach(function(b){var ch=barrelChanges(allReadings,b.key);ch.forEach(function(e,i){var days=i?barrelDaysBetween(ch[i-1].date,e.date):'';rows.push([e.date,b.label,b.chem,b.gal,days,(days&&days>0)?(Math.round(b.gal/days*100)/100):'',e.tester||'',e.notes||'']);});});
+  var body=rows.slice(1).sort(function(a,b){return a[0]<b[0]?1:(a[0]>b[0]?-1:0);});
+  var csv=[rows[0]].concat(body).map(function(r){return r.map(function(c){return maintCsvCell(c);}).join(',');}).join('\r\n');
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-chemical-barrels-'+todayStr()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
 }
 function renderMaint(){
   var el=document.getElementById('maint-section');if(!el)return;
@@ -1556,6 +1728,8 @@ function renderDashboard(){
 
   document.getElementById('level-sections').innerHTML=html;
   renderMaint();
+  renderBarrels();
+  if(document.getElementById('tab-barrels-content').style.display!=='none')renderBarrelsTab();
   renderSpend();
 
   // Render mini charts after DOM update
@@ -1826,7 +2000,7 @@ function renderVisuals(filtered){
 }
 
 function showDashTab(tab){
-  ["overview","history","purchases"].forEach(function(t){
+  ["overview","history","purchases","barrels"].forEach(function(t){
     document.getElementById("tab-"+t+"-content").style.display=t===tab?"block":"none";
     document.getElementById("tab-"+t).classList.toggle("active",t===tab);
   });
@@ -1835,6 +2009,7 @@ function showDashTab(tab){
     renderDashHistory();
   }
   if(tab==="purchases"){resetPurchFormOnce();renderPurchView();}
+  if(tab==="barrels"){renderBarrelsTab();}
 }
 
 function populateDashHistFilter(){
@@ -1898,6 +2073,14 @@ function renderDashHistory(){
         +(e.tester?'<div style="font-size:13px;color:var(--success-text);">By: '+escHtml(e.tester)+'</div>':'')
         +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
     }
+    if(e.barrelChange){
+      return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">'+escHtml(String(e.chem||'').toUpperCase())+' BARREL CHANGED: '+escHtml(e.barrelLabel)+' ('+escHtml(e.barrelGal)+' gal)</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.notes?'<div style="font-size:13px;color:var(--info-text);">Note: '+escHtml(e.notes)+'</div>':'')
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
     if(e.backwashOnly){
       return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
         +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
@@ -1955,7 +2138,7 @@ function backwashDeleteMessage(entry,list){
 async function dashDeleteEntry(id,kind){
   var numId=Number(id);
   var target=allReadings.filter(function(r){return r.id===numId;})[0];
-  if(kind==='event'&&target){if(!confirm(target.backwashOnly?backwashDeleteMessage(target,allReadings):statusDeleteMessage(target,allReadings)))return;}
+  if(kind==='event'&&target){if(!confirm(target.barrelChange?barrelDeleteMessage(target,allReadings):(target.backwashOnly?backwashDeleteMessage(target,allReadings):statusDeleteMessage(target,allReadings))))return;}
   else if(!confirm("Delete this reading? This cannot be undone."))return;
   setSyncBadge('syncing','Deleting...');
   var res=await ghMutate(function(remote){
@@ -1985,7 +2168,7 @@ function exportDashCSV(){
   var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)","Entry type","Reason or note","Backwash"]];
   entries.forEach(function(e){
     var r=e.readings||{};
-    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":"Reading")),e.outOfService?(e.reason||""):(e.notes||""),e.backwash?"Yes":""]);
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":""]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
   var blob=new Blob([csv],{type:"text/csv"});

@@ -176,6 +176,10 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
 .qa-btn{flex:1;min-width:140px;min-height:48px;padding:10px 12px;font-size:15px;font-weight:500;border-radius:var(--radius);border:0.5px solid var(--info-border);background:var(--info-bg);color:var(--info-text);}
 .qa-btn.warn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
 .qa-btn.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.qa-sub{font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em;color:var(--text2);margin:14px 0 6px;padding-top:12px;border-top:0.5px solid var(--border);}
+.qa-datewrap{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:14px;color:var(--text2);flex-wrap:wrap;}
+.qa-datewrap input{font-size:16px;font-family:var(--font);padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);min-height:44px;}
+.qa-barrel-info{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.55;}
 </style>
 </head>
 <body>
@@ -219,7 +223,7 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
   </div>
   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
     <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
-    <span class="version-label">v44 (synced) - Oct 24, 2026</span>
+    <span class="version-label">v45 (synced) - Oct 24, 2026</span>
   </div>
 </div>
 
@@ -257,6 +261,13 @@ button:not(.copy-preview-close):not(.del-btn):active{box-shadow:none;transform:t
       <button class="qa-btn ok" id="qa-return" onclick="returnToService()" style="display:none;">Return to service</button>
       <button class="qa-btn" id="qa-backwash" onclick="recordBackwash()">Record backwash</button>
     </div>
+    <div class="qa-sub">Chemical barrels</div>
+    <div class="qa-datewrap"><label for="qa-barrel-date">Barrel changed on</label><input type="date" id="qa-barrel-date"/></div>
+    <div class="qa-row">
+      <button class="qa-btn" id="qa-chlorine" onclick="recordBarrel('chlorine')">Chlorine barrel changed</button>
+      <button class="qa-btn" id="qa-acid" onclick="recordBarrel('acid')">Acid barrel changed</button>
+    </div>
+    <div class="qa-barrel-info" id="qa-barrel-info"></div>
   </div>
   <div class="orp-section">
     <p class="slabel">ORP Controller</p>
@@ -991,7 +1002,7 @@ function returnToService(){
 }
 
 function escH(s){return String(s==null?'':s).replace(/[&<>"']/g,function(ch){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
-function isStatusRec(r){return!!(r&&(r.outOfService||r.returnedToService||r.backwashOnly));} // status / maintenance entries are not chemical tests
+function isStatusRec(r){return!!(r&&(r.outOfService||r.returnedToService||r.backwashOnly||r.barrelChange));} // status / maintenance entries are not chemical tests
 function bodySelected(){var s=document.getElementById('location-select');return!!(s&&s.value);}
 // A body's status comes from its latest out-of-service / return-to-service entry in the shared history (all devices, incl. pending ones).
 function statusFromHistory(li,bi){
@@ -1014,6 +1025,81 @@ function refreshQuickActions(){
   document.getElementById('qa-oos').style.display=oos?'none':'block';
   document.getElementById('qa-return').style.display=oos?'block':'none';
   var s=document.getElementById('qa-state');s.textContent=oos?'OUT OF SERVICE: '+oos.reason+' (since '+oos.since+')':'In service';s.className='qa-state'+(oos?' oos':'');
+  var bd=document.getElementById('qa-barrel-date');if(bd){bd.max=barrelToday();if(!bd.value)bd.value=barrelToday();}   // today unless you pick another day
+  var bi=document.getElementById('qa-barrel-info');if(bi)bi.innerHTML=barrelInfoHTML('chlorine')+'<br>'+barrelInfoHTML('acid');
+}
+// ===== BARREL LOGIC BEGIN (identical in the calculator and the dashboard) =====
+// Chemical barrels. A barrel can feed several bodies of water. A "change" is saved as a small event record
+// ({barrelChange:true, barrelKey, date:'YYYY-MM-DD'}) alongside the readings, so it syncs offline-safely like backwash entries.
+// Duration of use = days from one recorded change to the next (the day a barrel is swapped counts as the day it ran out).
+var BARREL_LEVELS=['Level 1 - Indoor','Level 2 - Outdoor','Level 13 - Outdoor'];
+var BARRELS=[
+  {key:'L1-CL-POOL',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Pool chlorine',serves:'L1 Pool',bodies:['0-0']},
+  {key:'L1-CL-SPAS',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Hot spa + Cold spa chlorine',serves:'L1 Hot spa and Cold spa',bodies:['0-1','0-2']},
+  {key:'L1-ACID',levelIdx:0,chem:'acid',gal:15,label:'L1 acid (Pool, Hot spa, Cold spa)',serves:'L1 Pool, Hot spa and Cold spa',bodies:['0-0','0-1','0-2']},
+  {key:'L2-CL',levelIdx:1,chem:'chlorine',gal:30,label:'L2 chlorine (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L2-ACID',levelIdx:1,chem:'acid',gal:15,label:'L2 acid (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L13-CL',levelIdx:2,chem:'chlorine',gal:53,label:'L13 chlorine (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']},
+  {key:'L13-ACID',levelIdx:2,chem:'acid',gal:15,label:'L13 acid (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']}];
+function barrelByKey(k){for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].key===k)return BARRELS[i];}return null;}
+function barrelFor(levelIdx,bodyIdx,chem){var k=levelIdx+'-'+bodyIdx;for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].chem===chem&&BARRELS[i].bodies.indexOf(k)>=0)return BARRELS[i];}return null;}
+function barrelTitle(b){return b.label+' - '+b.gal+' gal';}
+function barrelP2(n){return(n<10?'0':'')+n;}
+function barrelToday(){var d=new Date();return d.getFullYear()+'-'+barrelP2(d.getMonth()+1)+'-'+barrelP2(d.getDate());}
+function barrelDayNum(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return null;var n=Math.round(Date.UTC(+m[1],+m[2]-1,+m[3])/86400000);return isNaN(n)?null:n;}
+function barrelDaysBetween(a,b){var x=barrelDayNum(a),y=barrelDayNum(b);return(x==null||y==null)?null:y-x;}
+function barrelDateFromDayNum(n){return new Date(n*86400000).toISOString().slice(0,10);}
+function barrelDateLabel(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):String(s||'');}
+function barrelAgo(n){return n===0?'today':(n===1?'yesterday':n+' days ago');}
+function validateBarrelChange(key,date,list){
+  if(!barrelByKey(key))return 'Choose a barrel.';
+  if(barrelDayNum(date)==null)return 'Choose the date it was changed.';
+  if(barrelDaysBetween(date,barrelToday())<0)return 'The date is in the future.';
+  if((list||[]).some(function(e){return e&&e.barrelChange&&e.barrelKey===key&&e.date===date;}))return 'That barrel already has a change recorded on '+barrelDateLabel(date)+'.';
+  return null;
+}
+function buildBarrelChange(b,date,by,note){
+  return{id:Date.now()*1000+Math.floor(Math.random()*1000),ts:Date.parse(date+'T12:00:00'),date:date,when:barrelDateLabel(date),
+    barrelChange:true,barrelKey:b.key,chem:b.chem,barrelGal:b.gal,barrelLabel:b.label,
+    levelIdx:b.levelIdx,bodyIdx:null,level:BARREL_LEVELS[b.levelIdx],body:null,
+    tester:by||null,notes:(note||'').trim()||null,readings:{},doses:[]};
+}
+function barrelChanges(list,key){ // one record per date, oldest first
+  var seen={},out=[];
+  (list||[]).forEach(function(e){if(e&&e.barrelChange&&e.barrelKey===key&&barrelDayNum(e.date)!=null&&!seen[e.date]){seen[e.date]=1;out.push(e);}});
+  return out.sort(function(a,b){return barrelDayNum(a.date)-barrelDayNum(b.date);});
+}
+function barrelStats(list,key,today){
+  var b=barrelByKey(key),ch=barrelChanges(list,key),s={key:key,barrel:b,changes:ch.length,current:null,daysIn:null,done:[],lastDays:null,avgDays:null,galPerDay:null,estEmpty:null,daysLeft:null,status:'none'};
+  if(!ch.length)return s;
+  var last=ch[ch.length-1];s.current=last;s.daysIn=barrelDaysBetween(last.date,today);
+  for(var i=1;i<ch.length;i++){var d=barrelDaysBetween(ch[i-1].date,ch[i].date);s.done.push({from:ch[i-1],to:ch[i],days:d,galPerDay:d>0?b.gal/d:null});}
+  if(!s.done.length){s.status='tracking';return s;}   // first barrel on record: no duration to learn from yet
+  var recent=s.done.slice(-5),sum=0;recent.forEach(function(x){sum+=x.days;});
+  s.lastDays=s.done[s.done.length-1].days;s.avgDays=Math.max(1,Math.round(sum/recent.length));s.galPerDay=b.gal/s.avgDays;
+  s.estEmpty=barrelDateFromDayNum(barrelDayNum(last.date)+s.avgDays);s.daysLeft=s.avgDays-s.daysIn;
+  s.status=s.daysIn>s.avgDays?'overdue':(s.daysIn>=s.avgDays*0.85?'soon':'ok');
+  return s;
+}
+// ===== BARREL LOGIC END =====
+
+function barrelInfoHTML(chem){
+  var b=barrelFor(st.level,st.body,chem);if(!b)return '';
+  var s=barrelStats(st.history,b.key,barrelToday()),head='<b>'+(chem==='chlorine'?'Chlorine':'Acid')+'</b> ('+b.gal+' gal, '+escH(b.serves)+'): ';
+  if(!s.current)return head+'no change recorded yet.';
+  return head+'last changed '+escH(barrelDateLabel(s.current.date))+' ('+barrelAgo(s.daysIn)+').';
+}
+function recordBarrel(chem){ // a barrel swap, saved as its own entry (offline-safe, shown on the dashboard)
+  if(!bodySelected()){alert('Select a body of water first.');return;}
+  var b=barrelFor(st.level,st.body,chem);if(!b){alert('No '+chem+' barrel is set up for this body of water.');return;}
+  var el=document.getElementById('qa-barrel-date'),date=(el&&el.value)||barrelToday();
+  var err=validateBarrelChange(b.key,date,st.history);if(err){alert(err);return;}
+  if(!confirm('Record that the '+chem.toUpperCase()+' barrel for '+b.serves+' ('+b.gal+' gal) was changed on '+barrelDateLabel(date)+'?\n\nTap OK to record, Cancel to stop.'))return;
+  var entry=buildBarrelChange(b,date,getUserName(),'');entry.synced=false;
+  setSyncBadge('syncing','Saving...');
+  var p=submitEntry(entry);refreshQuickActions();   // history is rebuilt before any network call, so the screen updates at once
+  p.then(function(ok){if(ok)setSyncBadge('ok','Barrel change recorded and synced');else updatePendingBadge();renderHistory();});
+  alert('Recorded: '+chem+' barrel changed on '+barrelDateLabel(date)+' ('+b.serves+').\nIt appears on the management dashboard (and syncs automatically if there is no signal right now).');
 }
 function recordBackwash(){ // a backwash with no reading: saved as its own entry, counted by the dashboard's Last backwash card
   if(!bodySelected()){alert('Select a body of water first.');return;}
@@ -1319,6 +1405,13 @@ function renderHistory(){
         +'<div class="hist-when">'+escH(e.when)+'</div></div>'
         +'<div style="display:flex;align-items:center;gap:8px;">'+pend+'</div></div></div>';
     }
+    if(e.barrelChange){
+      return '<div class="hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="hist-head"><div><div class="hist-who" style="color:var(--info-text);">'+escH(String(e.chem||'').toUpperCase())+' BARREL CHANGED: '+escH(e.barrelLabel)+' ('+escH(e.barrelGal)+' gal)</div>'
+        +'<div class="hist-when">'+escH(e.when)+'</div>'
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escH(e.tester)+'</div>':'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'+pend+'</div></div></div>';
+    }
     if(e.backwashOnly){
       return '<div class="hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
         +'<div class="hist-head"><div><div class="hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escH(e.body)+' - '+escH(e.level)+'</div>'
@@ -1407,7 +1500,7 @@ function batchCopyLatest(){
 function exportCSV(){
   if(!st.history.length){alert('No readings to export.');return;}
   var rows=[['Date','Level','Body','Volume (gal)','LSI','ORP (mV)','ORP Setpoint (mV)','pH','Free Chlorine (ppm)','Combined Chlorine (ppm)','Total Alkalinity (ppm)','Calcium Hardness (ppm)','Cyanuric Acid (ppm)','Temperature (F)','Entry type','Reason or note','Backwash']];
-  st.history.forEach(function(e){rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'',e.outOfService?'Out of service':(e.returnedToService?'Returned to service':(e.backwashOnly?'Backwash':'Reading')),e.outOfService?(e.reason||''):(e.notes||''),e.backwash?'Yes':'']);});
+  st.history.forEach(function(e){rows.push([e.when,e.level,e.body,e.volume||'',e.lsi!=null?e.lsi:'',e.readings.orp||'',e.readings.orpSetpoint||'',e.readings.pH||'',e.readings.fc||'',e.readings.cc||'',e.readings.ta||'',e.readings.ch||'',e.readings.cya||'',e.readings.temp||'',e.outOfService?'Out of service':(e.returnedToService?'Returned to service':(e.backwashOnly?'Backwash':(e.barrelChange?'Barrel changed':'Reading'))),e.outOfService?(e.reason||''):(e.barrelChange?(e.barrelLabel+' ('+e.barrelGal+' gal)'+(e.notes?' - '+e.notes:'')):(e.notes||'')),e.backwash?'Yes':'']);});
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='aquatic-readings-'+new Date().toISOString().slice(0,10)+'.csv';a.click();
