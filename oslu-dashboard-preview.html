@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PREVIEW - OSLU Aquatics Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeece8;
+  --text:#1a1a18;--text2:#52524e;--text3:#62625e;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);
+  --info-bg:#e6f1fb;--info-text:#185fa5;--info-border:rgba(24,95,165,0.25);
+  --success-bg:#eaf3de;--success-text:#3b6d11;--success-border:rgba(59,109,17,0.25);
+  --warn-bg:#faeeda;--warn-text:#854f0b;--warn-border:rgba(133,79,11,0.25);
+  --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:rgba(163,45,45,0.25);
+  --radius:8px;--radius-lg:12px;
+  --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
+  --c-chem:#1F4E9A;--c-equip:#D35400;--c-parts:#17A589;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1e1e1c;--bg2:#2a2a28;--bg3:#323230;
+    --text:#f0ede8;--text2:#c4c4c0;--text3:#a8a8a4;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+    --info-bg:#0c3058;--info-text:#85b7eb;--info-border:rgba(133,183,235,0.2);
+    --success-bg:#173404;--success-text:#97c459;--success-border:rgba(151,196,89,0.2);
+    --warn-bg:#412402;--warn-text:#ef9f27;--warn-border:rgba(239,159,39,0.2);
+    --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.2);
+    --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
+    --c-chem:#4B8DE3;--c-equip:#E8962A;--c-parts:#62E5C2;
+  }
+}
+body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:100vh;}
+.wrap{max-width:2600px;margin:0 auto;padding:1.5rem clamp(16px,2.5vw,56px);}
+
+/* Header */
+.dash-header{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.5rem;}
+.dash-header h1{font-size:22px;font-weight:500;}
+.dash-header p{font-size:15px;color:var(--text2);margin-top:3px;}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.sync-badge{font-size:13px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--border2);background:var(--bg2);color:var(--text2);}
+.sync-badge.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.sync-badge.err{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.sync-badge.syncing{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.version{font-size:12px;color:var(--text3);}
+
+/* Token screen */
+.token-screen{max-width:480px;margin:4rem auto;background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius-lg);padding:2rem;}
+.token-screen h2{font-size:18px;font-weight:500;margin-bottom:8px;}
+.token-screen p{font-size:15px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6;}
+.token-screen label{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.token-screen input{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);margin-bottom:1rem;font-family:var(--font);}
+.token-select{width:100%;padding:10px;font-size:14px;border:0.5px solid var(--info-border);border-radius:var(--radius);background:var(--info-bg);color:var(--info-text);font-weight:500;font-family:var(--font);cursor:pointer;}
+.token-note{font-size:13px;color:var(--text3);line-height:1.6;margin-top:1rem;}
+
+/* Controls */
+.controls{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;}
+.window-btn{padding:7px 14px;border:0.5px solid var(--border2);border-radius:20px;background:var(--bg);color:var(--text2);font-size:14px;cursor:pointer;font-family:var(--font);}
+.window-btn.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
+.refresh-btn{padding:7px 14px;border:0.5px solid var(--border2);border-radius:20px;background:var(--bg);color:var(--text2);font-size:14px;cursor:pointer;font-family:var(--font);margin-left:auto;}
+.last-updated{font-size:13px;color:var(--text3);}
+
+/* Alert bar */
+.alert-bar{background:var(--danger-bg);border:0.5px solid var(--danger-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:1.25rem;display:none;}
+.alert-bar.visible{display:block;}
+.alert-bar-title{font-size:15px;font-weight:500;color:var(--danger-text);margin-bottom:8px;}
+.alert-list{list-style:none;}
+.alert-item{font-size:14px;color:var(--danger-text);padding:3px 0;border-bottom:0.5px solid var(--danger-border);}
+.alert-item:last-child{border-bottom:none;}
+
+/* Summary strip */
+.summary-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1.5rem;}
+.summary-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;}
+.summary-label{font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;}
+.summary-val{font-size:28px;font-weight:500;color:var(--text);}
+.summary-sub{font-size:13px;color:var(--text3);margin-top:3px;}
+
+/* Level sections */
+.level-section{margin-bottom:1.5rem;}
+.level-title{font-size:14px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;padding-bottom:8px;border-bottom:0.5px solid var(--border);}
+.body-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;}
+
+/* Body card */
+.body-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;position:relative;}
+.body-card.alert{border-color:var(--danger-border);background:var(--danger-bg);}
+.body-card.warn{border-color:var(--warn-border);}
+.body-card.ok{border-color:var(--success-border);}
+.body-card.no-data{opacity:0.8;}
+.body-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.body-name{font-size:16px;font-weight:500;color:var(--text);}
+.body-vol{font-size:13px;color:var(--text3);margin-top:2px;}
+.body-when{font-size:13px;color:var(--text3);text-align:right;}
+.status-pill{font-size:12px;padding:3px 9px;border-radius:20px;display:inline-block;margin-top:4px;}
+.pill-ok{background:var(--success-bg);color:var(--success-text);border:0.5px solid var(--success-border);}
+.pill-warn{background:var(--warn-bg);color:var(--warn-text);border:0.5px solid var(--warn-border);}
+.pill-alert{background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);}
+.pill-none{background:var(--bg2);color:var(--text3);border:0.5px solid var(--border);}
+
+/* Metric rows */
+.metric-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.metric-row{display:flex;align-items:center;justify-content:space-between;font-size:14px;}
+.metric-label{color:var(--text2);min-width:100px;}
+.metric-val{font-weight:500;color:var(--text);}
+.metric-bar-wrap{flex:1;margin:0 10px;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;}
+.metric-bar{height:100%;border-radius:3px;transition:width 0.3s;}
+
+/* Action items */
+.action-list{border-top:0.5px solid var(--border);padding-top:8px;margin-top:8px;}
+.action-item{font-size:13px;color:var(--text2);padding:3px 0;display:flex;gap:6px;align-items:flex-start;}
+.action-item.urgent{color:var(--danger-text);}
+.action-item.caution{color:var(--warn-text);}
+.action-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.dot-urgent{background:var(--danger-text);}
+.dot-caution{background:var(--warn-text);}
+.dot-ok{background:var(--success-text);}
+
+/* ORP chart mini */
+.mini-chart-wrap{margin-top:10px;border-top:0.5px solid var(--border);padding-top:8px;}
+
+/* No data */
+.no-data-msg{font-size:14px;color:var(--text3);text-align:center;padding:1rem 0;}
+
+/* Visual panels */
+.visual-panels{display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.visual-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;flex:1;min-width:200px;}
+.visual-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;}
+.visual-sub{font-size:13px;color:var(--text3);margin-bottom:12px;}
+.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;}
+.donut-leg-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);}
+.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.donut-leg-val{font-size:16px;font-weight:500;color:var(--text);margin-left:auto;padding-left:8px;}
+
+/* Timeline */
+.tl-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.tl-label{font-size:14px;color:var(--text2);width:112px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-bar-track{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.tl-bar-fill{height:100%;border-radius:4px;transition:width 0.4s;}
+.tl-age{font-size:13px;color:var(--text3);width:62px;text-align:right;flex-shrink:0;}
+
+/* Heatmap */
+.heatmap-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:1.25rem;}
+.hm-table{border-collapse:collapse;min-width:100%;font-size:14px;}
+.hm-table th{padding:6px 10px;font-size:12px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;text-align:center;white-space:nowrap;border-bottom:0.5px solid var(--border);}
+.hm-table th:first-child{text-align:left;}
+.hm-table td{padding:6px 10px;text-align:center;border-bottom:0.5px solid var(--border);vertical-align:middle;}
+.hm-table td:first-child{text-align:left;color:var(--text);font-weight:500;white-space:nowrap;}
+.hm-table tr:last-child td{border-bottom:none;}
+.hm-cell{display:inline-block;padding:3px 8px;border-radius:var(--radius);font-size:13px;font-weight:500;min-width:52px;}
+.hm-ok{background:var(--success-bg);color:var(--success-text);}
+.hm-warn{background:var(--warn-bg);color:var(--warn-text);}
+.hm-alert{background:var(--danger-bg);color:var(--danger-text);}
+.hm-none{background:var(--bg2);color:var(--text3);}
+
+/* Frequency chart */
+.freq-label-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-top:4px;}
+.dash-tabs{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.dash-tab{padding:10px 20px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-size:15px;cursor:pointer;font-family:var(--font);}
+.dash-tab.active{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);font-weight:500;}
+.dash-hist-entry{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;}
+.dash-hist-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.dash-hist-who{font-size:15px;font-weight:500;color:var(--text);}
+.dash-hist-when{font-size:13px;color:var(--text3);text-align:left;}
+.dash-hist-params{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+.dash-hist-param{font-size:14px;color:var(--text2);}
+.dash-hist-param span{color:var(--text);font-weight:500;}
+.dash-hist-suggest{font-size:13px;color:var(--text2);margin-top:6px;}
+.dash-hist-suggest b{color:var(--text);font-weight:500;}
+.dash-del-btn{background:var(--danger-bg);border:0.5px solid var(--danger-border);color:var(--danger-text);font-size:13px;padding:4px 10px;border-radius:var(--radius);cursor:pointer;font-family:var(--font);}
+.oos-overlay{position:absolute;inset:0;background:rgba(133,79,11,0.15);border-radius:var(--radius-lg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;}
+.oos-badge{background:var(--warn-bg);border:1.5px solid var(--warn-border);border-radius:var(--radius);padding:12px 16px;text-align:center;max-width:200px;}
+.oos-badge-title{font-size:14px;font-weight:600;color:var(--warn-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+.oos-badge-reason{font-size:13px;color:var(--warn-text);opacity:0.9;line-height:1.5;}
+.oos-badge-since{font-size:12px;color:var(--warn-text);margin-top:3px;}
+.body-card{position:relative;}
+/* Card shadows: Overview tab only */
+#tab-overview-content .summary-card,
+#tab-overview-content .visual-card,
+#tab-overview-content .body-card,
+#tab-overview-content .heatmap-card{box-shadow:var(--card-shadow);}
+
+/* Maintenance (Overview) */
+.maint-panels{display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap;}
+.maint-panels .visual-card{min-width:320px;}
+.maint-count{display:inline-block;min-width:22px;padding:1px 7px;margin-left:6px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-size:13px;font-weight:500;text-align:center;}
+.maint-count.zero{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.maint-item{padding:9px 0;border-bottom:0.5px solid var(--border);}
+.maint-item:last-child{border-bottom:none;}
+.maint-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;font-size:14px;color:var(--text);}
+.maint-item-sub{font-size:13px;color:var(--text2);margin-top:2px;}
+.maint-item-text{font-size:13px;color:var(--text2);margin-top:4px;word-break:break-word;}
+.maint-pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;margin-left:4px;}
+.maint-pill.pm{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.maint-pill.repair{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.maint-pill.closed{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.maint-empty{font-size:14px;color:var(--text3);padding:10px 0;}
+.maint-warn{font-size:13px;color:var(--warn-text);background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);padding:6px 10px;margin-bottom:6px;}
+.maint-line{font-size:13px;color:var(--text2);margin-top:8px;margin-bottom:10px;padding-top:7px;border-top:0.5px solid var(--border);}
+.maint-open{display:inline-block;font-size:12px;padding:1px 8px;margin-right:4px;border-radius:20px;background:var(--danger-bg);color:var(--danger-text);border:0.5px solid var(--danger-border);font-weight:500;}
+.hist-switch{display:flex;gap:8px;margin-bottom:1rem;}
+.maint-co{margin-top:8px;padding:8px 10px;border-left:3px solid var(--success-text);background:var(--success-bg);color:var(--success-text);border-radius:var(--radius);font-size:13px;word-break:break-word;}
+.maint-pill.open{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.maint-item{padding:7px 0;}
+.maint-item-text.clamp,.maint-co.clamp,.maint-up.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.maint-more{display:block;background:none;border:none;color:var(--info-text);font-size:13px;font-weight:500;padding:8px 0 2px;cursor:pointer;text-decoration:underline;}
+.maint-ref{font-family:ui-monospace,Consolas,monospace;font-weight:600;color:var(--text);font-size:12px;}
+/* Purchases */
+.pu-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.pu-total{font-size:30px;font-weight:500;color:var(--text);}
+.pu-sub{font-size:13px;color:var(--text2);margin-bottom:8px;}
+.pu-cats{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--text2);}
+.pu-cats b{color:var(--text);font-weight:500;}
+.pu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:8px;}
+.pu-grid label{display:block;font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;}
+.pu-input{width:100%;padding:8px 10px;font-size:14px;font-family:var(--font);border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);}
+.pu-msg{font-size:13px;}
+.pu-msg.ok{color:var(--success-text);}
+.pu-msg.err{color:var(--danger-text);}
+.un-step{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:14px;color:var(--text);}
+.un-step label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
+@media(min-width:900px){#spend-card{grid-column:span 2;}}
+.sp-i{white-space:nowrap;}
+/* Tests by person */
+.tp-row{display:flex;align-items:center;gap:12px;padding:5px 0;}
+.tp-name{width:130px;flex:none;font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tp-track{flex:1;height:16px;background:var(--bg3);border-radius:8px;overflow:hidden;}
+.tp-fill{height:100%;background:var(--info-text);border-radius:8px;min-width:4px;}
+.tp-fill.other{background:var(--text3);}
+.tp-val{width:120px;flex:none;text-align:right;font-size:14px;color:var(--text2);white-space:nowrap;}
+.tp-val b{color:var(--text);font-weight:500;font-size:15px;}
+@media(max-width:600px){.tp-name{width:90px;}.tp-val{width:96px;}}
+/* Purchases trend */
+.hist-switch{flex-wrap:wrap;}
+.pu-trend-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+.tr-legend{display:flex;gap:22px;flex-wrap:wrap;margin:6px 0 10px;font-size:14px;color:var(--text);}
+.tr-key{display:inline-flex;align-items:center;gap:7px;font-size:14px;color:var(--text);}
+.tr-key b{font-weight:500;}
+.tr-keysub{color:var(--text3);font-size:13px;}
+#pu-chart{width:100%;}
+.tr-svg{display:block;max-width:100%;height:auto;}
+.tr-grid{stroke:var(--border);stroke-width:1;}
+.tr-base{stroke:var(--border2);stroke-width:1;}
+.tr-axis{fill:var(--text2);font-size:12px;font-family:var(--font);}
+.tr-line{stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round;}
+.tr-line.chem{stroke:var(--c-chem);}.tr-line.equip{stroke:var(--c-equip);}.tr-line.parts{stroke:var(--c-parts);}
+.tr-mk.chem{fill:var(--c-chem);}.tr-mk.equip{fill:var(--c-equip);}.tr-mk.parts{fill:var(--c-parts);}
+.tr-mk{stroke:var(--bg);stroke-width:1.5;}
+.tr-pt:hover .tr-mk{stroke:var(--text);stroke-width:2;}
+.tr-details{margin-top:12px;font-size:14px;color:var(--text);}
+.tr-details summary{cursor:pointer;color:var(--info-text);font-weight:500;}
+.tr-table{border-collapse:collapse;margin-top:8px;font-size:13px;min-width:100%;}
+.tr-table th,.tr-table td{padding:5px 7px;text-align:right;white-space:nowrap;border-bottom:0.5px solid var(--border);}
+.tr-table th:first-child,.tr-table td:first-child{text-align:left;}
+.tr-table th{color:var(--text2);font-weight:500;font-size:12px;}
+.tr-total td{font-weight:500;border-top:1px solid var(--border2);}
+/* Wide monitors (1500px and up): use the whole screen */
+@media(min-width:1500px){
+  #level-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px;align-items:start;}   /* Level 1 | Level 2 | Level 13, like the building */
+  #level-sections .body-cards{grid-template-columns:1fr;}
+  #dash-hist-list,#pu-list,#bar-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start;}
+  #dash-hist-list>*,#pu-list>*,#bar-list>*{margin-bottom:0;}
+  #dash-hist-list>:not(.dash-hist-entry),#pu-list>:not(.dash-hist-entry),#bar-list>:not(.dash-hist-entry){grid-column:1/-1;}
+}
+.maint-up{margin-top:8px;padding:8px 10px;border-left:3px solid var(--info-text);background:var(--info-bg);color:var(--info-text);border-radius:var(--radius);font-size:13px;word-break:break-word;}
+.maint-hold{margin-top:6px;padding:6px 8px;background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);color:var(--warn-text);}
+.maint-hold-title{font-size:13px;color:var(--warn-text);}
+.maint-hold .maint-item-text{color:var(--warn-text);margin-top:2px;}
+.maint-hold .maint-up{margin-top:4px;}
+/* Chemical barrels */
+.bar-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:6px;}
+.bar-table th{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;text-align:left;padding:6px 10px;border-bottom:0.5px solid var(--border2);white-space:nowrap;}
+.bar-table td{padding:8px 10px;border-bottom:0.5px solid var(--border);vertical-align:top;color:var(--text);}
+.bar-table td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
+.bar-pill{display:inline-block;font-size:12px;padding:2px 10px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;background:var(--bg2);color:var(--text2);}
+.bar-pill.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.bar-pill.soon{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.bar-pill.overdue{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
+.bar-pill.tracking{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
+.bar-note{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.5;}
+/* ===== PREVIEW layout ===== */
+.preview-badge{display:inline-block;vertical-align:middle;font-size:12px;font-weight:500;letter-spacing:0.06em;padding:3px 10px;margin-left:8px;border-radius:20px;background:var(--info-text);color:var(--bg);}
+.sec-title{font-size:13px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin:1.7rem 0 0.7rem;padding-bottom:6px;border-bottom:0.5px solid var(--border2);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.sec-sub{font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
+.alert-group{margin-top:8px;padding-top:8px;border-top:0.5px solid var(--danger-border);}
+.alert-group:first-child{border-top:none;margin-top:0;padding-top:0;}
+.alert-group-head{font-size:15px;font-weight:500;}
+.alert-group-head a{color:var(--danger-text);text-decoration:underline;}
+.alert-group ul{list-style:none;margin:3px 0 0;padding-left:14px;}
+.alert-group li{font-size:14px;color:var(--danger-text);padding:2px 0;}
+.alert-bar.clear{background:var(--success-bg);border-color:var(--success-border);}
+.alert-bar.clear .alert-bar-title{color:var(--success-text);margin-bottom:2px;}
+.alert-clear-line{font-size:14px;color:var(--success-text);}
+.gl-card{padding:6px 8px;margin-bottom:0;}
+.glance{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
+.glance th{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;text-align:left;padding:8px 10px;border-bottom:0.5px solid var(--border2);white-space:nowrap;}
+.glance td{padding:5px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle;color:var(--text);white-space:nowrap;}
+.glance td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
+.glance td:nth-child(2) small{display:inline;margin:0 0 0 8px;}   /* name and size on one line: shorter rows */
+.gl-level td{font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);background:var(--bg2);padding:5px 10px;border-bottom:0.5px solid var(--border);}
+.gl-row{cursor:pointer;}
+.gl-row:hover td{background:var(--bg2);}
+.gl-row td:first-child{box-shadow:inset 5px 0 0 var(--border2);}
+.gl-row.gl-alert td:first-child{box-shadow:inset 5px 0 0 var(--danger-text);}
+.gl-row.gl-warn td:first-child{box-shadow:inset 5px 0 0 var(--warn-text);}
+.gl-row.gl-ok td:first-child{box-shadow:inset 5px 0 0 var(--success-text);}
+.gl-row.gl-oos td:first-child{box-shadow:inset 5px 0 0 var(--warn-text);}
+.glance .hm-alert{background:var(--danger-text);color:var(--bg);}   /* the value that is the problem is the loudest thing in the row */
+.glance .hm-warn{border:0.5px solid var(--warn-border);}
+.gl-pill{display:inline-block;font-size:13px;font-weight:500;padding:4px 12px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;}
+.gl-pill.alert{background:var(--danger-text);color:var(--bg);border-color:var(--danger-text);}
+.gl-pill.warn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.gl-pill.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.gl-pill.oos{background:var(--warn-text);color:var(--bg);border-color:var(--warn-text);}
+.gl-pill.none{background:var(--bg2);color:var(--text3);}
+.gl-age.ok{color:var(--success-text);}.gl-age.warn{color:var(--warn-text);}.gl-age.alert{color:var(--danger-text);font-weight:500;}.gl-age.none{color:var(--text3);}
+.gl-none{color:var(--text3);}
+.gl-open{display:block;max-width:260px;white-space:normal;color:var(--warn-text);}
+.gl-open small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text2);}
+.maint-supplies{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px;align-items:start;}
+.maint-supplies .visual-card{margin-bottom:0;}
+@keyframes flashcard{0%{box-shadow:0 0 0 4px var(--info-text);}100%{box-shadow:0 0 0 0 transparent;}}
+.body-card.flash{animation:flashcard 1.8s ease-out;}
+#tab-barrels-content #barrels-section .refresh-btn{display:none;}
+@media(max-width:560px){.maint-supplies{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- TOKEN SETUP -->
+<div id="token-setup" style="display:none;">
+  <div class="token-screen">
+    <h2>OSLU Aquatics Dashboard</h2>
+    <p>Enter your personal access token to load shared readings data. The token is saved to this browser only.</p>
+    <label>Personal access token</label>
+    <input type="password" id="token-input" placeholder="Paste your access token here"/>
+    <select class="token-select" onchange="if(this.value==='save'){submitToken();this.value='';}">
+      <option value="">-- Tap to connect --</option>
+      <option value="save">Connect</option>
+    </select>
+    <p class="token-note">Same token used in the OSLU Aquatic Chemical Calculator. Contact your Senior Maintenance Manager if you need access.</p>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="dashboard" style="display:none;">
+
+  <div class="dash-header">
+    <div>
+      <h1>OSLU Aquatics Dashboard <span class="preview-badge">PREVIEW</span></h1>
+      <p>Proposed new layout - reads your live data; your current dashboard is unchanged</p>
+    </div>
+    <div class="header-right">
+      <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="version">PREVIEW layout - Oct 24, 2026</span>
+        <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-tabs">
+    <button class="dash-tab active" id="tab-overview" onclick="showDashTab('overview')">Overview</button>
+    <button class="dash-tab" id="tab-history" onclick="showDashTab('history')">History</button>
+    <button class="dash-tab" id="tab-purchases" onclick="showDashTab('purchases')">Purchases</button>
+    <button class="dash-tab" id="tab-barrels" onclick="showDashTab('barrels')">Barrels</button>
+  </div>
+
+  <div id="tab-overview-content">
+  <div class="controls">
+    <button class="window-btn active" id="w7" onclick="setWindow(7)">Last 7 days</button>
+    <button class="window-btn" id="w30" onclick="setWindow(30)">Last 30 days</button>
+    <button class="window-btn" id="wall" onclick="setWindow(0)">All time</button>
+    <span class="last-updated" id="last-updated"></span>
+    <button class="refresh-btn" onclick="loadData()">Refresh</button>
+    <button class="refresh-btn" onclick="resetToken()">Change token</button>
+  </div>
+
+  <!-- Alert bar -->
+  <div class="alert-bar visible" id="alert-bar">
+    <div class="alert-bar-title" id="alert-title">Action required</div>
+    <div id="alert-groups"></div>
+    <ul class="alert-list" id="alert-list" style="display:none;"></ul>
+  </div>
+
+  <!-- Summary strip -->
+  <div class="summary-strip">
+    <div class="summary-card">
+      <div class="summary-label">Total readings</div>
+      <div class="summary-val" id="s-total">--</div>
+      <div class="summary-sub" id="s-window">in selected window</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Bodies tested</div>
+      <div class="summary-val" id="s-bodies">--</div>
+      <div class="summary-sub">of 7 bodies</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Shock alerts</div>
+      <div class="summary-val" id="s-shocks" style="color:var(--danger-text);">--</div>
+      <div class="summary-sub">bodies with CC over 50% of FC</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">ORP issues</div>
+      <div class="summary-val" id="s-orp" style="color:var(--warn-text);">--</div>
+      <div class="summary-sub">below setpoint</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">Actions needed</div>
+      <div class="summary-val" id="s-actions">--</div>
+      <div class="summary-sub">latest readings</div>
+    </div>
+    <div class="summary-card" id="spend-card">
+      <div class="summary-label" id="spend-label">Spent this month</div>
+      <div class="summary-val" id="s-spend">--</div>
+      <div class="summary-sub" id="s-spend-sub">aquatic purchases</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Bodies at a glance <span class="sec-sub">latest reading for each body of water - click a row for its details</span></div>
+  <div id="glance-section"></div>
+
+  <div class="sec-title">Maintenance and supplies</div>
+  <div class="maint-supplies">
+    <div id="maint-open-slot"></div>
+    <div id="barrels-attention"></div>
+  </div>
+
+  <div class="sec-title">Body details <span class="sec-sub">readings, trend and what is holding each one up</span></div>
+  <div id="level-sections"></div>
+
+  <div class="sec-title">Activity</div>
+  <div class="maint-supplies">
+    <div id="maint-recent-slot"></div>
+    <div class="visual-panels" id="testers-section" style="margin-bottom:0;"></div>
+  </div>
+
+  <!-- Kept only so the existing code that fills them keeps working; replaced on screen by the glance table above -->
+  <div id="legacy-panels" style="display:none;">
+  <!-- Visual panels -->
+  <div class="visual-panels">
+
+    <!-- 1a. Pools donut -->
+    <div class="visual-card">
+      <div class="visual-title">Pools status</div>
+      <div class="visual-sub">L1 Pool, L2 Pool, L13 Pool</div>
+      <div class="donut-wrap">
+        <canvas id="donut-pools" width="140" height="140" role="img" aria-label="Pools status donut chart"></canvas>
+        <div class="donut-legend" id="donut-legend-pools"></div>
+      </div>
+    </div>
+
+    <!-- 1b. Spas donut -->
+    <div class="visual-card">
+      <div class="visual-title">Spas status</div>
+      <div class="visual-sub">L1 Hot spa, L1 Cold spa, L2 Hot spa, L13 Hot tub</div>
+      <div class="donut-wrap">
+        <canvas id="donut-spas" width="140" height="140" role="img" aria-label="Spas status donut chart"></canvas>
+        <div class="donut-legend" id="donut-legend-spas"></div>
+      </div>
+    </div>
+
+    <!-- 2. Last tested timeline -->
+    <div class="visual-card" style="flex:2;min-width:280px;">
+      <div class="visual-title">Last tested</div>
+      <div class="visual-sub">How recently each body was tested</div>
+      <div id="timeline-rows"></div>
+    </div>
+
+    <!-- 3. Last backwash timeline -->
+    <div class="visual-card" style="flex:2;min-width:280px;">
+      <div class="visual-title">Last backwash</div>
+      <div class="visual-sub">Days since last recorded backwash per body</div>
+      <div id="backwash-rows"></div>
+    </div>
+
+
+
+  </div>
+
+  <!-- Aquatic maintenance (from aquatic-maintenance.json) -->
+  <div id="maint-section"></div>
+
+  <!-- Parameter heatmap -->
+  <div class="heatmap-card">
+    <div class="visual-title">Parameter health heatmap</div>
+    <div class="visual-sub">Latest reading per body -- green = in range, amber = monitor, red = action needed, grey = no data</div>
+    <div id="heatmap-wrap" style="overflow-x:auto;margin-top:12px;"></div>
+  </div>
+
+  </div>
+
+  </div><!-- end tab-overview-content -->
+
+  <!-- HISTORY TAB -->
+  <div id="tab-purchases-content" style="display:none;">
+    <div class="hist-switch"><button class="dash-tab active" id="pu-v-entries" onclick="setPuView('entries')">Entries</button><button class="dash-tab" id="pu-v-trend" onclick="setPuView('trend')">Trend</button></div>
+    <div class="pu-head">
+      <div><div style="font-size:15px;font-weight:500;color:var(--text);">Aquatic purchases</div><div style="font-size:13px;color:var(--text2);">Chemicals, equipment and parts</div></div>
+      <div style="display:flex;gap:8px;align-items:center;"><select id="pu-month" onchange="onPurchMonth()" class="pu-input" style="min-width:170px;"></select><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportPurchCSV()">Export CSV</button></div>
+    </div>
+    <div id="pu-entries-view">
+    <div class="visual-card" style="margin-bottom:12px;"><div id="pu-sum"></div></div>
+    <div class="visual-card" style="margin-bottom:12px;">
+      <div class="visual-title">Add a purchase</div>
+      <div class="pu-grid">
+        <div><label for="pu-date">Date purchased</label><input class="pu-input" type="date" id="pu-date"/></div>
+        <div><label for="pu-cat">Category</label><select class="pu-input" id="pu-cat"><option value="">Choose...</option><option value="chemicals">Chemicals</option><option value="equipment">Equipment</option><option value="parts">Parts</option></select></div>
+        <div style="grid-column:span 2;"><label for="pu-item">What was bought</label><input class="pu-input" type="text" id="pu-item" maxlength="120" placeholder="e.g. 2 x 15 gal sodium hypochlorite 12.5%"/></div>
+        <div><label for="pu-amount">Amount (USD)</label><input class="pu-input" type="text" id="pu-amount" inputmode="decimal" placeholder="125.50"/></div>
+        <div><label for="pu-vendor">Vendor</label><input class="pu-input" type="text" id="pu-vendor" maxlength="60" placeholder="Optional"/></div>
+        <div><label for="pu-body">Body of water</label><select class="pu-input" id="pu-body"></select></div>
+        <div><label for="pu-ref">Related reference</label><input class="pu-input" type="text" id="pu-ref" maxlength="12" placeholder="Optional, e.g. AQ-0007"/></div>
+        <div style="grid-column:span 2;"><label for="pu-note">Note</label><input class="pu-input" type="text" id="pu-note" maxlength="200" placeholder="Optional"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;"><button class="dash-tab active" id="pu-add" onclick="addPurchaseDash()">Add purchase</button><div id="pu-msg" class="pu-msg"></div></div>
+    </div>
+    <div id="pu-list"></div>
+    </div>
+    <div id="pu-trend-view" style="display:none;">
+      <div class="visual-card">
+        <div class="pu-trend-head"><div><div class="visual-title">Spending trend by category</div><div class="visual-sub" id="pu-trend-sub"></div></div>
+          <select id="pu-range" class="pu-input" style="width:auto;min-width:160px;" onchange="onPuRange()"><option value="6">Last 6 months</option><option value="12" selected>Last 12 months</option><option value="all">All time</option></select></div>
+        <div id="pu-legend" class="tr-legend"></div>
+        <div id="pu-chart"></div>
+        <div id="pu-trend-note"></div>
+        <div id="pu-trend-table"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-barrels-content" style="display:none;">
+    <div class="pu-head">
+      <div><div style="font-size:15px;font-weight:500;color:var(--text);">Chemical barrels</div><div style="font-size:13px;color:var(--text2);">Record when a chlorine or acid barrel is changed</div></div>
+      <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportBarrelsCSV()">Export CSV</button>
+    </div>
+    <div id="barrels-section"></div>
+    <div class="visual-card" style="margin-bottom:12px;">
+      <div class="visual-title">Record a barrel change</div>
+      <div class="pu-grid">
+        <div style="grid-column:span 2;"><label for="bar-key">Barrel</label><select class="pu-input" id="bar-key"></select></div>
+        <div><label for="bar-date">Date changed</label><input class="pu-input" type="date" id="bar-date"/></div>
+        <div><label for="bar-note">Note</label><input class="pu-input" type="text" id="bar-note" maxlength="120" placeholder="Optional"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:12px;"><button class="dash-tab active" id="bar-add" onclick="addBarrelChange()">Record change</button><div id="bar-msg" class="pu-msg"></div></div>
+      <div class="bar-note">To start tracking, enter the date each barrel was last changed. Staff can also record a change from the calculator, in the same place as the backwash and out of service buttons.</div>
+    </div>
+    <div id="bar-list"></div>
+  </div>
+
+  <div id="tab-history-content" style="display:none;">
+    <div class="hist-switch"><button class="dash-tab active" id="hv-readings" onclick="setHistView('readings')">Readings</button><button class="dash-tab" id="hv-maint" onclick="setHistView('maint')">Aquatic maintenance</button><button class="dash-del-btn" id="unnamed-btn" style="display:none;margin-left:12px;font-size:13px;padding:8px 14px;" onclick="toggleUnnamedPanel()"></button><input type="search" id="hist-search" placeholder="Search reference (AQ-0007) or text" oninput="renderDashHistory()" style="display:none;margin-left:auto;min-width:260px;padding:8px 12px;font-size:14px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);"/></div>
+    <div id="unnamed-panel" class="visual-card" style="display:none;margin-bottom:14px;">
+      <div class="visual-title">Clean up unnamed tests</div>
+      <div id="un-info" style="font-size:14px;color:var(--text);margin:6px 0 12px;line-height:1.5;"></div>
+      <div class="un-step"><b>1.</b> <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="downloadReadingsBackup()">Download a backup of all readings</button> <span id="un-bk" class="pu-msg err">not downloaded yet</span></div>
+      <div class="un-step"><b>2.</b> <label><input type="radio" name="un-act" value="delete" checked onchange="onUnChange()"/> Delete them</label>
+        <label><input type="radio" name="un-act" value="rename" onchange="onUnChange()"/> Keep them and label them as</label>
+        <input class="pu-input" id="un-name" maxlength="30" placeholder="e.g. Earlier tests" style="max-width:190px;display:inline-block;" oninput="onUnChange()" disabled/></div>
+      <div class="un-step"><b>3.</b> Type <b id="un-n"></b> to confirm <input class="pu-input" id="un-confirm" inputmode="numeric" style="width:80px;display:inline-block;" oninput="onUnChange()"/>
+        <button class="dash-del-btn" id="un-apply" style="font-size:14px;padding:8px 16px;" disabled onclick="applyUnnamed()">Delete</button></div>
+      <div id="un-msg" class="pu-msg"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem;">
+      <div>
+        <div id="hist-title" style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;">All readings</div>
+        <div style="font-size:13px;color:var(--text3);" id="hist-summary">Loading...</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="hist-body-filter" onchange="renderDashHistory()" style="font-size:14px;padding:6px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);font-family:var(--font);">
+          <option value="all">All bodies</option>
+        </select>
+        <button onclick="exportDashCSV()" style="font-size:14px;padding:6px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-family:var(--font);cursor:pointer;">Export CSV</button>
+      </div>
+    </div>
+    <div id="dash-hist-list"></div>
+  </div><!-- end tab-history-content -->
+
+  <div class="dash-footer">
+    OSLU Aquatic Management Dashboard | Data from OSLU Aquatic Chemical Calculator<br>
+    For water chemistry questions consult your Senior Maintenance Manager.
+  </div>
+
+</div><!-- end dashboard -->
+</div><!-- end wrap -->
+
+<script>
+var GH_TOKEN='';
+var GH_OWNER='thomisrad';
+var GH_REPO='aquatic-calculator';
+var GH_FILE='readings.json';
+var GH_BRANCH='data';
+var GH_API='https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+GH_FILE+'?ref='+GH_BRANCH;
+var TKEY='aquatic_gh_token';
+var allReadings=[];
+// ===== MAINTENANCE DATA (read-only; written by oslu-aquatic-maintenance.html to aquatic-maintenance.json) =====
+var MAINT_API=GH_API.replace(GH_FILE,'aquatic-maintenance.json');
+var maintRecords=[];
+var maintState='unknown'; // 'ok' = loaded this refresh, 'stale' = last good copy (refresh failed), 'unknown' = never loaded
+function maintOpenItems(list){ // an open repair = a follow-up that no later close-out refers to
+  var closed=new Set();
+  list.forEach(function(e){if(e&&e.kind==='closeout'&&e.closes!=null)closed.add(e.closes);});
+  return list.filter(function(e){return e&&e.kind!=='closeout'&&e.kind!=='update'&&e.followUp&&!closed.has(e.id);}).sort(function(a,b){return a.ts-b.ts;});
+}
+
+// Group each close-out under the entry it closes, so a repair and its close-out read as ONE job.
+function maintThreads(list){
+  var main={},closeouts={},updates={},threads=[],orphans=[];
+  list.forEach(function(e){if(e&&e.kind!=='closeout'&&e.kind!=='update')main[e.id]=e;});
+  list.forEach(function(e){
+    if(!e)return;
+    if(e.kind==='closeout'){if(main[e.closes]){(closeouts[e.closes]=closeouts[e.closes]||[]).push(e);}else orphans.push(e);}   // original missing: show on its own
+    else if(e.kind==='update'){if(main[e.updates]){(updates[e.updates]=updates[e.updates]||[]).push(e);}else orphans.push(e);}
+  });
+  list.forEach(function(e){
+    if(!e||e.kind==='closeout'||e.kind==='update')return;
+    var byTime=function(a,b){return a.ts-b.ts;},cs=(closeouts[e.id]||[]).sort(byTime),us=(updates[e.id]||[]).sort(byTime),act=e.ts;
+    cs.concat(us).forEach(function(c){if(c.ts>act)act=c.ts;});
+    threads.push({entry:e,closeouts:cs,updates:us,activity:act});
+  });
+  orphans.forEach(function(e){threads.push({entry:e,closeouts:[],updates:[],activity:e.ts,orphan:true});});
+  return threads.sort(function(a,b){return b.activity-a.activity;});
+}
+// What still needs doing = the newest update that restated it, otherwise what was written when the item was logged.
+function threadNeed(th){var n=th.entry.followUpNote;(th.updates||[]).forEach(function(u){if(u.followUpNote)n=u.followUpNote;});return n;}
+function maintAgo(ts){var n=calDaysAgo(ts);return n===0?'today':(n===1?'yesterday':n+' days ago');}
+
+// Reference numbers: AQ-0001, AQ-0002... assigned when an entry syncs (inside the same safe write), so they are unique across devices.
+var REF_PREFIX='AQ-';  // display only: entries store just the number, so this can be changed at any time
+function refLabel(n){return(n==null||isNaN(n))?'':REF_PREFIX+String(n).padStart(4,'0');}
+function maintMatches(th,q){ // History search: reference number ("AQ-0007", "7") or any text on the job
+  q=(q||'').trim().toLowerCase();if(!q)return true;
+  var e=th.entry,pfx=REF_PREFIX.toLowerCase().replace('-',''),digits=q.indexOf(pfx)===0?q.slice(pfx.length).replace(/^-/,''):q;
+  if(/^\d+$/.test(digits)&&e.refNo!=null&&Number(digits)===e.refNo)return true;
+  var hay=[refLabel(e.refNo),e.equipment,e.description,e.performedBy,e.company,e.followUpNote].concat(th.closeouts.map(function(c){return c.description+' '+c.performedBy;})).concat((th.updates||[]).map(function(u){return u.description+' '+u.performedBy+' '+(u.followUpNote||'');})).join(' ').toLowerCase();
+  return hay.indexOf(q)>=0;
+}
+function maintRefHTML(e){var r=refLabel(e.refNo);return r?'<span class="maint-ref">'+escHtml(r)+'</span> - ':'';}
+var MAINT_VISIBLE=4,maintShowAllRecent=false,maintShowAllOpen=false;
+function toggleMaintMore(which){if(which==='recent')maintShowAllRecent=!maintShowAllRecent;else maintShowAllOpen=!maintShowAllOpen;renderMaint();}
+function maintTypeLabel(t){return t==='pm'?'PM':'Repair';}
+function maintBodyLabel(e){var l=LEVELS[e.levelIdx],b=l&&l.bodies[e.bodyIdx];return b?b.name+' ('+l.short+')':(e.body||'Unknown');}
+function maintWho(e){return escHtml(e.performedBy||'Unknown')+(e.company?' ('+escHtml(e.company)+')':'');}
+function maintShortDate(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function maintClip(s,n){s=String(s==null?'':s);return s.length>n?s.slice(0,n-1)+'\u2026':s;}
+function maintBodyHTML(li,bi){ // under each body card: what is holding up its open repairs (until they are closed out), then the last completed work
+  if(maintState==='unknown')return '';
+  var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;});
+  if(!recs.length)return '';
+  var open=maintOpenItems(recs),thById={},last=recs.filter(function(e){return e.kind!=='update';}).sort(function(a,b){return b.ts-a.ts;})[0];
+  maintThreads(recs).forEach(function(t){thById[t.entry.id]=t;});
+  if(!last&&!open.length)return '';
+  var h='<div class="maint-line">';
+  if(open.length){
+    h+='<div><span class="maint-open">'+open.length+' open repair'+(open.length!==1?'s':'')+'</span></div>';
+    open.slice(0,3).forEach(function(e){
+      var th=thById[e.id],d=Math.max(0,calDaysAgo(e.ts)),lu=th&&th.updates.length?th.updates[th.updates.length-1]:null;
+      h+='<div class="maint-hold"><div class="maint-hold-title"><b>'+escHtml(e.equipment)+'</b> - '+maintRefHTML(e)+'open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+'</div>'
+        +'<div class="maint-item-text clamp"><b>Still needed:</b> '+escHtml(th?threadNeed(th):e.followUpNote)+'</div>'
+        +(lu?'<div class="maint-up clamp"><b>Update '+escHtml(maintAgo(lu.ts))+'</b> by '+maintWho(lu)+': '+escHtml(lu.description)+'</div>':'')+'</div>';
+    });
+    if(open.length>3)h+='<div class="maint-item-sub">+ '+(open.length-3)+' more open on this body of water (see Open repairs)</div>';
+  }
+  if(last)h+='<div style="margin-top:'+(open.length?'6':'0')+'px;">Last work: '+escHtml(maintShortDate(last.ts))+' - '+escHtml(last.equipment)+' ('+maintWho(last)+')</div>';
+  return h+'</div>';
+}
+
+// ---- History tab: aquatic maintenance view (Jason deletes mistaken entries here, same model as readings) ----
+var histView='readings';
+function setHistView(v){
+  histView=v;
+  document.getElementById('hv-readings').classList.toggle('active',v==='readings');
+  document.getElementById('hv-maint').classList.toggle('active',v==='maint');
+  document.getElementById('hist-title').textContent=v==='maint'?'Aquatic maintenance log':'All readings';
+  document.getElementById('hist-search').style.display=v==='maint'?'block':'none';
+  renderDashHistory();
+}
+function renderMaintHistory(){
+  var filter=document.getElementById('hist-body-filter').value,summary=document.getElementById('hist-summary'),list=document.getElementById('dash-hist-list');
+  if(maintState==='unknown'){
+    if(summary)summary.textContent='Not loaded';
+    list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">Aquatic maintenance data is unavailable. Use Refresh to try again.</div>';return;
+  }
+  var threads=maintThreads(maintRecords);
+  if(filter!=='all'){var p=filter.split('-');threads=threads.filter(function(t){return t.entry.levelIdx===parseInt(p[0])&&t.entry.bodyIdx===parseInt(p[1]);});}
+  var q=document.getElementById('hist-search').value;threads=threads.filter(function(t){return maintMatches(t,q);});
+  if(summary)summary.textContent=threads.length+' entr'+(threads.length!==1?'ies':'y')+(filter==='all'?' across all bodies':' for selected body')+(maintState==='stale'?' (last copy loaded - refresh failed)':'');
+  if(!threads.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">No aquatic maintenance entries found.</div>';return;}
+  var openSet=new Set(maintOpenItems(maintRecords).map(function(e){return e.id;})),h='';
+  function metaOf(e){var m=['Performed by '+maintWho(e)];if(e.loggedBy&&e.loggedBy!==e.performedBy)m.push('logged by '+escHtml(e.loggedBy));if(e.parts)m.push('Parts: '+escHtml(e.parts));if(e.minutes!=null)m.push(escHtml(e.minutes)+' min');return m.join(' - ');}
+  threads.slice(0,300).forEach(function(th){
+    var e=th.entry,isOpen=openSet.has(e.id),closed=e.followUp&&th.closeouts.length>0;
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</div><div class="dash-hist-when" style="text-align:left;">'+maintRefHTML(e)+escHtml(e.when)+'</div></div>'
+      +'<div style="white-space:nowrap;"><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'
+      +(e.kind==='closeout'?'<span class="maint-pill closed">Close-out</span>':'')+(isOpen?'<span class="maint-pill open">Open</span>':(closed?'<span class="maint-pill closed">Closed</span>':''))+'</div></div>'
+      +'<div class="maint-item-text" style="font-size:14px;color:var(--text);white-space:pre-wrap;margin-top:6px;">'+escHtml(e.description)+'</div>'
+      +(e.followUp&&e.followUpNote?'<div class="maint-item-text"><b>Follow-up needed:</b> '+escHtml(threadNeed(th))+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+metaOf(e)+'</div>'
+      +'<button class="dash-del-btn" onclick="dashDeleteMaint('+e.id+')">Delete</button></div>';
+    th.updates.forEach(function(u){
+      h+='<div class="maint-up"><div><b>Update '+escHtml(u.when)+'</b></div><div style="white-space:pre-wrap;margin-top:2px;">'+escHtml(u.description)+'</div>'+(u.followUpNote?'<div style="margin-top:2px;"><b>Still needed now:</b> '+escHtml(u.followUpNote)+'</div>':'')
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;"><span class="maint-item-sub" style="color:inherit;">'+metaOf(u)+'</span>'
+        +'<button class="dash-del-btn" onclick="dashDeleteMaint('+u.id+')">Delete update</button></div></div>';
+    });
+    th.closeouts.forEach(function(c){
+      h+='<div class="maint-co"><div><b>Closed out '+escHtml(c.when)+'</b></div><div style="white-space:pre-wrap;margin-top:2px;">'+escHtml(c.description)+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px;"><span class="maint-item-sub" style="color:inherit;">'+metaOf(c)+'</span>'
+        +'<button class="dash-del-btn" onclick="dashDeleteMaint('+c.id+')">Delete close-out</button></div></div>';
+    });
+    h+='</div>';
+  });
+  if(threads.length>300)h+='<div class="maint-empty" style="text-align:center;">Showing the newest 300 of '+threads.length+'. Export CSV for everything.</div>';
+  list.innerHTML=h;
+}
+// Delete acts on a FRESH copy of the file and removes only the chosen entry.
+// Deleting an entry also removes its close-outs (no orphans); deleting a close-out re-opens the repair.
+async function dashDeleteMaint(id){
+  var numId=Number(id),target=maintRecords.filter(function(e){return e.id===numId;})[0];
+  var msg='Delete this aquatic maintenance entry? This cannot be undone.';
+  if(target&&target.kind==='closeout')msg='Delete this close-out? The repair will show as open again.';
+  else if(target&&target.kind==='update')msg='Delete this update? The repair stays open'+(target.followUpNote?', and "Still needed" goes back to the previous wording':'')+'. This cannot be undone.';
+  else if(target){
+    var nc=maintRecords.filter(function(e){return e.kind==='closeout'&&e.closes===numId;}).length,nu=maintRecords.filter(function(e){return e.kind==='update'&&e.updates===numId;}).length,parts=[];
+    if(nc)parts.push(nc+' close-out'+(nc!==1?'s':''));if(nu)parts.push(nu+' update'+(nu!==1?'s':''));
+    if(parts.length)msg='Delete this entry and its '+parts.join(' and ')+'? This cannot be undone.';
+  }
+  if(!confirm(msg))return;
+  setSyncBadge('syncing','Deleting...');
+  var blocked=false;
+  var res=await ghMutate(function(remote){
+    var t=null;for(var i=0;i<remote.length;i++){if(remote[i].id===numId){t=remote[i];break;}}
+    if(!t)return null; // already gone
+    var kept=remote.filter(function(e){
+      if(e.id===numId)return false;
+      if(t.kind!=='closeout'&&t.kind!=='update'&&((e.kind==='closeout'&&e.closes===numId)||(e.kind==='update'&&e.updates===numId)))return false;
+      return true;
+    });
+    var removed=remote.length-kept.length;
+    if(removed>50){blocked=true;return null;} // implausible: refuse, change nothing
+    return{list:kept,added:0,removed:removed};
+  },'Deleted aquatic maintenance entry',MAINT_API);
+  if(res.ok&&!blocked){
+    maintRecords=res.list;maintState='ok';
+    setSyncBadge('ok','Deleted - '+maintRecords.length+' maintenance entr'+(maintRecords.length!==1?'ies':'y')+' remaining');
+    renderDashHistory();renderDashboard();
+  }else{
+    setSyncBadge('err','Delete failed');
+    alert('Delete failed ('+(blocked?'safety check':res.reason)+'). Nothing was changed. Try again.');
+  }
+}
+function maintCsvCell(v){if(v==null)return '';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function exportMaintCSV(){
+  var ref={};maintRecords.forEach(function(e){if(e&&e.kind!=='closeout'&&e.kind!=='update')ref[e.id]=e.refNo;});
+  var rows=[['Reference','Date','Level','Body','Equipment','Type','Entry','Work done','Performed by','Company','Parts','Minutes','Needs follow-up','Follow-up note','Closes entry ID','Logged by','Entry ID','Updates entry ID'].join(',')];
+  maintRecords.slice().sort(function(a,b){return b.ts-a.ts;}).forEach(function(e){
+    rows.push([e.kind==='closeout'?refLabel(ref[e.closes]):(e.kind==='update'?refLabel(ref[e.updates]):refLabel(e.refNo)),e.when,e.level,e.body,e.equipment,e.type==='pm'?'Preventive maintenance':'Repair',e.kind==='closeout'?'Close-out':(e.kind==='update'?'Update':'Work'),e.description,e.performedBy,e.company,e.parts,e.minutes,e.followUp?'Yes':'',e.followUpNote,e.closes,e.loggedBy,e.id,e.updates].map(maintCsvCell).join(','));
+  });
+  var dd=new Date(),stamp=dd.getFullYear()+'-'+('0'+(dd.getMonth()+1)).slice(-2)+'-'+('0'+dd.getDate()).slice(-2);
+  var blob=new Blob(['\ufeff'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-maintenance-'+stamp+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+// ===== PURCH LOGIC BEGIN (identical in the maintenance app and the dashboard) =====
+// Purchases live in aquatic-purchases.json. Money is stored as whole cents, never as floating point dollars.
+var PURCH_CATS={chemicals:'Chemicals',equipment:'Equipment',parts:'Parts'};
+function pad2(n){return(n<10?'0':'')+n;}
+function todayStr(){var d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function monthOf(s){return String(s).slice(0,7);}
+function prevMonth(m){var y=+m.slice(0,4),mo=+m.slice(5,7)-1;if(mo<1){y--;mo=12;}return y+'-'+pad2(mo);}
+function monthLabel(m){return new Date(+m.slice(0,4),+m.slice(5,7)-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function fmtMoney(c,whole){return(c/100).toLocaleString('en-US',{style:'currency',currency:'USD',minimumFractionDigits:whole?0:2,maximumFractionDigits:whole?0:2});}
+function purchNewId(){return Date.now()*1000+Math.floor(Math.random()*1000);}
+function parseAmountCents(s){ // "125.5", "$1,250.00" -> cents; anything else (negative, 3 decimals, text, zero) -> null
+  s=String(s==null?'':s).trim().replace(/^\$/,'');
+  if(s.indexOf(',')>=0){if(!/^\d{1,3}(,\d{3})+(\.\d{1,2})?$/.test(s))return null;s=s.replace(/,/g,'');} // commas only as thousands separators: "12,50" is rejected, never read as $1,250
+  if(!/^\d{1,7}(\.\d{1,2})?$/.test(s))return null;
+  var p=s.split('.'),c=parseInt(p[0],10)*100+(p[1]?parseInt((p[1]+'0').slice(0,2),10):0);
+  return c>0?c:null;
+}
+function parseRefNo(s){ // optional link to a maintenance reference: "AQ-0007", "aq7", "7" -> 7
+  s=String(s==null?'':s).trim().toLowerCase();if(!s)return{ok:true,value:null};
+  var pf=REF_PREFIX.toLowerCase().replace('-',''),m=s.indexOf(pf)===0?s.slice(pf.length).replace(/^-/,''):s;
+  return/^\d{1,6}$/.test(m)?{ok:true,value:Number(m)}:{ok:false,value:null};
+}
+function validatePurchase(f){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(f.date||''))return 'Choose the purchase date.';
+  if(f.date>todayStr())return 'The purchase date is in the future.';
+  if(!PURCH_CATS[f.category])return 'Choose Chemicals, Equipment or Parts.';
+  if(!f.item||f.item.trim().length<2)return 'Describe what was bought.';
+  if(parseAmountCents(f.amountText)==null)return 'Enter the amount in dollars, for example 125.50.';
+  if(!parseRefNo(f.refText).ok)return 'Reference should look like '+REF_PREFIX+'0007.';
+  return null;
+}
+function buildPurchase(f){
+  var ts=Date.parse(f.date+'T12:00:00');
+  return{id:purchNewId(),ts:ts,loggedAt:Date.now(),date:f.date,
+    when:new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    category:f.category,item:f.item.trim(),vendor:(f.vendor||'').trim()||null,amountCents:parseAmountCents(f.amountText),
+    levelIdx:f.body?f.body.levelIdx:null,bodyIdx:f.body?f.body.bodyIdx:null,level:f.body?f.body.level:null,body:f.body?f.body.body:null,
+    relatedRef:parseRefNo(f.refText).value,note:(f.note||'').trim()||null,enteredBy:f.enteredBy};
+}
+function purchSort(list){return list.slice().sort(function(a,b){return(b.ts-a.ts)||((b.loggedAt||0)-(a.loggedAt||0));});}
+function purchSummary(list,month){ // month 'YYYY-MM'; falsy = all time
+  var s={total:0,count:0,byCat:{chemicals:0,equipment:0,parts:0}};
+  list.forEach(function(p){
+    if(!p||(month&&monthOf(p.date)!==month))return;
+    s.total+=p.amountCents||0;s.count++;if(s.byCat[p.category]!=null)s.byCat[p.category]+=p.amountCents||0;
+  });
+  return s;
+}
+function purchMonths(list){var set={};set[monthOf(todayStr())]=1;list.forEach(function(p){if(p&&p.date)set[monthOf(p.date)]=1;});return Object.keys(set).sort().reverse();}
+function purchCsvCell(v){if(v==null)return'';v=String(v);if(/^[=+\-@]/.test(v))v="'"+v;return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function buildPurchCSV(list){
+  var rows=[['Date','Month','Category','Item','Vendor','Amount (USD)','Level','Body','Related reference','Note','Entered by','Entry ID'].join(',')];
+  purchSort(list).forEach(function(p){
+    rows.push([p.date,monthOf(p.date),PURCH_CATS[p.category]||p.category,p.item,p.vendor,(p.amountCents/100).toFixed(2),p.level,p.body,p.relatedRef!=null?REF_PREFIX+String(p.relatedRef).padStart(4,'0'):'',p.note,p.enteredBy,p.id].map(purchCsvCell).join(','));
+  });
+  return rows.join('\r\n');
+}
+// ===== PURCH LOGIC END =====
+
+// ===== PURCHASES on the dashboard (read for the spend tile, add/delete in the Purchases tab) =====
+var PURCH_API=GH_API.replace(GH_FILE,'aquatic-purchases.json');
+var purchRecords=[],purchState='unknown',puMonth=null,puRetry=null; // purchState: 'ok' | 'stale' (refresh failed) | 'unknown' (never loaded)
+function renderSpend(){
+  var lab=document.getElementById('spend-label'),val=document.getElementById('s-spend'),sub=document.getElementById('s-spend-sub');if(!val)return;
+  var m=monthOf(todayStr());
+  lab.textContent='Spent in '+new Date().toLocaleDateString('en-US',{month:'long'});
+  if(purchState==='unknown'){val.textContent='--';sub.innerHTML='<span style="color:var(--warn-text);">Purchases unavailable</span>';return;}
+  var s=purchSummary(purchRecords,m),last=purchSummary(purchRecords,prevMonth(m));
+  val.textContent=fmtMoney(s.total,s.total>=100000);
+  sub.innerHTML='<span class="sp-i">Chem '+fmtMoney(s.byCat.chemicals,true)+'</span> &middot; <span class="sp-i">Equip '+fmtMoney(s.byCat.equipment,true)+'</span> &middot; <span class="sp-i">Parts '+fmtMoney(s.byCat.parts,true)+'</span>'
+    +'<br>Last month '+fmtMoney(last.total,last.total>=100000)+(purchState==='stale'?' <span style="color:var(--warn-text);">(not refreshed)</span>':'');
+}
+function puCatPill(c){return '<span class="maint-pill '+(c==='chemicals'?'pm':(c==='equipment'?'repair':'closed'))+'">'+escHtml(PURCH_CATS[c]||c)+'</span>';}
+function fillPurchBodySelect(){
+  var sel=document.getElementById('pu-body');if(sel.options.length)return;
+  var h='<option value="">Not specific</option>';
+  LEVELS.forEach(function(l,li){l.bodies.forEach(function(b,bi){h+='<option value="'+li+'-'+bi+'">'+escHtml(l.short+' - '+b.name)+'</option>';});});
+  sel.innerHTML=h;
+}
+function resetPurchForm(){
+  ['pu-item','pu-amount','pu-vendor','pu-ref','pu-note'].forEach(function(i){document.getElementById(i).value='';});
+  document.getElementById('pu-cat').value='';document.getElementById('pu-body').value='';
+  var dt=document.getElementById('pu-date');dt.value=todayStr();dt.max=todayStr();
+}
+function puMsg(kind,text){var el=document.getElementById('pu-msg');el.className='pu-msg '+kind;el.textContent=text;}
+function onPurchMonth(){puMonth=document.getElementById('pu-month').value;renderPurchTab();}
+
+// ---- Purchases trend: monthly spending per category, drawn as inline SVG (no chart library, works offline) ----
+var puView='entries',puRange='12';
+var TREND_CATS=[{key:'chemicals',label:'Chemicals',cls:'chem',shape:'circle'},{key:'equipment',label:'Equipment',cls:'equip',shape:'square'},{key:'parts',label:'Parts',cls:'parts',shape:'diamond'}];
+function trendMonths(list,range){ // months (YYYY-MM, oldest first) from the first month with data (or the range limit) to the current month
+  var first=null;list.forEach(function(p){if(p&&p.date){var m=monthOf(p.date);if(first===null||m<first)first=m;}});
+  if(first===null)return[];
+  var cap=range==='all'?600:parseInt(range,10),cur=monthOf(todayStr()),m=cur,out=[];
+  for(var i=0;i<cap;i++){out.unshift(m);if(m<=first)break;m=prevMonth(m);}
+  return out;
+}
+function trendSeries(list,months){ // dollars-in-cents per category per month, zero-filled
+  return TREND_CATS.map(function(c){return{key:c.key,label:c.label,cls:c.cls,shape:c.shape,values:months.map(function(m){return purchSummary(list,m).byCat[c.key];})};});
+}
+function niceScale(maxDollars){ // axis top and step on a 1-2-5 grid, never more than 5 intervals
+  if(!(maxDollars>0))return{max:100,step:25};
+  var base=Math.pow(10,Math.floor(Math.log10(maxDollars))-1),mult=[1,2,5,10,20,50];
+  for(var i=0;i<mult.length;i++){var s=base*mult[i];if(Math.ceil(maxDollars/s-1e-9)<=5)return{max:Math.ceil(maxDollars/s-1e-9)*s,step:s};}
+  return{max:maxDollars,step:maxDollars/4};
+}
+function fmtAxis(v){return v>=1000?'$'+(Math.round(v/100)/10).toString().replace(/\.0$/,'')+'k':'$'+v;}
+function fmtTight(c){return c%100===0?fmtMoney(c,true):fmtMoney(c);} // table cells: drop ".00" on round amounts so 14 columns fit
+function trendMonthLabel(m,withYear){var d=new Date(+m.slice(0,4),+m.slice(5,7)-1,1);return d.toLocaleDateString('en-US',{month:'short'})+(withYear?" '"+m.slice(2,4):'');}
+function shapeSVG(shape,x,y,r,attrs){
+  if(shape==='square')return '<rect x="'+(x-r)+'" y="'+(y-r)+'" width="'+(2*r)+'" height="'+(2*r)+'" '+attrs+'/>';
+  if(shape==='diamond')return '<polygon points="'+x+','+(y-r-1)+' '+(x+r+1)+','+y+' '+x+','+(y+r+1)+' '+(x-r-1)+','+y+'" '+attrs+'/>';
+  return '<circle cx="'+x+'" cy="'+y+'" r="'+r+'" '+attrs+'/>';
+}
+function buildTrendSVG(series,months,W){
+  var H=Math.min(440,Math.max(300,Math.round(W*0.22))),L=58,R=18,T=14,B=36,pw=W-L-R,ph=H-T-B,n=months.length;
+  var maxC=0;series.forEach(function(s){s.values.forEach(function(v){if(v>maxC)maxC=v;});});
+  var sc=niceScale(maxC/100),svg='<svg class="tr-svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Monthly spending by category">';
+  function X(i){return n===1?L+pw/2:L+i*pw/(n-1);}function Y(c){return T+ph-(c/100)/sc.max*ph;}
+  var ticks=Math.round(sc.max/sc.step);
+  for(var k=0;k<=ticks;k++){var v=k*sc.step,y=Y(v*100);svg+='<line class="tr-grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'"/><text class="tr-axis" x="'+(L-8)+'" y="'+(y+4)+'" text-anchor="end">'+fmtAxis(v)+'</text>';}
+  var every=Math.max(1,Math.ceil(48/(n===1?pw:pw/(n-1))));
+  var lastYear=null;
+  months.forEach(function(m,i){if((n-1-i)%every!==0)return;var yr=m.slice(0,4);svg+='<text class="tr-axis" x="'+X(i)+'" y="'+(H-12)+'" text-anchor="middle">'+trendMonthLabel(m,yr!==lastYear)+'</text>';lastYear=yr;}); // the year shows on the first label and wherever it changes
+  svg+='<line class="tr-base" x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'"/>';
+  series.forEach(function(s){
+    if(n>1)svg+='<polyline class="tr-line '+s.cls+'" points="'+s.values.map(function(c,i){return X(i)+','+Y(c);}).join(' ')+'" fill="none"/>';
+    s.values.forEach(function(c,i){
+      svg+='<g class="tr-pt '+s.cls+'">'+shapeSVG(s.shape,X(i),Y(c),4.5,'class="tr-mk '+s.cls+'"')+'<title>'+escHtml(monthLabel(months[i])+' - '+s.label+': '+fmtMoney(c))+'</title></g>';
+    });
+  });
+  return svg+'</svg>';
+}
+function setPuView(v){
+  puView=v;
+  document.getElementById('pu-v-entries').classList.toggle('active',v==='entries');
+  document.getElementById('pu-v-trend').classList.toggle('active',v==='trend');
+  document.getElementById('pu-entries-view').style.display=v==='entries'?'block':'none';
+  document.getElementById('pu-trend-view').style.display=v==='trend'?'block':'none';
+  document.getElementById('pu-month').style.display=v==='entries'?'block':'none';
+  renderPurchView();
+}
+function onPuRange(){puRange=document.getElementById('pu-range').value;renderPurchTrend();}
+function renderPurchView(){if(puView==='trend')renderPurchTrend();else renderPurchTab();}
+function renderPurchTrend(){
+  var chart=document.getElementById('pu-chart'),legend=document.getElementById('pu-legend'),note=document.getElementById('pu-trend-note'),tbl=document.getElementById('pu-trend-table'),sub=document.getElementById('pu-trend-sub');
+  legend.innerHTML='';note.innerHTML='';tbl.innerHTML='';chart.innerHTML='';
+  if(purchState==='unknown'){sub.textContent='';chart.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">Purchases are unavailable. Use Refresh to try again.</div>';return;}
+  var months=trendMonths(purchRecords,puRange);
+  if(!months.length){sub.textContent='';chart.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">No purchases yet. The trend appears once some are logged.</div>';return;}
+  var series=trendSeries(purchRecords,months),W=Math.max(320,Math.floor(chart.clientWidth||900));
+  sub.textContent='Monthly spending, '+trendMonthLabel(months[0],true)+(months.length>1?' to '+trendMonthLabel(months[months.length-1],true):'')+(purchState==='stale'?' (last copy loaded - refresh failed)':'');
+  legend.innerHTML=series.map(function(s){var tot=s.values.reduce(function(a,b){return a+b;},0);
+    return '<span class="tr-key"><svg width="16" height="16" viewBox="0 0 16 16">'+shapeSVG(s.shape,8,8,5,'class="tr-mk '+s.cls+'"')+'</svg><b>'+escHtml(s.label)+'</b> '+escHtml(fmtMoney(tot,tot>=100000))+' <span class="tr-keysub">in this period</span></span>';}).join('');
+  chart.innerHTML=buildTrendSVG(series,months,W);
+  if(months.length===1)note.innerHTML='<div class="maint-empty">Only one month of purchases so far, so there is no line yet. Markers show this month\'s spending.</div>';
+  var rows='<table class="tr-table"><tr><th></th>'+months.map(function(m){return '<th>'+escHtml(trendMonthLabel(m,m===months[0]||m.slice(5)==='01'))+'</th>';}).join('')+'<th>Total</th></tr>';
+  series.forEach(function(s){rows+='<tr><td><span class="tr-key"><svg width="14" height="14" viewBox="0 0 16 16">'+shapeSVG(s.shape,8,8,5,'class="tr-mk '+s.cls+'"')+'</svg>'+escHtml(s.label)+'</span></td>'+s.values.map(function(c){return '<td>'+escHtml(fmtTight(c))+'</td>';}).join('')+'<td><b>'+escHtml(fmtTight(s.values.reduce(function(a,b){return a+b;},0)))+'</b></td></tr>';});
+  rows+='<tr class="tr-total"><td>All categories</td>'+months.map(function(m,i){return '<td>'+escHtml(fmtTight(series.reduce(function(a,s){return a+s.values[i];},0)))+'</td>';}).join('')+'<td><b>'+escHtml(fmtTight(series.reduce(function(a,s){return a+s.values.reduce(function(x,y){return x+y;},0);},0)))+'</b></td></tr></table>';
+  tbl.innerHTML='<details class="tr-details"><summary>Show the numbers</summary><div style="overflow-x:auto;">'+rows+'</div></details>';
+}
+var trendResizeTimer=null;window.addEventListener('resize',function(){clearTimeout(trendResizeTimer);trendResizeTimer=setTimeout(function(){if(puView==='trend'&&document.getElementById('tab-purchases-content').style.display!=='none')renderPurchTrend();},150);});
+function renderPurchTab(){
+  fillPurchBodySelect();
+  var list=document.getElementById('pu-list');
+  if(purchState==='unknown'){document.getElementById('pu-sum').innerHTML='';list.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">Purchases are unavailable. Use Refresh to try again.</div>';return;}
+  var months=purchMonths(purchRecords);if(!puMonth||(puMonth!=='all'&&months.indexOf(puMonth)<0))puMonth=months[0];
+  var sel=document.getElementById('pu-month'),opts='';months.forEach(function(m){opts+='<option value="'+m+'"'+(m===puMonth?' selected':'')+'>'+escHtml(monthLabel(m))+'</option>';});
+  opts+='<option value="all"'+(puMonth==='all'?' selected':'')+'>All time</option>';
+  if(sel.innerHTML!==opts)sel.innerHTML=opts;sel.value=puMonth;
+  var m=puMonth==='all'?null:puMonth,s=purchSummary(purchRecords,m);
+  document.getElementById('pu-sum').innerHTML='<div class="pu-total">'+escHtml(fmtMoney(s.total))+'</div><div class="pu-sub">'+s.count+' purchase'+(s.count!==1?'s':'')+(m?' in '+escHtml(monthLabel(m)):' all time')+(purchState==='stale'?' (last copy loaded - refresh failed)':'')+'</div>'
+    +'<div class="pu-cats"><span>Chemicals <b>'+escHtml(fmtMoney(s.byCat.chemicals))+'</b></span><span>Equipment <b>'+escHtml(fmtMoney(s.byCat.equipment))+'</b></span><span>Parts <b>'+escHtml(fmtMoney(s.byCat.parts))+'</b></span></div>';
+  var rows=purchSort(purchRecords).filter(function(p){return!m||monthOf(p.date)===m;}),h='';
+  if(!rows.length)h='<div class="maint-empty" style="text-align:center;padding:2rem;">No purchases for this period.</div>';
+  rows.slice(0,300).forEach(function(p){
+    var meta=[];if(p.body){var lv=LEVELS[p.levelIdx];meta.push(escHtml(p.body+(lv?' ('+lv.short+')':'')));}
+    if(p.relatedRef!=null)meta.push('Ref '+escHtml(refLabel(p.relatedRef)));if(p.note)meta.push(escHtml(p.note));meta.push('Entered by '+escHtml(p.enteredBy));
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(p.item)+'</div><div class="dash-hist-when" style="text-align:left;">'+escHtml(p.when)+(p.vendor?' - '+escHtml(p.vendor):'')+'</div></div>'
+      +'<div style="text-align:right;white-space:nowrap;"><div class="dash-hist-who">'+escHtml(fmtMoney(p.amountCents))+'</div>'+puCatPill(p.category)+'</div></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+meta.join(' - ')+'</div><button class="dash-del-btn" onclick="deletePurchase('+p.id+')">Delete</button></div></div>';
+  });
+  if(rows.length>300)h+='<div class="maint-empty" style="text-align:center;">Showing the newest 300 of '+rows.length+'. Export CSV for everything.</div>';
+  list.innerHTML=h;
+}
+async function addPurchaseDash(){
+  var bv=document.getElementById('pu-body').value,body=null;
+  if(bv){var p=bv.split('-'),l=LEVELS[+p[0]];body={levelIdx:+p[0],bodyIdx:+p[1],level:l.name,body:l.bodies[+p[1]].name};}
+  var f={date:document.getElementById('pu-date').value,category:document.getElementById('pu-cat').value,item:document.getElementById('pu-item').value,amountText:document.getElementById('pu-amount').value,
+    vendor:document.getElementById('pu-vendor').value,body:body,refText:document.getElementById('pu-ref').value,note:document.getElementById('pu-note').value,enteredBy:(function(){try{return localStorage.getItem('aquatic_user_name')||'Dashboard';}catch(e){return 'Dashboard';}})()};
+  var err=validatePurchase(f);if(err){puMsg('err',err);return;}
+  var rec=buildPurchase(f);
+  // if the last attempt may have landed (timeout), re-use its id so a retry can never double-count
+  if(puRetry&&puRetry.item===rec.item&&puRetry.amountCents===rec.amountCents&&puRetry.date===rec.date&&puRetry.category===rec.category)rec.id=puRetry.id;
+  document.getElementById('pu-add').disabled=true;setSyncBadge('syncing','Saving purchase...');
+  var res=await ghMutate(function(remote){
+    if(remote.some(function(e){return e.id===rec.id;}))return null; // already saved
+    return{list:[rec].concat(remote),added:1,removed:0};
+  },'Add aquatic purchase',PURCH_API);
+  document.getElementById('pu-add').disabled=false;
+  if(res.ok){
+    purchRecords=res.list;purchState='ok';puRetry=null;puMonth=monthOf(rec.date);resetPurchForm();
+    setSyncBadge('ok','Saved '+fmtMoney(rec.amountCents)+' - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':''));
+    puMsg('ok','Saved '+fmtMoney(rec.amountCents)+' ('+PURCH_CATS[rec.category]+').');renderPurchTab();renderSpend();
+  }else{
+    puRetry=rec;setSyncBadge('err','Purchase not saved');
+    puMsg('err','Could not save ('+res.reason+'). It needs a connection; click Add again to retry.');
+  }
+}
+async function deletePurchase(id){
+  var numId=Number(id);
+  if(!confirm('Delete this purchase? This cannot be undone.'))return;
+  setSyncBadge('syncing','Deleting...');
+  var res=await ghMutate(function(remote){
+    var kept=remote.filter(function(e){return e.id!==numId;});
+    if(kept.length===remote.length)return null; // already gone
+    return{list:kept,added:0,removed:remote.length-kept.length};
+  },'Deleted aquatic purchase',PURCH_API);
+  if(res.ok){purchRecords=res.list;purchState='ok';setSyncBadge('ok','Deleted - '+purchRecords.length+' purchase'+(purchRecords.length!==1?'s':'')+' remaining');renderPurchTab();renderSpend();}
+  else{setSyncBadge('err','Delete failed');alert('Delete failed ('+res.reason+'). Nothing was changed. Try again.');}
+}
+function exportPurchCSV(){
+  var blob=new Blob(['\ufeff'+buildPurchCSV(purchRecords)],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-aquatic-purchases-'+todayStr()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+var puFormReady=false;
+function resetPurchFormOnce(){if(puFormReady)return;puFormReady=true;fillPurchBodySelect();resetPurchForm();}
+
+// ---- Tests by person (share of real chemical tests; out-of-service / return-to-service events are not tests) ----
+function isTest(r){
+  if(!r||r.outOfService||r.returnedToService||r.backwashOnly||r.barrelChange)return false;
+  var x=r.readings;if(!x)return false;
+  return Object.keys(x).some(function(k){return x[k]!=null&&x[k]!=='';});
+}
+function testerKey(n){return String(n==null?'':n).replace(/\s+/g,' ').trim().toLowerCase();}
+function testsByPerson(list,maxRows){
+  maxRows=maxRows||8;
+  var groups={},order=[],total=0;
+  list.forEach(function(r){
+    if(!isTest(r))return;
+    var raw=String(r.tester==null?'':r.tester).replace(/\s+/g,' ').trim(),key=testerKey(raw)||'unknown';
+    if(!groups[key]){groups[key]={count:0,names:{}};order.push(key);}
+    groups[key].count++;total++;
+    var nm=raw||'Unknown';groups[key].names[nm]=(groups[key].names[nm]||0)+1;
+  });
+  var rows=order.map(function(k){
+    var g=groups[k],best=null;for(var n in g.names){if(best===null||g.names[n]>g.names[best])best=n;}
+    return{name:best,count:g.count};
+  }).sort(function(a,b){return(b.count-a.count)||a.name.localeCompare(b.name);});
+  if(rows.length>maxRows){ // fold the long tail into one row so the card stays compact
+    var rest=rows.slice(maxRows-1),sum=rest.reduce(function(s,r){return s+r.count;},0);
+    rows=rows.slice(0,maxRows-1);rows.push({name:'Others ('+rest.length+' people)',count:sum,other:true});
+  }
+  // whole percentages that always add up to exactly 100 (largest-remainder method)
+  var exact=rows.map(function(r){return total?r.count*100/total:0;}),pct=exact.map(Math.floor),left=total?100-pct.reduce(function(a,b){return a+b;},0):0;
+  exact.map(function(e,i){return{i:i,f:e-Math.floor(e)};}).sort(function(a,b){return(b.f-a.f)||(a.i-b.i);}).slice(0,left).forEach(function(x){pct[x.i]++;});
+  rows.forEach(function(r,i){r.pct=pct[i];});
+  return{total:total,rows:rows};
+}
+function pctLabel(r){return(r.pct===0&&r.count>0)?'<1%':r.pct+'%';} // never show 0% next to someone who did tests
+function renderTestersCard(filtered,windowLabel){
+  var el=document.getElementById('testers-section');if(!el)return;
+  var res=testsByPerson(filtered),h='<div class="visual-card tests-card"><div class="visual-title">Tests by person</div>';
+  if(!res.total){el.innerHTML=h+'<div class="visual-sub">'+(windowLabel==='all time'?'No tests recorded yet.':'No tests in the '+escHtml(windowLabel)+'.')+'</div></div>';return;}
+  h+='<div class="visual-sub">Share of '+res.total+' test'+(res.total!==1?'s':'')+', '+escHtml(windowLabel)+'</div>';
+  res.rows.forEach(function(r){
+    h+='<div class="tp-row" role="img" aria-label="'+escHtml(r.name)+': '+(r.pct===0?'under 1':r.pct)+' percent, '+r.count+' test'+(r.count!==1?'s':'')+'"><span class="tp-name" title="'+escHtml(r.name)+'">'+escHtml(r.name)+'</span>'
+      +'<div class="tp-track"><div class="tp-fill'+(r.other?' other':'')+'" style="width:'+r.pct+'%;"></div></div>'
+      +'<span class="tp-val"><b>'+escHtml(pctLabel(r))+'</b> '+r.count+' test'+(r.count!==1?'s':'')+'</span></div>';
+  });
+  el.innerHTML=h+'</div>';
+}
+
+// ---- Clean up unnamed tests (batch delete, or keep and label) ----
+function isUnnamed(r){var k=testerKey(r&&r.tester);return k===''||k==='unknown';}
+function unnamedTests(list){return list.filter(function(r){return isTest(r)&&isUnnamed(r);});}
+function unnamedSummary(list){
+  var u=unnamedTests(list),s={n:u.length,first:null,last:null,backwash:0,notes:0};
+  u.forEach(function(r){if(s.first==null||r.ts<s.first)s.first=r.ts;if(s.last==null||r.ts>s.last)s.last=r.ts;if(r.backwash===true)s.backwash++;if(r.notes)s.notes++;});
+  return s;
+}
+// Acts on a FRESH copy of the file and ONLY on the records previewed (ids) that are still unnamed tests: a named test can never be touched.
+async function batchFixUnnamed(ids,action,newName){
+  var idset=new Set(ids),blocked=false;
+  var res=await ghMutate(function(remote){
+    var targets=remote.filter(function(e){return idset.has(e.id)&&isTest(e)&&isUnnamed(e);});
+    if(!targets.length)return null;                       // nothing left to do
+    if(targets.length>ids.length){blocked=true;return null;}
+    var tset=new Set(targets);
+    if(action==='delete')return{list:remote.filter(function(e){return!tset.has(e);}),added:0,removed:targets.length};
+    return{list:remote.map(function(e){return tset.has(e)?Object.assign({},e,{tester:newName}):e;}),added:targets.length,removed:targets.length};
+  },action==='delete'?'Deleted '+ids.length+' unnamed tests':'Labelled '+ids.length+' unnamed tests as '+newName);
+  return{ok:res.ok&&!blocked,res:res,blocked:blocked,changed:!!res.changed};
+}
+var unIds=[];
+function fmtDay(ts){return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function updateUnnamedButton(){
+  var btn=document.getElementById('unnamed-btn');if(!btn)return;
+  var n=unnamedTests(allReadings).length;
+  btn.style.display=(histView==='readings'&&n>0)?'inline-block':'none';
+  btn.textContent='Clean up unnamed tests ('+n+')';
+  if(!n)document.getElementById('unnamed-panel').style.display='none';
+}
+function toggleUnnamedPanel(){
+  var p=document.getElementById('unnamed-panel');
+  if(p.style.display!=='none'){p.style.display='none';return;}
+  var s=unnamedSummary(allReadings);unIds=unnamedTests(allReadings).map(function(r){return r.id;});
+  document.getElementById('un-info').innerHTML='<b>'+s.n+' test'+(s.n!==1?'s':'')+'</b> have no tester name, recorded '+escHtml(fmtDay(s.first))+' to '+escHtml(fmtDay(s.last))+'. '
+    +(s.backwash?'<b>'+s.backwash+'</b> include a backwash record (deleting them changes the Last backwash card). ':'')+(s.notes?'<b>'+s.notes+'</b> have notes. ':'')
+    +'Out-of-service entries and named tests are never touched.';
+  document.getElementById('un-n').textContent=s.n;document.getElementById('un-confirm').value='';document.getElementById('un-bk').textContent='not downloaded yet';document.getElementById('un-bk').className='pu-msg err';
+  document.getElementById('un-msg').textContent='';unBackedUp=false;p.style.display='block';onUnChange();
+}
+var unBackedUp=false;
+function downloadReadingsBackup(){
+  var blob=new Blob([JSON.stringify(allReadings)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-readings-backup-'+todayStr()+'.json';
+  document.body.appendChild(a);a.click();a.remove();
+  unBackedUp=true;var el=document.getElementById('un-bk');el.textContent='downloaded ('+allReadings.length+' readings)';el.className='pu-msg ok';onUnChange();
+}
+function unAction(){var r=document.querySelector('input[name="un-act"]:checked');return r?r.value:'delete';}
+function unNameOk(){var n=document.getElementById('un-name').value.trim();return n.length>=2&&!isUnnamed({tester:n});}
+function onUnChange(){
+  var rename=unAction()==='rename';document.getElementById('un-name').disabled=!rename;
+  var ok=unBackedUp&&document.getElementById('un-confirm').value.trim()===String(unIds.length)&&(!rename||unNameOk());
+  var b=document.getElementById('un-apply');b.disabled=!ok;b.textContent=rename?'Label '+unIds.length+' tests':'Delete '+unIds.length+' tests';
+}
+async function applyUnnamed(){
+  var action=unAction(),name=document.getElementById('un-name').value.trim(),msg=document.getElementById('un-msg');
+  if(action==='rename'&&!unNameOk()){msg.className='pu-msg err';msg.textContent='Enter a name of at least 2 characters (not "Unknown").';return;}
+  if(!confirm((action==='delete'?'Permanently delete ':'Label ')+unIds.length+' unnamed tests'+(action==='delete'?'? This cannot be undone (you have a backup).':' as "'+name+'"?')))return;
+  document.getElementById('un-apply').disabled=true;setSyncBadge('syncing',action==='delete'?'Deleting...':'Saving...');
+  var r=await batchFixUnnamed(unIds,action,name);
+  if(r.ok){
+    var gone=unIds.length;allReadings=r.res.list;unIds=[];
+    setSyncBadge('ok',(action==='delete'?'Deleted ':'Labelled ')+gone+' tests - '+allReadings.length+' readings remain');
+    document.getElementById('unnamed-panel').style.display='none';
+    renderDashHistory();renderDashboard();
+  }else{
+    setSyncBadge('err','Cleanup failed');msg.className='pu-msg err';
+    msg.textContent='Nothing was changed ('+(r.blocked?'safety check':(r.res.reason||'unknown'))+'). Try again with a connection.';onUnChange();
+  }
+}
+// ===== BARREL LOGIC BEGIN (identical in the calculator and the dashboard) =====
+// Chemical barrels. A barrel can feed several bodies of water. A "change" is saved as a small event record
+// ({barrelChange:true, barrelKey, date:'YYYY-MM-DD'}) alongside the readings, so it syncs offline-safely like backwash entries.
+// Duration of use = days from one recorded change to the next (the day a barrel is swapped counts as the day it ran out).
+var BARREL_LEVELS=['Level 1 - Indoor','Level 2 - Outdoor','Level 13 - Outdoor'];
+var BARRELS=[
+  {key:'L1-CL-POOL',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Pool chlorine',serves:'L1 Pool',bodies:['0-0']},
+  {key:'L1-CL-SPAS',levelIdx:0,chem:'chlorine',gal:53,label:'L1 Hot spa + Cold spa chlorine',serves:'L1 Hot spa and Cold spa',bodies:['0-1','0-2']},
+  {key:'L1-ACID',levelIdx:0,chem:'acid',gal:15,label:'L1 acid (Pool, Hot spa, Cold spa)',serves:'L1 Pool, Hot spa and Cold spa',bodies:['0-0','0-1','0-2']},
+  {key:'L2-CL',levelIdx:1,chem:'chlorine',gal:30,label:'L2 chlorine (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L2-ACID',levelIdx:1,chem:'acid',gal:15,label:'L2 acid (Pool, Hot spa)',serves:'L2 Pool and Hot spa',bodies:['1-0','1-1']},
+  {key:'L13-CL',levelIdx:2,chem:'chlorine',gal:53,label:'L13 chlorine (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']},
+  {key:'L13-ACID',levelIdx:2,chem:'acid',gal:15,label:'L13 acid (Pool, Hot tub)',serves:'L13 Pool and Hot tub',bodies:['2-0','2-1']}];
+function barrelByKey(k){for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].key===k)return BARRELS[i];}return null;}
+function barrelFor(levelIdx,bodyIdx,chem){var k=levelIdx+'-'+bodyIdx;for(var i=0;i<BARRELS.length;i++){if(BARRELS[i].chem===chem&&BARRELS[i].bodies.indexOf(k)>=0)return BARRELS[i];}return null;}
+function barrelTitle(b){return b.label+' - '+b.gal+' gal';}
+function barrelP2(n){return(n<10?'0':'')+n;}
+function barrelToday(){var d=new Date();return d.getFullYear()+'-'+barrelP2(d.getMonth()+1)+'-'+barrelP2(d.getDate());}
+function barrelDayNum(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));if(!m)return null;var n=Math.round(Date.UTC(+m[1],+m[2]-1,+m[3])/86400000);return isNaN(n)?null:n;}
+function barrelDaysBetween(a,b){var x=barrelDayNum(a),y=barrelDayNum(b);return(x==null||y==null)?null:y-x;}
+function barrelDateFromDayNum(n){return new Date(n*86400000).toISOString().slice(0,10);}
+function barrelDateLabel(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s||''));return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):String(s||'');}
+function barrelAgo(n){return n===0?'today':(n===1?'yesterday':n+' days ago');}
+function validateBarrelChange(key,date,list){
+  if(!barrelByKey(key))return 'Choose a barrel.';
+  if(barrelDayNum(date)==null)return 'Choose the date it was changed.';
+  if(barrelDaysBetween(date,barrelToday())<0)return 'The date is in the future.';
+  if((list||[]).some(function(e){return e&&e.barrelChange&&e.barrelKey===key&&e.date===date;}))return 'That barrel already has a change recorded on '+barrelDateLabel(date)+'.';
+  return null;
+}
+function buildBarrelChange(b,date,by,note){
+  return{id:Date.now()*1000+Math.floor(Math.random()*1000),ts:Date.parse(date+'T12:00:00'),date:date,when:barrelDateLabel(date),
+    barrelChange:true,barrelKey:b.key,chem:b.chem,barrelGal:b.gal,barrelLabel:b.label,
+    levelIdx:b.levelIdx,bodyIdx:null,level:BARREL_LEVELS[b.levelIdx],body:null,
+    tester:by||null,notes:(note||'').trim()||null,readings:{},doses:[]};
+}
+function barrelChanges(list,key){ // one record per date, oldest first
+  var seen={},out=[];
+  (list||[]).forEach(function(e){if(e&&e.barrelChange&&e.barrelKey===key&&barrelDayNum(e.date)!=null&&!seen[e.date]){seen[e.date]=1;out.push(e);}});
+  return out.sort(function(a,b){return barrelDayNum(a.date)-barrelDayNum(b.date);});
+}
+function barrelStats(list,key,today){
+  var b=barrelByKey(key),ch=barrelChanges(list,key),s={key:key,barrel:b,changes:ch.length,current:null,daysIn:null,done:[],lastDays:null,avgDays:null,galPerDay:null,estEmpty:null,daysLeft:null,status:'none'};
+  if(!ch.length)return s;
+  var last=ch[ch.length-1];s.current=last;s.daysIn=barrelDaysBetween(last.date,today);
+  for(var i=1;i<ch.length;i++){var d=barrelDaysBetween(ch[i-1].date,ch[i].date);s.done.push({from:ch[i-1],to:ch[i],days:d,galPerDay:d>0?b.gal/d:null});}
+  if(!s.done.length){s.status='tracking';return s;}   // first barrel on record: no duration to learn from yet
+  var recent=s.done.slice(-5),sum=0;recent.forEach(function(x){sum+=x.days;});
+  s.lastDays=s.done[s.done.length-1].days;s.avgDays=Math.max(1,Math.round(sum/recent.length));s.galPerDay=b.gal/s.avgDays;
+  s.estEmpty=barrelDateFromDayNum(barrelDayNum(last.date)+s.avgDays);s.daysLeft=s.avgDays-s.daysIn;
+  s.status=s.daysIn>s.avgDays?'overdue':(s.daysIn>=s.avgDays*0.85?'soon':'ok');
+  return s;
+}
+// ===== BARREL LOGIC END =====
+
+// ---- Chemical barrels on the dashboard ----
+var BAR_PILL={none:['none','No record'],tracking:['tracking','Tracking'],ok:['ok','OK'],soon:['soon','Due soon'],overdue:['overdue','Past usual']};
+function barrelUserName(){try{return localStorage.getItem('aquatic_user_name')||'Dashboard';}catch(e){return 'Dashboard';}}
+function barrelIn(n){return n===0?'today':(n>0?'in '+n+' day'+(n!==1?'s':''):Math.abs(n)+' day'+(Math.abs(n)!==1?'s':'')+' past');}
+function renderBarrels(){ // Overview card
+  var el=document.getElementById('barrels-section');if(!el)return;
+  var today=barrelToday(),h='<div class="visual-card" style="margin-bottom:1.25rem;"><div class="pu-trend-head"><div><div class="visual-title">Chemical barrels</div><div class="visual-sub">How long each barrel lasts, and when the one in use is likely to run out</div></div><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="showDashTab(\'barrels\')">Record a change</button></div>'
+    +'<div style="overflow-x:auto;"><table class="bar-table"><tr><th>Barrel</th><th>In use since</th><th>In use</th><th>Last barrel lasted</th><th>Average</th><th>Estimated empty</th><th>Status</th></tr>';
+  BARRELS.forEach(function(b){
+    var s=barrelStats(allReadings,b.key,today),pill='<span class="bar-pill '+BAR_PILL[s.status][0]+'">'+BAR_PILL[s.status][1]+'</span>';
+    h+='<tr><td><b>'+escHtml(b.label)+'</b><small>'+b.gal+' gal, '+escHtml(b.chem)+'</small></td>';
+    if(!s.current){h+='<td colspan="5" style="color:var(--text3);">No change recorded yet</td>';}
+    else{
+      h+='<td>'+escHtml(barrelDateLabel(s.current.date))+'</td><td>'+s.daysIn+' day'+(s.daysIn!==1?'s':'')+'</td>';
+      if(s.status==='tracking')h+='<td colspan="3" style="color:var(--text3);">Needs one more change to estimate</td>';
+      else h+='<td>'+s.lastDays+' days</td><td>'+s.avgDays+' days<small>'+(Math.round(s.galPerDay*10)/10)+' gal/day</small></td><td>'+escHtml(barrelDateLabel(s.estEmpty))+'<small>'+escHtml(barrelIn(s.daysLeft))+'</small></td>';
+    }
+    h+='<td>'+pill+'</td></tr>';
+  });
+  el.innerHTML=h+'</table></div><div class="bar-note">A barrel counts as used up on the day it is swapped. The average covers the last 5 completed barrels. "Due soon" means 85% of the usual life; "Past usual" means longer than average.</div></div>';
+}
+var barFormReady=false;
+function initBarrelForm(){
+  if(barFormReady)return;barFormReady=true;
+  var sel=document.getElementById('bar-key'),h='<option value="">Choose a barrel...</option>';
+  BARREL_LEVELS.forEach(function(lv,li){h+='<optgroup label="'+escHtml(lv)+'">';BARRELS.filter(function(b){return b.levelIdx===li;}).forEach(function(b){h+='<option value="'+b.key+'">'+escHtml(barrelTitle(b))+'</option>';});h+='</optgroup>';});
+  sel.innerHTML=h;
+  var dt=document.getElementById('bar-date');dt.max=barrelToday();dt.value=barrelToday();
+}
+function barMsg(kind,text){var el=document.getElementById('bar-msg');el.className='pu-msg '+kind;el.textContent=text;}
+function renderBarrelsTab(){
+  initBarrelForm();
+  var list=document.getElementById('bar-list'),ev=allReadings.filter(function(e){return e&&e.barrelChange;}).sort(function(a,b){return(barrelDayNum(b.date)||0)-(barrelDayNum(a.date)||0)||(b.loggedAt||b.ts)-(a.loggedAt||a.ts);});
+  if(!ev.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:2rem;">No barrel changes recorded yet. Record the date each barrel was last changed to start tracking.</div>';return;}
+  var prevOf={};BARRELS.forEach(function(b){var ch=barrelChanges(allReadings,b.key);ch.forEach(function(e,i){prevOf[e.id]=i?ch[i-1]:null;});});
+  var h='';
+  ev.slice(0,300).forEach(function(e){
+    var b=barrelByKey(e.barrelKey),prev=prevOf[e.id],days=prev?barrelDaysBetween(prev.date,e.date):null,note='';
+    if(prev&&days>0&&b)note='The previous barrel lasted '+days+' day'+(days!==1?'s':'')+' ('+(Math.round(b.gal/days*10)/10)+' gal/day)';
+    else note='First change on record for this barrel';
+    h+='<div class="dash-hist-entry"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;"><div><div class="dash-hist-who">'+escHtml(b?barrelTitle(b):e.barrelLabel)+'</div><div class="dash-hist-when">'+escHtml(barrelDateLabel(e.date))+' - '+escHtml(note)+'</div></div>'
+      +'<span class="maint-pill '+(e.chem==='acid'?'repair':'pm')+'">'+escHtml(e.chem==='acid'?'Acid':'Chlorine')+'</span></div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;"><div class="maint-item-sub">'+escHtml(e.tester?'Recorded by '+e.tester:'')+(e.notes?' - '+escHtml(e.notes):'')+'</div>'
+      +'<button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+  });
+  list.innerHTML=h;
+}
+async function addBarrelChange(){
+  var key=document.getElementById('bar-key').value,date=document.getElementById('bar-date').value,note=document.getElementById('bar-note').value;
+  var err=validateBarrelChange(key,date,allReadings);if(err){barMsg('err',err);return;}
+  var b=barrelByKey(key),rec=buildBarrelChange(b,date,barrelUserName(),note),dup=false;
+  document.getElementById('bar-add').disabled=true;setSyncBadge('syncing','Saving barrel change...');
+  var res=await ghMutate(function(remote){
+    if(remote.some(function(e){return e.id===rec.id;}))return null;
+    if(remote.some(function(e){return e&&e.barrelChange&&e.barrelKey===key&&e.date===date;})){dup=true;return null;} // already there (another device, or a retry that landed)
+    return{list:[rec].concat(remote),added:1,removed:0};
+  },'Barrel change: '+b.label);
+  document.getElementById('bar-add').disabled=false;
+  if(res.ok){
+    allReadings=res.list;
+    if(dup){barMsg('err','That barrel already has a change recorded on '+barrelDateLabel(date)+'.');setSyncBadge('ok','Connected');}
+    else{document.getElementById('bar-note').value='';barMsg('ok','Recorded: '+b.label+', '+barrelDateLabel(date)+'.');setSyncBadge('ok','Barrel change recorded');}
+    renderBarrelsTab();renderBarrels();
+  }else{setSyncBadge('err','Barrel change not saved');barMsg('err','Could not save ('+res.reason+'). It needs a connection; try again.');}
+}
+function barrelDeleteMessage(entry,list){
+  var b=barrelByKey(entry.barrelKey),name=b?b.label:entry.barrelLabel,ch=barrelChanges(list,entry.barrelKey),i=-1;
+  for(var k=0;k<ch.length;k++){if(ch[k].id===entry.id){i=k;break;}}
+  var effect;
+  if(i<0)effect='This will not change any durations.';
+  else if(i===ch.length-1&&ch.length===1)effect='Afterwards no change will be recorded for this barrel.';
+  else if(i===ch.length-1)effect='Afterwards the barrel in use will show as changed on '+barrelDateLabel(ch[i-1].date)+'.';
+  else if(i===0)effect='The first recorded change will then be '+barrelDateLabel(ch[1].date)+'.';
+  else effect='The two barrels either side of it will then count as one barrel lasting '+barrelDaysBetween(ch[i-1].date,ch[i+1].date)+' days.';
+  return 'Delete this barrel change ('+name+', '+barrelDateLabel(entry.date)+')?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+function exportBarrelsCSV(){
+  var rows=[['Date','Barrel','Chemical','Gallons','Days since previous change','Gallons per day','Recorded by','Note']];
+  BARRELS.forEach(function(b){var ch=barrelChanges(allReadings,b.key);ch.forEach(function(e,i){var days=i?barrelDaysBetween(ch[i-1].date,e.date):'';rows.push([e.date,b.label,b.chem,b.gal,days,(days&&days>0)?(Math.round(b.gal/days*100)/100):'',e.tester||'',e.notes||'']);});});
+  var body=rows.slice(1).sort(function(a,b){return a[0]<b[0]?1:(a[0]>b[0]?-1:0);});
+  var csv=[rows[0]].concat(body).map(function(r){return r.map(function(c){return maintCsvCell(c);}).join(',');}).join('\r\n');
+  var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-chemical-barrels-'+todayStr()+'.csv';
+  document.body.appendChild(a);a.click();a.remove();
+}
+
+// ---- PREVIEW: "Bodies at a glance" ----
+function jumpToCard(li,bi){
+  var el=document.getElementById('card-'+li+'-'+bi);if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+}
+function glCell(status,val){var cls=status==='alert'?'hm-alert':(status==='warn'?'hm-warn':(status==='ok'?'hm-ok':'hm-none'));return '<td><span class="hm-cell '+cls+'">'+val+'</span></td>';}
+function renderGlance(allLatest){
+  var el=document.getElementById('glance-section');if(!el)return;
+  var now=Date.now(),h='<div class="visual-card gl-card"><div style="overflow-x:auto;"><table class="glance"><thead><tr><th>Status</th><th>Body</th><th>FC</th><th>CC</th><th>pH</th><th>ORP</th><th>TA</th><th>CH</th><th>LSI</th><th>Temp</th><th>Last tested</th><th>Last backwash</th><th>Open repair</th></tr></thead><tbody>';
+  var lastLevel=-1;
+  allLatest.forEach(function(item){
+    var li=item.li,bi=item.bi,l=item.level,b=item.body,latest=item.latest,r=latest?latest.readings:{};
+    if(li!==lastLevel){lastLevel=li;h+='<tr class="gl-level"><td colspan="13">'+escHtml(l.name)+'</td></tr>';}
+    var oos=getOOSStatus(li,bi,allReadings),st=latest?overallStatus(latest):'none';
+    var pill=oos?'<span class="gl-pill oos">Out of service</span>':(st==='alert'?'<span class="gl-pill alert">Action needed</span>':(st==='warn'?'<span class="gl-pill warn">Monitor</span>':(st==='ok'?'<span class="gl-pill ok">All clear</span>':'<span class="gl-pill none">No data</span>')));
+    var rowCls='gl-row '+(oos?'gl-oos':'gl-'+st);
+    h+='<tr class="'+rowCls+'" onclick="jumpToCard('+li+','+bi+')" title="Click for the details of '+escHtml(b.name)+'"><td>'+pill+'</td><td><b>'+escHtml(b.name)+'</b><small>'+escHtml(l.short)+', '+b.vol.toLocaleString()+' gal</small></td>';
+    if(!latest){for(var k=0;k<8;k++)h+=glCell('none','--');}
+    else{
+      var os=orpStatus(latest);h+=glCell(r.fc==null?'none':(r.fc<1.5||r.fc>10?'alert':(r.fc<2?'warn':'ok')),r.fc==null?'--':r.fc+' ppm');
+      h+=glCell((r.cc==null||r.fc==null||r.fc<=0)?'none':(r.cc>=r.fc*0.5?'alert':(r.cc>=r.fc*0.5*0.8?'warn':'ok')),r.cc==null?'--':r.cc.toFixed(1)+' ppm');
+      h+=glCell(r.pH==null?'none':(r.pH<7.2||r.pH>8.0?'alert':(r.pH<7.4||r.pH>7.8?'warn':'ok')),r.pH==null?'--':r.pH.toFixed(1));
+      h+=glCell(os||'none',r.orp==null?'--':r.orp+' mV');
+      h+=glCell(r.ta==null?'none':(r.ta<60||r.ta>160?'alert':'ok'),r.ta==null?'--':r.ta+' ppm');
+      h+=glCell(r.ch==null?'none':(doseFor(latest,'CH')?'warn':'ok'),r.ch==null?'--':r.ch+' ppm');
+      var lsi=latest.lsi!=null?parseFloat(latest.lsi):null;h+=glCell(lsi==null||isNaN(lsi)?'none':(lsi<-0.5||lsi>0.5?'alert':(lsi<-0.3||lsi>0.3?'warn':'ok')),lsi==null||isNaN(lsi)?'--':lsi.toFixed(2));
+      h+=glCell(r.temp==null?'none':'ok',r.temp==null?'--':r.temp+' F');
+    }
+    var age=latest?now-latest.ts:null,tcls=age==null?'none':(age<24*3600000?'ok':(age<48*3600000?'warn':'alert'));
+    h+='<td><span class="gl-age '+tcls+'">'+(age==null?'Never':(age<3600000?Math.floor(age/60000)+'m ago':(age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago')))+'</span></td>';
+    var bw=allReadings.filter(function(x){return x.levelIdx===li&&x.bodyIdx===bi&&x.backwash===true;}),lb=bw.length?bw.reduce(function(a,c){return a.ts>c.ts?a:c;}):null,bd=lb?calDaysAgo(lb.ts):null;
+    h+='<td><span class="gl-age '+(bd==null?'none':(bd<=7?'ok':(bd<=14?'warn':'alert')))+'">'+(bd==null?'Never':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago')))+'</span></td>';
+    var openTxt='<span class="gl-none">-</span>';
+    if(maintState!=='unknown'){
+      var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}),op=maintOpenItems(recs);
+      if(op.length){var th=maintThreads(recs).filter(function(t){return t.entry.id===op[0].id;})[0],need=th?threadNeed(th):op[0].followUpNote;
+        openTxt='<span class="gl-open" title="'+escHtml('Still needed: '+need)+'"><b>'+escHtml(op[0].equipment)+'</b>'+(op.length>1?' +'+(op.length-1)+' more':'')+'<small>'+escHtml(need)+'</small></span>';}
+    }
+    h+='<td>'+openTxt+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table></div></div>';
+}
+// ---- PREVIEW: barrels, exceptions only (the full table lives on the Barrels tab) ----
+function renderBarrelsAttention(){
+  var el=document.getElementById('barrels-attention');if(!el)return;
+  var today=barrelToday(),st=BARRELS.map(function(b){return barrelStats(allReadings,b.key,today);});
+  var attn=st.filter(function(s){return s.status==='overdue'||s.status==='soon';}).sort(function(a,b){return(a.status==='overdue'?0:1)-(b.status==='overdue'?0:1);});
+  var ok=st.filter(function(s){return s.status==='ok';}),noRec=st.filter(function(s){return s.status==='none'||s.status==='tracking';});
+  var h='<div class="visual-card"><div class="pu-trend-head"><div><div class="visual-title">Chemical barrels'+(attn.length?' <span class="maint-count">'+attn.length+'</span>':' <span class="maint-count zero">0</span>')+'</div><div class="visual-sub">Barrels at or near the end of their usual life</div></div><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="showDashTab(\'barrels\')">All barrels</button></div>';
+  if(!attn.length)h+='<div class="maint-empty">No barrel is near the end of its usual life.</div>';
+  attn.forEach(function(s){
+    h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(s.barrel.label)+'</b><span class="bar-pill '+(s.status==='overdue'?'overdue':'soon')+'">'+(s.status==='overdue'?'Past usual':'Due soon')+'</span></div>'
+      +'<div class="maint-item-sub">Day '+s.daysIn+' of about '+s.avgDays+' - estimated empty '+escHtml(barrelDateLabel(s.estEmpty))+' ('+escHtml(barrelIn(s.daysLeft))+')</div></div>';
+  });
+  var next=ok.filter(function(s){return s.daysLeft!=null;}).sort(function(a,b){return a.daysLeft-b.daysLeft;})[0];
+  var notes=[];if(next)notes.push('Next to run out: <b>'+escHtml(next.barrel.label)+'</b>, '+escHtml(barrelIn(next.daysLeft))+' ('+escHtml(barrelDateLabel(next.estEmpty))+').');
+  if(ok.length)notes.push(ok.length+' of 7 barrels are within their usual life.');
+  if(noRec.length)notes.push(noRec.length+' barrel'+(noRec.length!==1?'s have':' has')+' no duration estimate yet (record the change dates on the Barrels tab).');
+  h+='<div class="maint-item-sub" style="margin-top:8px;line-height:1.6;">'+notes.join('<br>')+'</div></div>';
+  el.innerHTML=h;
+}
+function renderMaint(){
+  var el=document.getElementById('maint-section');if(!el)return;
+  var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
+  var open=maintOpenItems(maintRecords),threads=maintThreads(maintRecords),openSet=new Set(open.map(function(e){return e.id;})),thById={},h='<div class="maint-panels">';
+  threads.forEach(function(t){thById[t.entry.id]=t;});
+  function more(which,total,shown,expanded){
+    if(total<=MAINT_VISIBLE)return '';
+    return '<button class="maint-more" onclick="toggleMaintMore(\''+which+'\')">'+(expanded?'Show fewer':'Show all '+total)+'</button>'
+      +(expanded&&which==='recent'&&total>shown?'<div class="maint-empty">Showing the latest '+shown+'. See History for older entries.</div>':'');
+  }
+  h+='<div class="visual-card"><div class="visual-title">Open repairs'+(maintState==='unknown'?'':' <span class="maint-count'+(open.length?'':' zero')+'">'+open.length+'</span>')+'</div><div class="visual-sub">Follow-ups not yet closed out, oldest first</div>'+warn;
+  if(maintState!=='unknown'){
+    if(!open.length)h+='<div class="maint-empty">No open repairs.</div>';
+    var oShown=maintShowAllOpen?open.length:Math.min(open.length,MAINT_VISIBLE);
+    open.slice(0,oShown).forEach(function(e){
+      var d=Math.max(0,calDaysAgo(e.ts));
+      h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span></div>'
+        +'<div class="maint-item-sub">'+maintRefHTML(e)+'Open '+(d===0?'since today':d+' day'+(d!==1?'s':''))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text clamp"><b>Still needed:</b> '+escHtml(thById[e.id]?threadNeed(thById[e.id]):e.followUpNote)+'</div>'
+        +(thById[e.id]&&thById[e.id].updates.length?(function(){var lu=thById[e.id].updates[thById[e.id].updates.length-1];return '<div class="maint-up clamp"><b>Update '+escHtml(maintAgo(lu.ts))+'</b> by '+maintWho(lu)+': '+escHtml(lu.description)+'</div>';})():'')+'</div>';
+    });
+    h+=more('open',open.length,oShown,maintShowAllOpen);
+  }
+  h+='</div><div class="visual-card"><div class="visual-title">Recent aquatic maintenance</div><div class="visual-sub">Latest work logged, with who did it</div>'+(open.length||maintState==='unknown'?'':warn);
+  if(maintState!=='unknown'){
+    if(!threads.length)h+='<div class="maint-empty">No maintenance logged yet.</div>';
+    var rShown=maintShowAllRecent?Math.min(threads.length,12):Math.min(threads.length,MAINT_VISIBLE);
+    threads.slice(0,rShown).forEach(function(th){
+      var e=th.entry,isOpen=openSet.has(e.id),closed=e.followUp&&th.closeouts.length>0;
+      h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(maintBodyLabel(e))+' - '+escHtml(e.equipment)+'</b><span><span class="maint-pill '+(e.type==='pm'?'pm':'repair')+'">'+maintTypeLabel(e.type)+'</span>'
+        +(e.kind==='closeout'?'<span class="maint-pill closed">Close-out</span>':'')+(isOpen?'<span class="maint-pill open">Open</span>':(closed?'<span class="maint-pill closed">Closed</span>':''))+'</span></div>'
+        +'<div class="maint-item-sub">'+maintRefHTML(e)+escHtml(maintShortDate(e.ts))+' - performed by '+maintWho(e)+'</div>'
+        +'<div class="maint-item-text clamp">'+escHtml(e.description)+'</div>';
+      th.updates.forEach(function(u){h+='<div class="maint-up clamp"><b>Update '+escHtml(maintShortDate(u.ts))+'</b> by '+maintWho(u)+': '+escHtml(u.description)+'</div>';});
+      th.closeouts.forEach(function(c){h+='<div class="maint-co clamp"><b>Closed out '+escHtml(maintShortDate(c.ts))+'</b> by '+maintWho(c)+': '+escHtml(c.description)+'</div>';});
+      h+='</div>';
+    });
+    h+=more('recent',threads.length,rShown,maintShowAllRecent);
+  }
+  var marker='</div><div class="visual-card"><div class="visual-title">Recent aquatic maintenance',cut=h.indexOf(marker),prefix='<div class="maint-panels">'.length;
+  var openHTML=h.slice(prefix,cut)+'</div>',recentHTML=h.slice(cut+6)+'</div>';
+  document.getElementById('maint-open-slot').innerHTML=openHTML;document.getElementById('maint-recent-slot').innerHTML=recentHTML;
+}
+var windowDays=7;
+var miniCharts={};
+
+var LEVELS=[
+  {name:'Level 1 - Indoor',short:'L1',bodies:[
+    {name:'Pool',vol:18600,spa:false,key:'0-0'},
+    {name:'Hot spa',vol:2000,spa:true,key:'0-1'},
+    {name:'Cold spa',vol:900,spa:true,key:'0-2'}
+  ]},
+  {name:'Level 2 - Outdoor',short:'L2',bodies:[
+    {name:'Pool',vol:47000,spa:false,key:'1-0'},
+    {name:'Hot spa',vol:900,spa:true,key:'1-1'}
+  ]},
+  {name:'Level 13 - Outdoor',short:'L13',bodies:[
+    {name:'Pool',vol:33000,spa:false,key:'2-0'},
+    {name:'Hot tub',vol:3500,spa:true,key:'2-1'}
+  ]}
+];
+
+function loadToken(){try{var t=localStorage.getItem(TKEY);if(t)GH_TOKEN=t;}catch(e){}}
+function saveToken(t){GH_TOKEN=t;try{localStorage.setItem(TKEY,t);}catch(e){}}
+function resetToken(){GH_TOKEN='';try{localStorage.removeItem(TKEY);}catch(e){}showTokenSetup();}
+function showTokenSetup(){document.getElementById('token-setup').style.display='block';document.getElementById('dashboard').style.display='none';}
+function showDashboard(){document.getElementById('token-setup').style.display='none';document.getElementById('dashboard').style.display='block';}
+function submitToken(){
+  var t=document.getElementById('token-input').value.trim();
+  if(!t){alert('Please enter your access token.');return;}
+  saveToken(t);showDashboard();loadData();
+}
+
+function setSyncBadge(type,text){
+  var b=document.getElementById('sync-badge');
+  b.className='sync-badge '+type;
+  b.textContent=text;
+}
+
+// ===== GH CORE BEGIN (shared by calculator + dashboard + maintenance) =====
+// url is optional everywhere and defaults to GH_API, so one core can serve several data files.
+// Every write follows one rule: fetch the CURRENT remote file, apply a small ID-based change
+// to that fresh copy, PUT with the SHA from that same fetch. Local copies are never a write base.
+function b64ToUtf8(b){
+  var bin=atob(String(b).replace(/\s/g,''));
+  var bytes=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+function utf8ToB64(s){return btoa(unescape(encodeURIComponent(s)));}
+function stripLocal(e){var c={};for(var k in e){if(k!=='synced')c[k]=e[k];}return c;}
+
+// One timer covers the whole request INCLUDING reading the body (a stalled body hangs forever otherwise)
+async function ghRequest(opts,ms,url){
+  var c=new AbortController();
+  var t=setTimeout(function(){c.abort();},ms);
+  try{
+    var r=await fetch(url||GH_API,Object.assign({cache:'no-store',signal:c.signal},opts));
+    var text=await r.text();
+    return{status:r.status,ok:r.ok,text:text};
+  }finally{clearTimeout(t);}
+}
+function ghHdr(accept,json){
+  var h={'Authorization':'token '+GH_TOKEN,'Accept':accept||'application/vnd.github.v3+json'};
+  if(json)h['Content-Type']='application/json';
+  return h;
+}
+
+async function ghFetchRemote(url){
+  try{
+    var r=await ghRequest({headers:ghHdr()},5000,url);
+    if(r.status===404)return{ok:true,list:[],sha:null,missing:true};
+    if(r.status===401)return{ok:false,reason:'auth',status:401};
+    if(!r.ok)return{ok:false,reason:'http',status:r.status};
+    var j=JSON.parse(r.text);
+    var text;
+    if(j.content&&j.encoding!=='none'){
+      text=b64ToUtf8(j.content);
+    }else if(j.size>0){
+      // Contents API returns EMPTY content for files over 1 MB -- fetch the raw body instead
+      var rr=await ghRequest({headers:ghHdr('application/vnd.github.raw+json')},12000,url);
+      if(!rr.ok)return{ok:false,reason:'http',status:rr.status};
+      text=rr.text;
+    }else{text='[]';}
+    var list=JSON.parse(text);
+    if(!Array.isArray(list))return{ok:false,reason:'format'};
+    if(j.size>10&&list.length===0)return{ok:false,reason:'format'}; // never trust an "empty" read of a non-empty file
+    return{ok:true,list:list,sha:j.sha};
+  }catch(e){return{ok:false,reason:'network',error:String(e)};}
+}
+
+async function ghPut(list,sha,message,url){
+  try{
+    var body={message:message,content:utf8ToB64(JSON.stringify(list.map(stripLocal))),branch:GH_BRANCH};
+    if(sha)body.sha=sha;
+    var w=await ghRequest({method:'PUT',headers:ghHdr(null,true),body:JSON.stringify(body)},20000,url);
+    if(w.ok)return{ok:true};
+    return{ok:false,status:w.status};
+  }catch(e){return{ok:false,error:String(e)};} // outcome unknown -- caller re-checks by ID on next attempt
+}
+
+// mutator(remoteList) -> null (nothing to change) or {list, added, removed}
+async function ghMutate(mutator,message,url){
+  for(var attempt=0;attempt<3;attempt++){
+    var rem=await ghFetchRemote(url);
+    if(!rem.ok)return{ok:false,reason:rem.reason,status:rem.status};
+    var plan=mutator(rem.list);
+    if(!plan)return{ok:true,changed:false,list:rem.list};
+    // Safety guard: the write may only add/remove exactly what the mutator says it does
+    var keep=new Set(plan.list),lost=0;
+    for(var i=0;i<rem.list.length;i++){if(!keep.has(rem.list[i]))lost++;}
+    var added=plan.list.length-(rem.list.length-lost);
+    if(lost!==(plan.removed||0)||added!==(plan.added||0))return{ok:false,reason:'guard'};
+    var w=await ghPut(plan.list,rem.sha,message,url);
+    if(w.ok)return{ok:true,changed:true,list:plan.list};
+    if(w.status===409||w.status===422)continue; // someone wrote first: re-fetch, re-apply, retry
+    return{ok:false,reason:w.status?'http':'network',status:w.status};
+  }
+  return{ok:false,reason:'conflict'};
+}
+// ===== GH CORE END =====
+
+async function loadData(){
+  setSyncBadge('syncing','Loading...');
+  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API),ghFetchRemote(PURCH_API)]); // readings + maintenance + purchases, in parallel
+  var rem=both[0],mrem=both[1],prem=both[2];
+  if(prem.ok){purchRecords=prem.list;purchState='ok';}
+  else{purchState=(purchState==='ok'||purchState==='stale')?'stale':'unknown';} // a purchases failure never blocks the pool/spa views
+  if(mrem.ok){maintRecords=mrem.list;maintState='ok';}
+  else{maintState=(maintState==='ok'||maintState==='stale')?'stale':'unknown';} // a maintenance failure never blocks the pool/spa views
+  if(rem.ok){
+    allReadings=rem.list;
+    var now=new Date();
+    document.getElementById('last-updated').textContent='Last updated: '+now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    setSyncBadge('ok',rem.missing?'Connected - no readings yet':'Connected - '+allReadings.length+' total reading'+(allReadings.length!==1?'s':''));
+    renderDashboard();
+    if(document.getElementById('tab-purchases-content').style.display!=='none')renderPurchView();
+    startAutoRefresh();
+    return;
+  }
+  if(rem.reason==='auth'){setSyncBadge('err','Invalid token');alert('Token invalid or expired. Please re-enter.');resetToken();return;}
+  setSyncBadge('err','Connection error');
+  document.getElementById('last-updated').textContent='Could not load data - check connection';
+}
+
+function setWindow(days){
+  windowDays=days;
+  ['w7','w30','wall'].forEach(function(id){document.getElementById(id).classList.remove('active');});
+  var map={7:'w7',30:'w30',0:'wall'};
+  document.getElementById(map[days]).classList.add('active');
+  renderDashboard();
+}
+
+function getFilteredReadings(){
+  if(windowDays===0)return allReadings;
+  var cutoff=Date.now()-(windowDays*24*60*60*1000);
+  return allReadings.filter(function(r){return r.ts>=cutoff;});
+}
+
+function getOOSStatus(li,bi,readings){
+  // Find the most recent OOS or return-to-service event for this body
+  var events=readings.filter(function(r){
+    return r.levelIdx===li&&r.bodyIdx===bi&&(r.outOfService||r.returnedToService);
+  }).sort(function(a,b){return b.ts-a.ts;});
+  if(!events.length)return null;
+  var latest=events[0];
+  if(latest.outOfService)return{oos:true,reason:latest.reason||'Maintenance',since:latest.when};
+  return null; // most recent event is a return-to-service
+}
+
+function getLatestForBody(li,bi,readings){ // the latest TEST: status entries (out of service, returned, backwash) are not readings and must not blank the body's card or reset "last tested"
+  var bodyReadings=readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi&&isTest(r);});
+  if(!bodyReadings.length)return null;
+  return bodyReadings.reduce(function(a,b){return a.ts>b.ts?a:b;});
+}
+
+function getBodyReadings(li,bi,readings){
+  return readings.filter(function(r){return r.levelIdx===li&&r.bodyIdx===bi&&isTest(r);}).sort(function(a,b){return a.ts-b.ts;});
+}
+
+function orpStatus(reading){
+  if(!reading||reading.readings.orp==null)return null;
+  var orp=reading.readings.orp;
+  var sp=reading.readings.orpSetpoint;
+  if(sp!=null){
+    var diff=orp-sp;
+    if(Math.abs(diff)<=20)return'ok';
+    if(diff<-20&&diff>=-80)return'warn';
+    if(diff<-80)return'alert';
+    return'ok';
+  }
+  if(orp<650)return'alert';
+  if(orp<750)return'warn';
+  return'ok';
+}
+
+function ccStatus(reading){
+  if(!reading||reading.readings.cc==null||reading.readings.fc==null||reading.readings.fc<=0)return null;
+  var cc=reading.readings.cc;
+  if(cc<=0)return'ok';
+  var fc=reading.readings.fc;
+  var limit=fc*0.5;
+  if(cc>=limit)return'alert';
+  if(cc>=limit*0.8)return'warn';
+  return'ok';
+}
+
+// ---- Suggested chemical doses ----
+// The calculator saves the doses it suggested with every reading. The dashboard shows them beside the problem they fix.
+var DOSE_LABEL={FC:'chlorine',PH:'pH',TA:'TA',CH:'calcium',CYA:'CYA'};
+function cleanChem(c){return String(c||'').replace(/^\[[A-Z]+\]\s*/,'').replace(/\s*\([^)]*\)\s*$/,'').toLowerCase();}
+function pendingDoses(reading){
+  var ds=(reading&&reading.doses)||[],r=(reading&&reading.readings)||{},out=[],muriatic=[];
+  ds.forEach(function(d){
+    if(!d||d.ok)return;
+    var amt=String(d.amount==null?'':d.amount),chem=String(d.chem||'');
+    if(/controller managing/i.test(amt)||/^OK\b/i.test(amt))return;   // nothing for a person to add
+    var item={chem:cleanChem(chem),amount:amt,dilute:/dilute/i.test(amt),shock:!!d.shock||/^\[SHOCK\]/i.test(chem),startup:/^\[STARTUP\]/i.test(chem)};
+    if(/sodium hypochlorite|sodium thiosulfate/i.test(chem))item.param='FC';
+    else if(/soda ash/i.test(chem))item.param='PH';
+    else if(/muriatic/i.test(chem)){muriatic.push(item);return;}          // used for BOTH high pH and high TA: decided below
+    else if(/sodium bicarbonate/i.test(chem))item.param='TA';
+    else if(/calcium chloride|calcium hardness/i.test(chem))item.param='CH';
+    else if(/cyanuric/i.test(chem))item.param='CYA';
+    else return;
+    out.push(item);
+  });
+  var phHigh=r.pH!=null&&r.pH>7.7,taHigh=r.ta!=null&&r.ta>160;           // the calculator doses pH only when it is more than 0.1 from 7.6
+  muriatic.forEach(function(m,i){m.param=muriatic.length>1?(i===0?'PH':'TA'):((phHigh&&!taHigh)?'PH':(taHigh&&!phHigh?'TA':'PH'));out.push(m);});
+  return out;
+}
+function doseFor(reading,param){var p=pendingDoses(reading).filter(function(x){return x.param===param;});return p.length?p[0]:null;}
+function doseLine(d){return d.dilute?'partial drain and refill':'add '+d.chem+' '+d.amount;}
+function doseLabeled(d){return doseLine(d)+' ('+(DOSE_LABEL[d.param]||'')+')';}
+// One rule, used by the tile AND the alert bar: city limit is CC < 50% of FC, so CC >= 50% of FC needs shock.
+function needsShock(r){var x=r&&r.readings;return!!(x&&x.cc!=null&&x.cc>0&&x.fc!=null&&x.fc>0&&x.cc>=x.fc*0.5);}
+function getActions(reading){
+  if(!reading)return[];
+  var actions=[];
+  var r=reading.readings;
+  var isSpa=reading.body.toLowerCase().indexOf('spa')>-1||reading.body.toLowerCase().indexOf('hot')>-1;
+  var fcTarget=isSpa?4.0:3.0;
+  var fc=r.fc,cc=r.cc,pH=r.pH,orp=r.orp,orpSP=r.orpSetpoint;
+  // When LSI is red, ONE combined line carries the readings behind it AND every dose, so a dose is never shown twice.
+  var lsi=reading.lsi!=null?parseFloat(reading.lsi):null;
+  var lsiRed=lsi!=null&&!isNaN(lsi)&&(lsi<-0.5||lsi>0.5);
+  var dTA=doseFor(reading,'TA'),dCH=doseFor(reading,'CH'),dPH=doseFor(reading,'PH');
+  var merged={TA:lsiRed&&!!dTA,CH:lsiRed&&!!dCH,PH:lsiRed&&!!dPH};   // separate lines are dropped only when the combined line carries that dose
+
+  // CC / shock check using current city rule: CC must be < 50% of FC
+  if(needsShock(reading)){
+    var ccLimit=fc*0.5,shd=doseFor(reading,'FC');
+    actions.push({text:'Shock required: CC '+cc.toFixed(1)+' ppm exceeds 50% of FC ('+ccLimit.toFixed(1)+' ppm limit)'+(shd&&shd.shock?' -- '+doseLine(shd):''),urgent:true});
+  }
+
+  // ORP check
+  var os=orpStatus(reading);
+  if(os==='alert'){
+    actions.push({text:'ORP well below setpoint - check chemical supply and probe',urgent:true});
+  }else if(os==='warn'){
+    actions.push({text:'ORP below setpoint - controller dosing',urgent:false});
+  }
+
+  // FC check
+  if(fc!=null){
+    if(fc<1.5){
+      var fld=doseFor(reading,'FC');
+      actions.push({text:'Free chlorine '+fc+' ppm below city minimum (1.5 ppm)'+(fld&&!fld.shock?' -- '+doseLine(fld):''),urgent:true});
+    }else if(fc>10){
+      var fcExcess=parseFloat((fc-10).toFixed(1));
+      var vol=reading.volume||0;
+      var stsOz=vol>0?parseFloat((fcExcess*vol/10000).toFixed(1)):null;
+      var stsAmt=stsOz!=null?(stsOz<128?stsOz+' oz':(stsOz/16).toFixed(2)+' lbs'):'calculate dose';
+      actions.push({text:'FC '+fc+' ppm exceeds city max (10.0 ppm) -- add sodium thiosulfate: '+stsAmt+'. Retest after 1 hour.',urgent:true});
+    }
+  }
+
+  // pH check
+  if(pH!=null&&!merged.PH){
+    var phd=dPH,phs=phd?' -- '+doseLine(phd):'';
+    if(pH<7.2)actions.push({text:'pH '+pH+' below city minimum (7.2)'+phs,urgent:false});
+    else if(pH>8.0)actions.push({text:'pH '+pH+' above city maximum (8.0)'+phs,urgent:false});
+  }
+
+  // Total alkalinity: city range 60-160 ppm
+  var ta=r.ta;
+  if(ta!=null&&(ta<60||ta>160)&&!merged.TA){
+    var tad=dTA;
+    actions.push({text:'Total alkalinity '+ta+' ppm '+(ta<60?'below city minimum (60 ppm)':'above city maximum (160 ppm)')+(tad?' -- '+doseLine(tad):''),urgent:true});
+  }
+  // Calcium hardness: no city limit, so a dose here is a recommendation, not an emergency
+  var chd=dCH;
+  if(chd&&!merged.CH)actions.push({text:'Calcium hardness '+(r.ch!=null?r.ch+' ppm ':'')+(chd.dilute?'is above target':'is below target')+' -- '+doseLine(chd),urgent:false});
+  // Cyanuric acid: city maximum 90 ppm is urgent; below target is a recommendation
+  var cyd=doseFor(reading,'CYA');
+  if(cyd){var cyOver=/city max/i.test(cyd.amount);actions.push({text:'Cyanuric acid '+(r.cya!=null?r.cya+' ppm ':'')+(cyOver?'exceeds city maximum (90 ppm)':(cyd.dilute?'is above the spa range':'is below target'))+' -- '+doseLine(cyd),urgent:cyOver});}
+  // LSI: red (below -0.5 or above +0.5). One line: the readings behind it, then each dose once, with the reason for it.
+  if(lsiRed){
+    var fix=[];
+    if(dTA)fix.push(doseLine(dTA)+' for TA'+(ta!=null&&ta<60?' (below the city minimum of 60 ppm)':(ta!=null&&ta>160?' (above the city maximum of 160 ppm)':'')));
+    if(dCH)fix.push(doseLine(dCH)+' for calcium');
+    if(dPH)fix.push(doseLine(dPH)+' for pH'+(pH!=null&&pH<7.2?' (below the city minimum of 7.2)':(pH!=null&&pH>8.0?' (above the city maximum of 8.0)':'')));
+    var inputs=[];if(r.pH!=null)inputs.push('pH '+r.pH);if(r.ta!=null)inputs.push('TA '+r.ta+' ppm');if(r.ch!=null)inputs.push('CH '+r.ch+' ppm');if(r.temp!=null)inputs.push(r.temp+' F');
+    var advice=lsi<-0.5?'Raise alkalinity or calcium hardness to protect surfaces and equipment.':'Lower pH or alkalinity to prevent cloudy water and scale buildup.';
+    actions.push({text:'LSI '+lsi.toFixed(2)+(lsi<-0.5?' (corrosive)':' (scale forming)')+', balanced is -0.3 to +0.3. From '+inputs.join(', ')+'. '+(fix.length?'To fix: '+fix.join('; ')+'.':advice),urgent:true});
+  }
+
+  return actions;
+}
+
+function isOOS(li,bi){return getOOSStatus(li,bi,allReadings)!=null;}
+
+function overallStatus(reading){
+  if(!reading)return'none';
+  var actions=getActions(reading);
+  var hasUrgent=actions.some(function(a){return a.urgent;});
+  if(hasUrgent)return'alert';
+  if(actions.length>0)return'warn';
+  return'ok';
+}
+
+function timeAgo(ts){
+  var diff=Math.floor((Date.now()-ts)/1000);
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+function renderDashboard(){
+  var filtered=getFilteredReadings();
+
+  // Summary strip
+  var windowLabel=windowDays===0?'all time':'last '+windowDays+' days';
+  document.getElementById('s-window').textContent=windowLabel;
+  var tests=filtered.filter(isTest);
+  document.getElementById('s-total').textContent=tests.length;
+  renderTestersCard(filtered,windowLabel==='all time'?'all time':windowLabel);
+
+  var bodiesTested=new Set();
+  tests.forEach(function(r){bodiesTested.add(r.levelIdx+'-'+r.bodyIdx);});
+  document.getElementById('s-bodies').textContent=bodiesTested.size;
+
+  var shockCount=0; // bodies whose latest reading is over the CC limit (current state, not every old reading in the window)
+  var orpIssues=0;
+  var actionCount=0;
+  var alerts=[],alertGroups=[];
+
+  // Get latest per body and count
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var latest=getLatestForBody(li,bi,filtered);
+      if(!latest)return;
+      if(needsShock(latest))shockCount++;
+      var os=orpStatus(latest);
+      if(os==='alert'||os==='warn')orpIssues++;
+      var actions=getActions(latest);
+      if(actions.length)actionCount+=actions.length;
+      var status=overallStatus(latest);
+      if(status==='alert'){
+        var urgentActions=getActions(latest).filter(function(a){return a.urgent;});
+        if(urgentActions.length)alertGroups.push({li:li,bi:bi,name:b.name+' ('+l.short+')',lines:urgentActions.map(function(a){return escHtml(a.text);})});
+        urgentActions.forEach(function(a){alerts.push(escHtml(b.name+' ('+l.short+'): '+a.text));});
+      }
+    });
+  });
+
+  document.getElementById('s-shocks').textContent=shockCount;
+  document.getElementById('s-shocks').style.color=shockCount>0?'var(--danger-text)':'var(--success-text)';
+  document.getElementById('s-orp').textContent=orpIssues;
+  document.getElementById('s-orp').style.color=orpIssues>0?'var(--warn-text)':'var(--success-text)';
+  document.getElementById('s-actions').textContent=actionCount;
+  document.getElementById('s-actions').style.color=actionCount>0?'var(--warn-text)':'var(--success-text)';
+
+  // Alert bar
+  var alertBar=document.getElementById('alert-bar'),groupsEl=document.getElementById('alert-groups'),titleEl=document.getElementById('alert-title');
+  alertBar.classList.add('visible');
+  if(alertGroups.length){
+    alertBar.classList.remove('clear');titleEl.textContent='Action required - '+alertGroups.length+' bod'+(alertGroups.length!==1?'ies':'y');
+    groupsEl.innerHTML=alertGroups.map(function(g){return '<div class="alert-group"><div class="alert-group-head"><a href="#" onclick="jumpToCard('+g.li+','+g.bi+');return false;">'+escHtml(g.name)+'</a></div><ul>'+g.lines.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';}).join('');
+  }else{
+    alertBar.classList.add('clear');titleEl.textContent='No action required';
+    groupsEl.innerHTML='<div class="alert-clear-line">Every body of water with a recent reading is within limits.</div>';
+  }
+
+  // Destroy old mini charts
+  Object.keys(miniCharts).forEach(function(k){if(miniCharts[k]){miniCharts[k].destroy();delete miniCharts[k];}});
+
+  // Level sections
+  var html='';
+  LEVELS.forEach(function(l,li){
+    html+='<div class="level-section">';
+    html+='<div class="level-title">'+l.name+'</div>';
+    html+='<div class="body-cards">';
+    l.bodies.forEach(function(b,bi){
+      var latest=getLatestForBody(li,bi,filtered);
+      var bodyRecs=getBodyReadings(li,bi,filtered);
+      var status=overallStatus(latest);
+      var cardClass='body-card '+(latest?status:'no-data');
+      var cardId='card-'+li+'-'+bi;
+      var oosStatus=getOOSStatus(li,bi,allReadings); // all time: an out-of-service entry older than the window still counts
+      if(oosStatus){cardClass='body-card warn';}
+      html+='<div class="'+cardClass+'" id="'+cardId+'">';
+      if(oosStatus){
+        html+='<div class="oos-overlay">'
+          +'<div class="oos-badge">'
+          +'<div class="oos-badge-title">Out of Service</div>'
+          +'<div class="oos-badge-reason">'+oosStatus.reason+'</div>'
+          +'<div class="oos-badge-since">Since '+oosStatus.since+'</div>'
+          +'</div></div>';
+      }
+      html+='<div class="body-card-head">';
+      html+='<div><div class="body-name">'+b.name+'</div><div class="body-vol">'+b.vol.toLocaleString()+' gal</div>';
+      if(latest){
+        var pillClass=status==='alert'?'pill-alert':status==='warn'?'pill-warn':status==='ok'?'pill-ok':'pill-none';
+        var pillText=status==='alert'?'Action needed':status==='warn'?'Monitor':'All clear';
+        html+='<span class="status-pill '+pillClass+'">'+pillText+'</span>';
+      }
+      html+='</div>';
+      html+='<div style="text-align:right;">';
+      if(latest){html+='<div class="body-when">'+timeAgo(latest.ts)+(latest.tester?' by '+latest.tester:'')+'</div><div style="font-size:12px;color:var(--text3);">'+bodyRecs.length+' reading'+(bodyRecs.length!==1?'s':'')+' in window</div>';}
+      else{html+='<div class="body-when">No readings</div>';}
+      html+='</div></div>';
+      html+=maintBodyHTML(li,bi);
+
+      if(latest){
+        var r=latest.readings;
+        html+='<div class="metric-rows">';
+
+        // ORP row
+        if(r.orp!=null){
+          var orpPct=Math.min(100,(r.orp/900)*100);
+          var orpColor=orpStatus(latest)==='alert'?'var(--danger-text)':orpStatus(latest)==='warn'?'var(--warn-text)':'var(--success-text)';
+          var orpLabel=r.orp+' mV'+(r.orpSetpoint?' / SP: '+r.orpSetpoint+' mV':'');
+          html+='<div class="metric-row"><span class="metric-label">ORP</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+orpPct.toFixed(1)+'%;background:'+orpColor+';"></div></div><span class="metric-val" style="color:'+orpColor+';">'+orpLabel+'</span></div>';
+        }
+
+        // CC row
+        if(r.cc!=null){
+          var ccColor=r.cc>=0.5?'var(--danger-text)':r.cc>=0.2?'var(--warn-text)':'var(--success-text)';
+          var ccLimit2=(r.fc&&r.fc>0)?r.fc*0.5:null;var ccPct=ccLimit2?Math.min(100,(r.cc/ccLimit2)*100):0;
+          html+='<div class="metric-row"><span class="metric-label">Combined Cl</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+ccPct.toFixed(1)+'%;background:'+ccColor+';"></div></div><span class="metric-val" style="color:'+ccColor+';">'+r.cc.toFixed(1)+' ppm</span></div>';
+        }
+
+        // pH row
+        if(r.pH!=null){
+          var phPct=Math.min(100,Math.max(0,((r.pH-6)/3)*100));
+          var phColor=r.pH>=7.2&&r.pH<=8.0?'var(--success-text)':'var(--warn-text)';
+          html+='<div class="metric-row"><span class="metric-label">pH</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+phPct.toFixed(1)+'%;background:'+phColor+';"></div></div><span class="metric-val" style="color:'+phColor+';">'+r.pH+'</span></div>';
+        }
+
+        // FC row
+        if(r.fc!=null){
+          var fcTarget=b.spa?4.0:3.0;
+          var fcPct=Math.min(100,(r.fc/10)*100);
+          var fcColor=r.fc<1.5||r.fc>10?'var(--danger-text)':'var(--success-text)';
+          html+='<div class="metric-row"><span class="metric-label">Free Chlorine</span><div class="metric-bar-wrap"><div class="metric-bar" style="width:'+fcPct.toFixed(1)+'%;background:'+fcColor+';"></div></div><span class="metric-val" style="color:'+fcColor+';">'+r.fc+' ppm</span></div>';
+        }
+
+        html+='</div>';
+
+        // Backwash tag
+        if(latest.backwash){
+          html+='<div style="font-size:13px;font-weight:500;color:var(--success-text);background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:6px;">Backwash performed - '+timeAgo(latest.ts)+'</div>';
+        }
+        // Notes
+        if(latest.notes){
+          html+=noteBox(latest.notes,'5px 9px');
+        }
+        // Action items
+        var actions=getActions(latest);
+        if(actions.length){
+          html+='<div class="action-list">';
+          actions.forEach(function(a){
+            var cls=a.urgent?'urgent':'caution';
+            var dotCls=a.urgent?'dot-urgent':'dot-caution';
+            html+='<div class="action-item '+cls+'"><span class="action-dot '+dotCls+'"></span><span>'+escHtml(a.text)+'</span></div>';
+          });
+          html+='</div>';
+        }else{
+          html+='<div class="action-list"><div class="action-item"><span class="action-dot dot-ok"></span><span style="color:var(--success-text);">No actions needed</span></div></div>';
+        }
+
+        // Mini ORP trend chart if enough data
+        if(bodyRecs.length>=2){
+          var chartId='mini-'+li+'-'+bi;
+          html+='<div class="mini-chart-wrap" style="height:120px;">'
+  +'<div style="font-size:12px;color:var(--text3);margin-bottom:4px;display:flex;gap:12px;align-items:center;">'
+  +'<span style="font-weight:500;color:var(--text2);">Chlorine trend (7 day)</span>'
+  +'<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:2.5px;background:#22c55e;border-radius:2px;"></span><span style="color:var(--text2);">Free Cl</span></span>'
+  +'<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:14px;height:0px;border-top:2.5px dashed #f97316;vertical-align:middle;"></span><span style="color:var(--text2);">Combined Cl</span></span>'
+  +'</div>'
+  +'<canvas id="'+chartId+'" style="max-height:96px;"></canvas>'
+  +'</div>';
+        }
+
+      }else{
+        html+='<div class="no-data-msg">No readings in selected time window</div>';
+      }
+
+      html+='</div>';
+    });
+    html+='</div></div>';
+  });
+
+  document.getElementById('level-sections').innerHTML=html;
+  renderMaint();
+  renderBarrels();
+  renderBarrelsAttention();
+  if(document.getElementById('tab-barrels-content').style.display!=='none')renderBarrelsTab();
+  renderSpend();
+
+  // Render mini charts after DOM update
+  setTimeout(function(){
+    renderVisuals(filtered);
+    LEVELS.forEach(function(l,li){
+      l.bodies.forEach(function(b,bi){
+        var bodyRecs=getBodyReadings(li,bi,filtered);
+        if(bodyRecs.length<2)return;
+        var chartId='mini-'+li+'-'+bi;
+        var canvas=document.getElementById(chartId);
+        if(!canvas)return;
+        var labels=bodyRecs.map(function(r){return new Date(r.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'});});
+        var fcData=bodyRecs.map(function(r){return r.readings.fc!=null?r.readings.fc:null;});
+        var ccData=bodyRecs.map(function(r){return r.readings.cc!=null?r.readings.cc:null;});
+        var datasets=[];
+        if(fcData.some(function(v){return v!=null;})){
+          datasets.push({label:'Free Cl',data:fcData,borderColor:'#22c55e',backgroundColor:'rgba(34,197,94,0.1)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#22c55e',tension:0.3,spanGaps:true,fill:false});
+        }
+        if(ccData.some(function(v){return v!=null;})){
+          datasets.push({label:'Combined Cl',data:ccData,borderColor:'#f97316',backgroundColor:'transparent',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'#f97316',tension:0.3,spanGaps:true,borderDash:[5,3]});
+        }
+        if(!datasets.length)return;
+        miniCharts[chartId]=new Chart(canvas,{
+          type:'line',
+          data:{labels:labels,datasets:datasets},
+          options:{
+            responsive:true,maintainAspectRatio:false,
+            animation:false,
+            interaction:{mode:'index',intersect:false},
+            plugins:{
+              legend:{display:false},
+              tooltip:{
+                enabled:true,
+                backgroundColor:'rgba(20,20,18,0.95)',
+                titleColor:'rgba(255,255,255,0.65)',
+                bodyColor:'rgba(255,255,255,0.9)',
+                titleFont:{size:12},
+                bodyFont:{size:13},
+                padding:8,
+                borderColor:'rgba(255,255,255,0.1)',
+                borderWidth:1,
+                callbacks:{
+                  title:function(items){return items[0].label;},
+                  label:function(ctx){return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' ppm';}
+                }
+              }
+            },
+            scales:{
+              x:{display:false},
+              y:{
+                display:true,
+                position:'right',
+                ticks:{font:{size:12},color:chartText(),maxTicksLimit:4,callback:function(v){return v.toFixed(1);}},
+                grid:{color:'rgba(128,128,128,0.07)'}
+              }
+            }
+          }
+        });
+      });
+    });
+  },50);
+}
+
+var donutChart=null;
+
+function renderVisuals(filtered){
+  var allLatest=[];
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var latest=getLatestForBody(li,bi,filtered);
+      allLatest.push({level:l,body:b,li:li,bi:bi,latest:latest});
+    });
+  });
+
+  renderDonut(allLatest);
+  renderTimeline(allLatest);
+  renderBackwash(allLatest);
+  renderHeatmap(allLatest);
+  renderGlance(allLatest);
+}
+
+function buildDonutChart(canvasId,legendId,items,chartRef){
+  var counts={ok:0,warn:0,alert:0,none:0};
+  items.forEach(function(item){
+    var s=overallStatus(item.latest);
+    counts[s]=(counts[s]||0)+1;
+  });
+  var data=[counts.ok,counts.warn,counts.alert,counts.none];
+  var colors=['#22c55e','#f97316','#ef4444','#6b7280'];
+  var labels=['All clear','Monitor','Action needed','No data'];
+
+  if(chartRef[0]){chartRef[0].destroy();chartRef[0]=null;}
+  var canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  chartRef[0]=new Chart(canvas,{
+    type:'doughnut',
+    data:{
+      labels:labels,
+      datasets:[{data:data,backgroundColor:colors,borderWidth:2,borderColor:'var(--bg)',hoverOffset:4}]
+    },
+    options:{
+      responsive:false,
+      cutout:'65%',
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:function(ctx){
+              var noun=canvasId==='donut-pools'?'pool':'spa';
+              return ' '+ctx.label+': '+ctx.parsed+' '+noun+(ctx.parsed===1?'':'s');
+            }
+          }
+        }
+      }
+    }
+  });
+
+  var leg=document.getElementById(legendId);
+  if(!leg)return;
+  leg.innerHTML=labels.map(function(l,i){
+    if(data[i]===0)return '';
+    return '<div class="donut-leg-row">'
+      +'<span class="donut-leg-dot" style="background:'+colors[i]+';"></span>'
+      +'<span>'+l+'</span>'
+      +'<span class="donut-leg-val">'+data[i]+'</span>'
+      +'</div>';
+  }).join('');
+}
+
+var donutPoolsRef=[null];
+var donutSpasRef=[null];
+
+function renderDonut(allLatest){
+  var pools=allLatest.filter(function(item){return !item.body.spa;});
+  var spas=allLatest.filter(function(item){return item.body.spa;});
+  buildDonutChart('donut-pools','donut-legend-pools',pools,donutPoolsRef);
+  buildDonutChart('donut-spas','donut-legend-spas',spas,donutSpasRef);
+}
+
+function renderTimeline(allLatest){
+  var now=Date.now();
+  var maxAge=72*60*60*1000; // 72 hours = full bar
+  var html='';
+  allLatest.forEach(function(item){
+    var latest=item.latest;
+    var age=latest?now-latest.ts:null;
+    var pct=age!=null?Math.max(0,100-Math.min(100,(age/maxAge)*100)):0;
+    var color=age==null?'#6b7280':age<24*3600*1000?'#22c55e':age<48*3600*1000?'#f97316':'#ef4444';
+    var ageText=age==null?'Never':age<3600000?Math.floor(age/60000)+'m ago':age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago';
+    var name=item.body.name+' ('+item.level.short+')';
+    html+='<div class="tl-row">'
+      +'<span class="tl-label" title="'+name+'">'+name+'</span>'
+      +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
+      +'<span class="tl-age">'+ageText+'</span>'
+      +'</div>';
+  });
+  document.getElementById('timeline-rows').innerHTML=html;
+}
+
+
+
+// Whole CALENDAR days between a past time and now (not elapsed 24-hour blocks): 9:22 AM Wednesday viewed at 8:30 AM Friday is 2 days ago, not "yesterday".
+function calDaysAgo(ts,nowTs){var n=new Date(nowTs==null?Date.now():nowTs),t=new Date(ts);return Math.round((Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())-Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);}
+function renderBackwash(allLatest){
+  var wrap=document.getElementById('backwash-rows');
+  if(!wrap)return;
+  var html='';
+  allLatest.forEach(function(item){
+    // Find most recent reading with backwash:true for this body
+    var bwReadings=allReadings.filter(function(r){
+      return r.levelIdx===item.li&&r.bodyIdx===item.bi&&r.backwash===true;
+    });
+    var lastBW=bwReadings.length?bwReadings.reduce(function(a,b){return a.ts>b.ts?a:b;}):null;
+    var age=lastBW?calDaysAgo(lastBW.ts):null;
+    // Colour: green 0-7 days, amber 8-14 days, red 15+ days, grey never
+    var color=age===null?'#6b7280':age<=7?'#22c55e':age<=14?'#f97316':'#ef4444';
+    var pct=age===null?0:Math.max(5,Math.min(100,100-Math.min(100,(age/21)*100)));
+    var ageText=age===null?'Never recorded':age===0?'Today':age===1?'Yesterday':age+' days ago';
+    var name=item.body.name+' ('+item.level.short+')';
+    html+='<div class="tl-row">'
+      +'<span class="tl-label" title="'+name+'">'+name+'</span>'
+      +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
+      +'<span class="tl-age" title="'+(lastBW?escHtml('Backwash logged '+(lastBW.when||new Date(lastBW.ts).toLocaleString('en-US'))):'')+'">'+ageText+'</span>'
+      +'</div>';
+  });
+  wrap.innerHTML=html;
+}
+
+function renderHeatmap(allLatest){
+  var params=[
+    {key:'orp',label:'ORP',check:function(item){
+      var s=orpStatus(item.latest);
+      if(!s)return null;
+      var val=item.latest.readings.orp;
+      return{status:s,val:val!=null?val+' mV':'--'};
+    }},
+    {key:'fc',label:'Free Cl',check:function(item){
+      var r=item.latest.readings;
+      if(r.fc==null)return null;
+      var s=r.fc<1.5||r.fc>10?'alert':r.fc<2?'warn':'ok';
+      return{status:s,val:r.fc+' ppm'};
+    }},
+    {key:'cc',label:'Combined Cl',check:function(item){
+      var r=item.latest.readings;
+      if(r.cc==null||r.fc==null||r.fc<=0)return null;
+      var limit=r.fc*0.5;
+      var s=r.cc>=limit?'alert':r.cc>=limit*0.8?'warn':'ok';
+      return{status:s,val:r.cc.toFixed(1)+' ppm'};
+    }},
+    {key:'pH',label:'pH',check:function(item){
+      var r=item.latest.readings;
+      if(r.pH==null)return null;
+      var s=r.pH<7.2||r.pH>8.0?'alert':r.pH<7.4||r.pH>7.8?'warn':'ok';
+      return{status:s,val:r.pH.toFixed(1)};
+    }},
+    {key:'lsi',label:'LSI',check:function(item){
+      var lsi=item.latest.lsi;
+      if(lsi==null)return null;
+      var s=lsi<-0.5||lsi>0.5?'alert':lsi<-0.3||lsi>0.3?'warn':'ok';
+      return{status:s,val:parseFloat(lsi).toFixed(2)};
+    }},
+    {key:'temp',label:'Temp (F)',check:function(item){
+      var r=item.latest.readings;
+      if(r.temp==null)return null;
+      return{status:'ok',val:r.temp+'F'};
+    }}
+  ];
+
+  var html='<table class="hm-table"><thead><tr><th>Body</th>';
+  var showTester=allLatest.some(function(i){return i.latest&&i.latest.tester;});
+  params.forEach(function(p){html+='<th>'+p.label+'</th>';});
+  if(showTester)html+='<th>Tested by</th>';
+  html+='</tr></thead><tbody>';
+
+  allLatest.forEach(function(item){
+    html+='<tr><td>'+item.body.name+'<br><span style="font-size:12px;font-weight:400;color:var(--text3);">'+item.level.short+'</span></td>';
+    if(!item.latest){
+      params.forEach(function(){html+='<td><span class="hm-cell hm-none">No data</span></td>';});
+      if(showTester)html+='<td><span class="hm-cell hm-none">--</span></td>';
+    }else{
+      params.forEach(function(p){
+        var result=p.check(item);
+        if(!result){html+='<td><span class="hm-cell hm-none">--</span></td>';return;}
+        var cls=result.status==='alert'?'hm-alert':result.status==='warn'?'hm-warn':'hm-ok';
+        html+='<td><span class="hm-cell '+cls+'">'+result.val+'</span></td>';
+      });
+      if(showTester)html+='<td><span class="hm-cell hm-none" style="background:none;color:var(--text2);">'+(item.latest&&item.latest.tester?item.latest.tester:'--')+'</span></td>';
+    }
+    html+='</tr>';
+  });
+
+  html+='</tbody></table>';
+  document.getElementById('heatmap-wrap').innerHTML=html;
+}
+
+function renderVisuals(filtered){
+  var allLatest=[];
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var latest=getLatestForBody(li,bi,filtered);
+      allLatest.push({level:l,body:b,li:li,bi:bi,latest:latest});
+    });
+  });
+  renderDonut(allLatest);
+  renderTimeline(allLatest);
+  renderBackwash(allLatest);
+  renderHeatmap(allLatest);
+  renderGlance(allLatest);
+}
+
+function showDashTab(tab){
+  ["overview","history","purchases","barrels"].forEach(function(t){
+    document.getElementById("tab-"+t+"-content").style.display=t===tab?"block":"none";
+    document.getElementById("tab-"+t).classList.toggle("active",t===tab);
+  });
+  if(tab==="history"){
+    populateDashHistFilter();
+    renderDashHistory();
+  }
+  if(tab==="purchases"){resetPurchFormOnce();renderPurchView();}
+  if(tab==="barrels"){renderBarrelsTab();}
+}
+
+function populateDashHistFilter(){
+  var sel=document.getElementById("hist-body-filter");
+  sel.innerHTML='<option value="all">All bodies</option>';
+  LEVELS.forEach(function(l,li){
+    l.bodies.forEach(function(b,bi){
+      var o=document.createElement("option");
+      o.value=li+"-"+bi;
+      o.textContent=b.name+" ("+l.short+")";
+      sel.appendChild(o);
+    });
+  });
+}
+
+function suggestedHTML(e){ // "Suggested at the time: ..." so a red LSI or a low TA in History shows what was recommended
+  var p=pendingDoses(e);if(!p.length)return '';
+  return '<div class="dash-hist-suggest"><b>Suggested:</b> '+p.map(function(x){return escHtml(doseLabeled(x));}).join('; ')+'</div>';
+}
+function lsiPill(lsi){
+  if(lsi==null)return '<span style="font-size:13px;padding:2px 8px;border-radius:20px;background:var(--bg2);color:var(--text3);">LSI --</span>';
+  var bg=lsi<-0.5?"var(--danger-bg)":lsi>0.5?"var(--warn-bg)":"var(--success-bg)";
+  var col=lsi<-0.5?"var(--danger-text)":lsi>0.5?"var(--warn-text)":"var(--success-text)";
+  var brd=lsi<-0.5?"var(--danger-border)":lsi>0.5?"var(--warn-border)":"var(--success-border)";
+  return '<span style="font-size:13px;padding:2px 8px;border-radius:20px;background:'+bg+';color:'+col+';border:0.5px solid '+brd+';">LSI '+parseFloat(lsi).toFixed(2)+'</span>';
+}
+
+function chartText(){var v=getComputedStyle(document.documentElement).getPropertyValue('--text3').trim();return v||'#62625e';} // chart labels follow the theme gray (light/dark)
+function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function noteBox(n,pad){return '<div style="font-size:13px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:'+pad+';margin-bottom:6px;white-space:pre-wrap;">Note: '+escHtml(n)+'</div>';}
+function renderDashHistory(){
+  updateUnnamedButton();
+  if(histView==='maint'){renderMaintHistory();return;}
+  var filter=document.getElementById("hist-body-filter").value;
+  var entries=allReadings.slice();
+  if(filter!=="all"){
+    var p=filter.split("-");
+    entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});
+  }
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  var summary=document.getElementById("hist-summary");
+  if(summary)summary.textContent=entries.length+" reading"+(entries.length!==1?"s":"")+(filter==="all"?" across all bodies":" for selected body");
+  var list=document.getElementById("dash-hist-list");
+  if(!entries.length){
+    list.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;">No readings found.</div>';
+    return;
+  }
+  list.innerHTML=entries.map(function(e){
+    if(e.outOfService){
+      return '<div class="dash-hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +'<div style="font-size:13px;color:var(--warn-text);">Reason: '+escHtml(e.reason||'')+'</div>'
+        +(e.tester?'<div style="font-size:13px;color:var(--warn-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
+    if(e.returnedToService){
+      return '<div class="dash-hist-entry" style="border-color:var(--success-border);background:var(--success-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--success-text);">RETURNED TO SERVICE: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.tester?'<div style="font-size:13px;color:var(--success-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
+    if(e.barrelChange){
+      return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">'+escHtml(String(e.chem||'').toUpperCase())+' BARREL CHANGED: '+escHtml(e.barrelLabel)+' ('+escHtml(e.barrelGal)+' gal)</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.notes?'<div style="font-size:13px;color:var(--info-text);">Note: '+escHtml(e.notes)+'</div>':'')
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
+    if(e.backwashOnly){
+      return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(e.notes?'<div style="font-size:13px;color:var(--info-text);">Note: '+escHtml(e.notes)+'</div>':'')
+        +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escHtml(e.tester)+'</div>':'')
+        +'</div><button class="dash-del-btn" onclick="dashDeleteEntry(\''+e.id+'\',\'event\')">Delete</button></div></div>';
+    }
+    var r=e.readings||{};
+    return '<div class="dash-hist-entry">'
+      +'<div class="dash-hist-head">'
+      +'<div><div class="dash-hist-who">'+e.body+' - '+e.level+'</div>'
+      +'<div class="dash-hist-when">'+e.when+(e.volume?' - '+e.volume.toLocaleString()+' gal':'')+'</div>'
+      +(e.tester?'<div style="font-size:13px;color:var(--text3);">Tested by '+e.tester+'</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:8px;align-items:center;">'
+      +lsiPill(e.lsi)
+      +' <button class="dash-del-btn" onclick="dashDeleteEntry(\''+(e.id)+'\')">Delete</button>'
+      +'</div></div>'
+      +'<div class="dash-hist-params">'
+      +(r.orp!=null?'<div class="dash-hist-param">ORP <span>'+r.orp+' mV</span></div>':'')
+      +(r.orpSetpoint!=null?'<div class="dash-hist-param">SP <span>'+r.orpSetpoint+' mV</span></div>':'')
+      +(r.pH!=null?'<div class="dash-hist-param">pH <span>'+r.pH+'</span></div>':'')
+      +(r.fc!=null?'<div class="dash-hist-param">FC <span>'+r.fc+' ppm</span></div>':'')
+      +(r.cc!=null?'<div class="dash-hist-param">CC <span>'+r.cc+' ppm</span></div>':'')
+      +(r.ta!=null?'<div class="dash-hist-param">TA <span>'+r.ta+' ppm</span></div>':'')
+      +(r.ch!=null?'<div class="dash-hist-param">CH <span>'+r.ch+' ppm</span></div>':'')
+      +(r.cya!=null?'<div class="dash-hist-param">CYA <span>'+r.cya+' ppm</span></div>':'')
+      +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
+      +'</div>'
+      +suggestedHTML(e)
+      +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">Backwash performed</span></div>':'')
+      +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
+      +'</div>';
+  }).join("");
+}
+
+// What deleting a status entry does to the body's out-of-service state (its latest out-of-service / return-to-service entry decides it).
+function statusDeleteMessage(entry,list){
+  var name=entry.body+' ('+entry.level+')',before=getOOSStatus(entry.levelIdx,entry.bodyIdx,list),after=getOOSStatus(entry.levelIdx,entry.bodyIdx,list.filter(function(r){return r.id!==entry.id;}));
+  var what=entry.outOfService?'out-of-service':'return-to-service';
+  var effect=(!!before===!!after)?'This will not change whether '+name+' shows as out of service.'
+    :(after?'Afterwards '+name+' will show as OUT OF SERVICE ('+(after.reason||'Maintenance')+').':'Afterwards '+name+' will no longer show as out of service.');
+  return 'Delete this '+what+' entry for '+name+'?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+function backwashDeleteMessage(entry,list){
+  function last(arr){var l=null;arr.forEach(function(r){if(r.levelIdx===entry.levelIdx&&r.bodyIdx===entry.bodyIdx&&r.backwash===true&&(l===null||r.ts>l.ts))l=r;});return l;}
+  var name=entry.body+' ('+entry.level+')',before=last(list),after=last(list.filter(function(r){return r.id!==entry.id;}));
+  var effect;
+  if(before&&before.id!==entry.id)effect='This will not change the Last backwash card for '+name+'.';
+  else if(after){var n=calDaysAgo(after.ts);effect='Afterwards the last backwash for '+name+' will show as '+(after.when||'earlier')+' ('+(n===0?'today':(n===1?'yesterday':n+' days ago'))+').';}
+  else effect='Afterwards the last backwash for '+name+' will show as "Never recorded".';
+  return 'Delete this backwash entry for '+name+'?\n\n'+effect+'\n\nThis cannot be undone.';
+}
+async function dashDeleteEntry(id,kind){
+  var numId=Number(id);
+  var target=allReadings.filter(function(r){return r.id===numId;})[0];
+  if(kind==='event'&&target){if(!confirm(target.barrelChange?barrelDeleteMessage(target,allReadings):(target.backwashOnly?backwashDeleteMessage(target,allReadings):statusDeleteMessage(target,allReadings))))return;}
+  else if(!confirm("Delete this reading? This cannot be undone."))return;
+  setSyncBadge('syncing','Deleting...');
+  var res=await ghMutate(function(remote){
+    var kept=remote.filter(function(e){return e.id!==numId;});
+    if(kept.length===remote.length)return null;            // already gone
+    if(remote.length-kept.length>1)return{list:remote,added:0,removed:0}; // duplicate IDs: refuse, change nothing
+    return{list:kept,added:0,removed:1};
+  },kind==='event'?'Deleted status entry (out of service / returned to service / backwash)':'Deleted reading');
+  if(res.ok){
+    allReadings=res.list;
+    setSyncBadge("ok","Deleted - "+allReadings.length+" reading"+(allReadings.length!==1?"s":""));
+    renderDashHistory();
+    renderDashboard();
+  }else{
+    setSyncBadge('err','Delete failed');
+    alert("Delete failed ("+res.reason+"). Nothing was changed. Try again.");
+  }
+}
+
+function exportDashCSV(){
+  if(histView==='maint'){exportMaintCSV();return;}
+  if(!allReadings.length){alert("No readings to export.");return;}
+  var filter=document.getElementById("hist-body-filter").value;
+  var entries=allReadings.slice();
+  if(filter!=="all"){var p=filter.split("-");entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});}
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)","Entry type","Reason or note","Backwash"]];
+  entries.forEach(function(e){
+    var r=e.readings||{};
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":""]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var blob=new Blob([csv],{type:"text/csv"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="aquatic-readings-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+var autoRefreshInterval=null;
+var autoRefreshSeconds=0;
+var AUTO_REFRESH_MS=7*60*1000; // 7 minutes
+
+function startAutoRefresh(){
+  stopAutoRefresh();
+  autoRefreshSeconds=Math.round(AUTO_REFRESH_MS/1000);
+  updateCountdown();
+  autoRefreshInterval=setInterval(function(){
+    autoRefreshSeconds--;
+    updateCountdown();
+    if(autoRefreshSeconds<=0){
+      autoRefreshSeconds=Math.round(AUTO_REFRESH_MS/1000);
+      loadData();
+    }
+  },1000);
+}
+
+function stopAutoRefresh(){
+  if(autoRefreshInterval){clearInterval(autoRefreshInterval);autoRefreshInterval=null;}
+}
+
+function updateCountdown(){
+  var el=document.getElementById('refresh-countdown');
+  if(!el)return;
+  var m=Math.floor(autoRefreshSeconds/60);
+  var s=autoRefreshSeconds%60;
+  el.textContent='Auto-refresh in '+m+':'+(s<10?'0':'')+s;
+}
+
+window.onload=function(){
+  loadToken();
+  if(!GH_TOKEN){showTokenSetup();}
+  else{showDashboard();setTimeout(function(){loadData();},600);}
+};
+</script>
+</body>
+</html>
