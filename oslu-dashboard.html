@@ -18,6 +18,7 @@
   --radius:8px;--radius-lg:12px;
   --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
   --band:rgba(0,0,0,0.035);
+  --level-bg:var(--info-bg);
   --c-chem:#1F4E9A;--c-equip:#D35400;--c-parts:#17A589;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
@@ -32,6 +33,7 @@
     --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.2);
     --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
     --band:rgba(255,255,255,0.05);
+    --level-bg:#13283f;
     --c-chem:#4B8DE3;--c-equip:#E8962A;--c-parts:#62E5C2;
   }
 }
@@ -277,7 +279,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .glance td{padding:5px 10px;border-bottom:0.5px solid var(--border2);vertical-align:middle;color:var(--text);white-space:nowrap;}
 .glance td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
 .glance td:nth-child(2) small{display:inline;margin:0 0 0 8px;}   /* name and size on one line: shorter rows */
-.gl-level td{font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);background:var(--bg2);padding:5px 10px;border-bottom:0.5px solid var(--border);}
+.gl-level td{font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--info-text);background:var(--level-bg);padding:5px 10px;border-bottom:0.5px solid var(--info-border);}
 .gl-row{cursor:pointer;}
 .gl-row.gl-alt td{background:var(--band);}
 .gl-row:hover td,.gl-row.gl-alt:hover td{background:var(--bg2);}
@@ -341,7 +343,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v2.0.2 - Nov 7, 2026</span>
+        <span class="version">v2.0.3 - Nov 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
