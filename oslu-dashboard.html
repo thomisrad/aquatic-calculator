@@ -17,6 +17,7 @@
   --danger-bg:#fcebeb;--danger-text:#a32d2d;--danger-border:rgba(163,45,45,0.25);
   --radius:8px;--radius-lg:12px;
   --card-shadow:0 1px 3px rgba(0,0,0,0.08),0 4px 14px rgba(0,0,0,0.10);
+  --band:rgba(0,0,0,0.035);
   --c-chem:#1F4E9A;--c-equip:#D35400;--c-parts:#17A589;
   --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 }
@@ -30,6 +31,7 @@
     --warn-bg:#412402;--warn-text:#ef9f27;--warn-border:rgba(239,159,39,0.2);
     --danger-bg:#501313;--danger-text:#f09595;--danger-border:rgba(240,149,149,0.2);
     --card-shadow:0 1px 3px rgba(0,0,0,0.45),0 6px 18px rgba(0,0,0,0.40);
+    --band:rgba(255,255,255,0.05);
     --c-chem:#4B8DE3;--c-equip:#E8962A;--c-parts:#62E5C2;
   }
 }
@@ -272,12 +274,13 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .gl-card{padding:6px 8px;margin-bottom:0;}
 .glance{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
 .glance th{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;text-align:left;padding:8px 10px;border-bottom:0.5px solid var(--border2);white-space:nowrap;}
-.glance td{padding:5px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle;color:var(--text);white-space:nowrap;}
+.glance td{padding:5px 10px;border-bottom:0.5px solid var(--border2);vertical-align:middle;color:var(--text);white-space:nowrap;}
 .glance td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
 .glance td:nth-child(2) small{display:inline;margin:0 0 0 8px;}   /* name and size on one line: shorter rows */
 .gl-level td{font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);background:var(--bg2);padding:5px 10px;border-bottom:0.5px solid var(--border);}
 .gl-row{cursor:pointer;}
-.gl-row:hover td{background:var(--bg2);}
+.gl-row.gl-alt td{background:var(--band);}
+.gl-row:hover td,.gl-row.gl-alt:hover td{background:var(--bg2);}
 .gl-row td:first-child{box-shadow:inset 5px 0 0 var(--border2);}
 .gl-row.gl-alert td:first-child{box-shadow:inset 5px 0 0 var(--danger-text);}
 .gl-row.gl-warn td:first-child{box-shadow:inset 5px 0 0 var(--warn-text);}
@@ -291,6 +294,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .gl-pill.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
 .gl-pill.oos{background:var(--warn-text);color:var(--bg);border-color:var(--warn-text);}
 .gl-pill.none{background:var(--bg2);color:var(--text3);}
+.gl-age.plain{color:var(--text2);}
 .gl-age.ok{color:var(--success-text);}.gl-age.warn{color:var(--warn-text);}.gl-age.alert{color:var(--danger-text);font-weight:500;}.gl-age.none{color:var(--text3);}
 .gl-none{color:var(--text3);}
 .gl-open{display:block;max-width:260px;white-space:normal;color:var(--warn-text);}
@@ -337,7 +341,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v2.0.1 - Nov 7, 2026</span>
+        <span class="version">v2.0.2 - Nov 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -1181,13 +1185,13 @@ function glCell(status,val){var cls=status==='alert'?'hm-alert':(status==='warn'
 function renderGlance(allLatest){
   var el=document.getElementById('glance-section');if(!el)return;
   var now=Date.now(),h='<div class="visual-card gl-card"><div style="overflow-x:auto;"><table class="glance"><thead><tr><th>Status</th><th>Body</th><th>FC</th><th>CC</th><th>pH</th><th>ORP</th><th>TA</th><th>CH</th><th>LSI</th><th>Temp</th><th>Last tested</th><th>Last backwash</th><th>Open repair</th></tr></thead><tbody>';
-  var lastLevel=-1;
+  var lastLevel=-1,bandIdx=0;
   allLatest.forEach(function(item){
     var li=item.li,bi=item.bi,l=item.level,b=item.body,latest=item.latest,r=latest?latest.readings:{};
-    if(li!==lastLevel){lastLevel=li;h+='<tr class="gl-level"><td colspan="13">'+escHtml(l.name)+'</td></tr>';}
+    if(li!==lastLevel){lastLevel=li;bandIdx=0;h+='<tr class="gl-level"><td colspan="13">'+escHtml(l.name)+'</td></tr>';}
     var oos=getOOSStatus(li,bi,allReadings),st=latest?overallStatus(latest):'none';
     var pill=oos?'<span class="gl-pill oos">Out of service</span>':(st==='alert'?'<span class="gl-pill alert">Action needed</span>':(st==='warn'?'<span class="gl-pill warn">Monitor</span>':(st==='ok'?'<span class="gl-pill ok">All clear</span>':'<span class="gl-pill none">No data</span>')));
-    var rowCls='gl-row '+(oos?'gl-oos':'gl-'+st);
+    var rowCls='gl-row '+(oos?'gl-oos':'gl-'+st)+(bandIdx++%2?' gl-alt':'');
     h+='<tr class="'+rowCls+'" onclick="jumpToCard('+li+','+bi+')" title="Click for the details of '+escHtml(b.name)+'"><td>'+pill+'</td><td><b>'+escHtml(b.name)+'</b><small>'+escHtml(l.short)+', '+b.vol.toLocaleString()+' gal</small></td>';
     if(!latest){for(var k=0;k<8;k++)h+=glCell('none','--');}
     else{
@@ -1203,7 +1207,7 @@ function renderGlance(allLatest){
     var age=latest?now-latest.ts:null,tcls=age==null?'none':(age<24*3600000?'ok':(age<48*3600000?'warn':'alert'));
     h+='<td><span class="gl-age '+tcls+'">'+(age==null?'Never':(age<3600000?Math.floor(age/60000)+'m ago':(age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago')))+'</span></td>';
     var bw=allReadings.filter(function(x){return x.levelIdx===li&&x.bodyIdx===bi&&x.backwash===true;}),lb=bw.length?bw.reduce(function(a,c){return a.ts>c.ts?a:c;}):null,bd=lb?calDaysAgo(lb.ts):null;
-    h+='<td><span class="gl-age '+(bd==null?'none':(bd<=7?'ok':(bd<=14?'warn':'alert')))+'" title="'+(lb?escHtml('Backwash logged '+(lb.when||new Date(lb.ts).toLocaleString('en-US'))):'')+'">'+(bd==null?'Never recorded':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago')))+'</span></td>';
+    h+='<td><span class="gl-age plain" title="'+(lb?escHtml('Backwash logged '+(lb.when||new Date(lb.ts).toLocaleString('en-US'))):'')+'">'+(bd==null?'Never recorded':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago')))+'</span></td>';
     var openTxt='<span class="gl-none">-</span>';
     if(maintState!=='unknown'){
       var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}),op=maintOpenItems(recs);
