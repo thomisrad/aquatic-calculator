@@ -67,7 +67,6 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .alert-bar{background:var(--danger-bg);border:0.5px solid var(--danger-border);border-radius:var(--radius);padding:12px 16px;margin-bottom:1.25rem;display:none;}
 .alert-bar.visible{display:block;}
 .alert-bar-title{font-size:15px;font-weight:500;color:var(--danger-text);margin-bottom:8px;}
-.alert-list{list-style:none;}
 .alert-item{font-size:14px;color:var(--danger-text);padding:3px 0;border-bottom:0.5px solid var(--danger-border);}
 .alert-item:last-child{border-bottom:none;}
 
@@ -128,27 +127,8 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .visual-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;flex:1;min-width:200px;}
 .visual-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:2px;}
 .visual-sub{font-size:13px;color:var(--text3);margin-bottom:12px;}
-.donut-wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-.donut-legend{display:flex;flex-direction:column;gap:8px;}
-.donut-leg-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);}
-.donut-leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-.donut-leg-val{font-size:16px;font-weight:500;color:var(--text);margin-left:auto;padding-left:8px;}
 
-/* Timeline */
-.tl-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
-.tl-label{font-size:14px;color:var(--text2);width:112px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tl-bar-track{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
-.tl-bar-fill{height:100%;border-radius:4px;transition:width 0.4s;}
-.tl-age{font-size:13px;color:var(--text3);width:62px;text-align:right;flex-shrink:0;}
 
-/* Heatmap */
-.heatmap-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:1.25rem;}
-.hm-table{border-collapse:collapse;min-width:100%;font-size:14px;}
-.hm-table th{padding:6px 10px;font-size:12px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.04em;text-align:center;white-space:nowrap;border-bottom:0.5px solid var(--border);}
-.hm-table th:first-child{text-align:left;}
-.hm-table td{padding:6px 10px;text-align:center;border-bottom:0.5px solid var(--border);vertical-align:middle;}
-.hm-table td:first-child{text-align:left;color:var(--text);font-weight:500;white-space:nowrap;}
-.hm-table tr:last-child td{border-bottom:none;}
 .hm-cell{display:inline-block;padding:3px 8px;border-radius:var(--radius);font-size:13px;font-weight:500;min-width:52px;}
 .hm-ok{background:var(--success-bg);color:var(--success-text);}
 .hm-warn{background:var(--warn-bg);color:var(--warn-text);}
@@ -180,7 +160,6 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 #tab-overview-content .summary-card,
 #tab-overview-content .visual-card,
 #tab-overview-content .body-card,
-#tab-overview-content .heatmap-card{box-shadow:var(--card-shadow);}
 
 /* Maintenance (Overview) */
 .maint-panels{display:flex;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap;}
@@ -260,9 +239,6 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 @media(min-width:1500px){
   #level-sections{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 22px;align-items:start;}   /* Level 1 | Level 2 | Level 13, like the building */
   #level-sections .body-cards{grid-template-columns:1fr;}
-  #dash-hist-list,#pu-list,#bar-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start;}
-  #dash-hist-list>*,#pu-list>*,#bar-list>*{margin-bottom:0;}
-  #dash-hist-list>:not(.dash-hist-entry),#pu-list>:not(.dash-hist-entry),#bar-list>:not(.dash-hist-entry){grid-column:1/-1;}
 }
 .maint-up{margin-top:8px;padding:8px 10px;border-left:3px solid var(--info-text);background:var(--info-bg);color:var(--info-text);border-radius:var(--radius);font-size:13px;word-break:break-word;}
 .maint-hold{margin-top:6px;padding:6px 8px;background:var(--warn-bg);border:0.5px solid var(--warn-border);border-radius:var(--radius);color:var(--warn-text);}
@@ -280,6 +256,55 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .bar-pill.overdue{background:var(--danger-bg);color:var(--danger-text);border-color:var(--danger-border);}
 .bar-pill.tracking{background:var(--info-bg);color:var(--info-text);border-color:var(--info-border);}
 .bar-note{font-size:13px;color:var(--text2);margin-top:10px;line-height:1.5;}
+/* ===== Overview layout ===== */
+.sec-title{font-size:13px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin:1.7rem 0 0.7rem;padding-bottom:6px;border-bottom:0.5px solid var(--border2);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+.sec-sub{font-size:13px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
+.alert-group{margin-top:8px;padding-top:8px;border-top:0.5px solid var(--danger-border);}
+.alert-group:first-child{border-top:none;margin-top:0;padding-top:0;}
+.alert-group-head{font-size:15px;font-weight:500;}
+.alert-group-head a{color:var(--danger-text);text-decoration:underline;}
+.alert-group ul{list-style:none;margin:3px 0 0;padding-left:14px;}
+.alert-group li{font-size:14px;color:var(--danger-text);padding:2px 0;}
+.alert-bar.clear{background:var(--success-bg);border-color:var(--success-border);}
+.alert-bar.clear .alert-bar-title{color:var(--success-text);margin-bottom:2px;}
+.alert-clear-line{font-size:14px;color:var(--success-text);}
+.gl-card{padding:6px 8px;margin-bottom:0;}
+.glance{width:100%;border-collapse:separate;border-spacing:0;font-size:14px;}
+.glance th{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em;text-align:left;padding:8px 10px;border-bottom:0.5px solid var(--border2);white-space:nowrap;}
+.glance td{padding:5px 10px;border-bottom:0.5px solid var(--border);vertical-align:middle;color:var(--text);white-space:nowrap;}
+.glance td small{display:block;color:var(--text3);font-size:12px;margin-top:1px;}
+.glance td:nth-child(2) small{display:inline;margin:0 0 0 8px;}   /* name and size on one line: shorter rows */
+.gl-level td{font-size:12px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;color:var(--text2);background:var(--bg2);padding:5px 10px;border-bottom:0.5px solid var(--border);}
+.gl-row{cursor:pointer;}
+.gl-row:hover td{background:var(--bg2);}
+.gl-row td:first-child{box-shadow:inset 5px 0 0 var(--border2);}
+.gl-row.gl-alert td:first-child{box-shadow:inset 5px 0 0 var(--danger-text);}
+.gl-row.gl-warn td:first-child{box-shadow:inset 5px 0 0 var(--warn-text);}
+.gl-row.gl-ok td:first-child{box-shadow:inset 5px 0 0 var(--success-text);}
+.gl-row.gl-oos td:first-child{box-shadow:inset 5px 0 0 var(--warn-text);}
+.glance .hm-alert{background:var(--danger-text);color:var(--bg);}   /* the value that is the problem is the loudest thing in the row */
+.glance .hm-warn{border:0.5px solid var(--warn-border);}
+.gl-pill{display:inline-block;font-size:13px;font-weight:500;padding:4px 12px;border-radius:20px;border:0.5px solid var(--border);white-space:nowrap;}
+.gl-pill.alert{background:var(--danger-text);color:var(--bg);border-color:var(--danger-text);}
+.gl-pill.warn{background:var(--warn-bg);color:var(--warn-text);border-color:var(--warn-border);}
+.gl-pill.ok{background:var(--success-bg);color:var(--success-text);border-color:var(--success-border);}
+.gl-pill.oos{background:var(--warn-text);color:var(--bg);border-color:var(--warn-text);}
+.gl-pill.none{background:var(--bg2);color:var(--text3);}
+.gl-age.ok{color:var(--success-text);}.gl-age.warn{color:var(--warn-text);}.gl-age.alert{color:var(--danger-text);font-weight:500;}.gl-age.none{color:var(--text3);}
+.gl-none{color:var(--text3);}
+.gl-open{display:block;max-width:260px;white-space:normal;color:var(--warn-text);}
+.gl-open small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--text2);}
+.maint-supplies{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px;align-items:start;}
+.maint-supplies .visual-card{margin-bottom:0;}
+@keyframes flashcard{0%{box-shadow:0 0 0 4px var(--info-text);}100%{box-shadow:0 0 0 0 transparent;}}
+.body-card.flash{animation:flashcard 1.8s ease-out;}
+#tab-barrels-content #barrels-section .refresh-btn{display:none;}
+@media(max-width:560px){.maint-supplies{grid-template-columns:1fr;}}
+/* History, Purchases and Barrels lists: ONE column, so the reading order is unmistakable */
+#dash-hist-list,#pu-list,#bar-list{max-width:1100px;}
+.dash-day{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 8px;padding-bottom:5px;border-bottom:0.5px solid var(--border2);font-size:13px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;}
+.dash-day:first-child{margin-top:4px;}
+.dash-day-count{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
 </style>
 </head>
 <body>
@@ -311,7 +336,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v1.46 - Oct 24, 2026</span>
+        <span class="version">v2.0 - Nov 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -335,9 +360,9 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
   </div>
 
   <!-- Alert bar -->
-  <div class="alert-bar" id="alert-bar">
-    <div class="alert-bar-title">Action required</div>
-    <ul class="alert-list" id="alert-list"></ul>
+  <div class="alert-bar visible" id="alert-bar">
+    <div class="alert-bar-title" id="alert-title">Action required</div>
+    <div id="alert-groups"></div>
   </div>
 
   <!-- Summary strip -->
@@ -374,65 +399,23 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     </div>
   </div>
 
-  <!-- Visual panels -->
-  <!-- Tests by person -->
-  <div class="visual-panels" id="testers-section"></div>
+  <div class="sec-title">Bodies at a glance <span class="sec-sub">latest reading for each body of water - click a row for its details</span></div>
+  <div id="glance-section"></div>
 
-  <div class="visual-panels">
-
-    <!-- 1a. Pools donut -->
-    <div class="visual-card">
-      <div class="visual-title">Pools status</div>
-      <div class="visual-sub">L1 Pool, L2 Pool, L13 Pool</div>
-      <div class="donut-wrap">
-        <canvas id="donut-pools" width="140" height="140" role="img" aria-label="Pools status donut chart"></canvas>
-        <div class="donut-legend" id="donut-legend-pools"></div>
-      </div>
-    </div>
-
-    <!-- 1b. Spas donut -->
-    <div class="visual-card">
-      <div class="visual-title">Spas status</div>
-      <div class="visual-sub">L1 Hot spa, L1 Cold spa, L2 Hot spa, L13 Hot tub</div>
-      <div class="donut-wrap">
-        <canvas id="donut-spas" width="140" height="140" role="img" aria-label="Spas status donut chart"></canvas>
-        <div class="donut-legend" id="donut-legend-spas"></div>
-      </div>
-    </div>
-
-    <!-- 2. Last tested timeline -->
-    <div class="visual-card" style="flex:2;min-width:280px;">
-      <div class="visual-title">Last tested</div>
-      <div class="visual-sub">How recently each body was tested</div>
-      <div id="timeline-rows"></div>
-    </div>
-
-    <!-- 3. Last backwash timeline -->
-    <div class="visual-card" style="flex:2;min-width:280px;">
-      <div class="visual-title">Last backwash</div>
-      <div class="visual-sub">Days since last recorded backwash per body</div>
-      <div id="backwash-rows"></div>
-    </div>
-
-
-
+  <div class="sec-title">Maintenance and supplies</div>
+  <div class="maint-supplies">
+    <div id="maint-open-slot"></div>
+    <div id="barrels-attention"></div>
   </div>
 
-  <!-- Aquatic maintenance (from aquatic-maintenance.json) -->
-  <div id="maint-section"></div>
-
-  <!-- Chemical barrels -->
-  <div id="barrels-section"></div>
-
-  <!-- Parameter heatmap -->
-  <div class="heatmap-card">
-    <div class="visual-title">Parameter health heatmap</div>
-    <div class="visual-sub">Latest reading per body -- green = in range, amber = monitor, red = action needed, grey = no data</div>
-    <div id="heatmap-wrap" style="overflow-x:auto;margin-top:12px;"></div>
-  </div>
-
-  <!-- Level sections -->
+  <div class="sec-title">Body details <span class="sec-sub">readings, trend and what is holding each one up</span></div>
   <div id="level-sections"></div>
+
+  <div class="sec-title">Activity</div>
+  <div class="maint-supplies">
+    <div id="maint-recent-slot"></div>
+    <div class="visual-panels" id="testers-section" style="margin-bottom:0;"></div>
+  </div>
 
   </div><!-- end tab-overview-content -->
 
@@ -478,6 +461,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
       <div><div style="font-size:15px;font-weight:500;color:var(--text);">Chemical barrels</div><div style="font-size:13px;color:var(--text2);">Record when a chlorine or acid barrel is changed</div></div>
       <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="exportBarrelsCSV()">Export CSV</button>
     </div>
+    <div id="barrels-section"></div>
     <div class="visual-card" style="margin-bottom:12px;">
       <div class="visual-title">Record a barrel change</div>
       <div class="pu-grid">
@@ -627,7 +611,7 @@ function renderMaintHistory(){
   var threads=maintThreads(maintRecords);
   if(filter!=='all'){var p=filter.split('-');threads=threads.filter(function(t){return t.entry.levelIdx===parseInt(p[0])&&t.entry.bodyIdx===parseInt(p[1]);});}
   var q=document.getElementById('hist-search').value;threads=threads.filter(function(t){return maintMatches(t,q);});
-  if(summary)summary.textContent=threads.length+' entr'+(threads.length!==1?'ies':'y')+(filter==='all'?' across all bodies':' for selected body')+(maintState==='stale'?' (last copy loaded - refresh failed)':'');
+  if(summary)summary.textContent=threads.length+' entr'+(threads.length!==1?'ies':'y')+(filter==='all'?' across all bodies':' for selected body')+' - most recent activity first, top to bottom'+(maintState==='stale'?' (last copy loaded - refresh failed)':'');
   if(!threads.length){list.innerHTML='<div class="maint-empty" style="text-align:center;padding:3rem 1rem;">No aquatic maintenance entries found.</div>';return;}
   var openSet=new Set(maintOpenItems(maintRecords).map(function(e){return e.id;})),h='';
   function metaOf(e){var m=['Performed by '+maintWho(e)];if(e.loggedBy&&e.loggedBy!==e.performedBy)m.push('logged by '+escHtml(e.loggedBy));if(e.parts)m.push('Parts: '+escHtml(e.parts));if(e.minutes!=null)m.push(escHtml(e.minutes)+' min');return m.join(' - ');}
@@ -1186,8 +1170,69 @@ function exportBarrelsCSV(){
   var blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='oslu-chemical-barrels-'+todayStr()+'.csv';
   document.body.appendChild(a);a.click();a.remove();
 }
+
+// ---- Bodies at a glance (Overview) ----
+function jumpToCard(li,bi){
+  var el=document.getElementById('card-'+li+'-'+bi);if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+}
+function glCell(status,val){var cls=status==='alert'?'hm-alert':(status==='warn'?'hm-warn':(status==='ok'?'hm-ok':'hm-none'));return '<td><span class="hm-cell '+cls+'">'+val+'</span></td>';}
+function renderGlance(allLatest){
+  var el=document.getElementById('glance-section');if(!el)return;
+  var now=Date.now(),h='<div class="visual-card gl-card"><div style="overflow-x:auto;"><table class="glance"><thead><tr><th>Status</th><th>Body</th><th>FC</th><th>CC</th><th>pH</th><th>ORP</th><th>TA</th><th>CH</th><th>LSI</th><th>Temp</th><th>Last tested</th><th>Last backwash</th><th>Open repair</th></tr></thead><tbody>';
+  var lastLevel=-1;
+  allLatest.forEach(function(item){
+    var li=item.li,bi=item.bi,l=item.level,b=item.body,latest=item.latest,r=latest?latest.readings:{};
+    if(li!==lastLevel){lastLevel=li;h+='<tr class="gl-level"><td colspan="13">'+escHtml(l.name)+'</td></tr>';}
+    var oos=getOOSStatus(li,bi,allReadings),st=latest?overallStatus(latest):'none';
+    var pill=oos?'<span class="gl-pill oos">Out of service</span>':(st==='alert'?'<span class="gl-pill alert">Action needed</span>':(st==='warn'?'<span class="gl-pill warn">Monitor</span>':(st==='ok'?'<span class="gl-pill ok">All clear</span>':'<span class="gl-pill none">No data</span>')));
+    var rowCls='gl-row '+(oos?'gl-oos':'gl-'+st);
+    h+='<tr class="'+rowCls+'" onclick="jumpToCard('+li+','+bi+')" title="Click for the details of '+escHtml(b.name)+'"><td>'+pill+'</td><td><b>'+escHtml(b.name)+'</b><small>'+escHtml(l.short)+', '+b.vol.toLocaleString()+' gal</small></td>';
+    if(!latest){for(var k=0;k<8;k++)h+=glCell('none','--');}
+    else{
+      var os=orpStatus(latest);h+=glCell(r.fc==null?'none':(r.fc<1.5||r.fc>10?'alert':(r.fc<2?'warn':'ok')),r.fc==null?'--':r.fc+' ppm');
+      h+=glCell((r.cc==null||r.fc==null||r.fc<=0)?'none':(r.cc>=r.fc*0.5?'alert':(r.cc>=r.fc*0.5*0.8?'warn':'ok')),r.cc==null?'--':r.cc.toFixed(1)+' ppm');
+      h+=glCell(r.pH==null?'none':(r.pH<7.2||r.pH>8.0?'alert':(r.pH<7.4||r.pH>7.8?'warn':'ok')),r.pH==null?'--':r.pH.toFixed(1));
+      h+=glCell(os||'none',r.orp==null?'--':r.orp+' mV');
+      h+=glCell(r.ta==null?'none':(r.ta<60||r.ta>160?'alert':'ok'),r.ta==null?'--':r.ta+' ppm');
+      h+=glCell(r.ch==null?'none':(doseFor(latest,'CH')?'warn':'ok'),r.ch==null?'--':r.ch+' ppm');
+      var lsi=latest.lsi!=null?parseFloat(latest.lsi):null;h+=glCell(lsi==null||isNaN(lsi)?'none':(lsi<-0.5||lsi>0.5?'alert':(lsi<-0.3||lsi>0.3?'warn':'ok')),lsi==null||isNaN(lsi)?'--':lsi.toFixed(2));
+      h+=glCell(r.temp==null?'none':'ok',r.temp==null?'--':r.temp+' F');
+    }
+    var age=latest?now-latest.ts:null,tcls=age==null?'none':(age<24*3600000?'ok':(age<48*3600000?'warn':'alert'));
+    h+='<td><span class="gl-age '+tcls+'">'+(age==null?'Never':(age<3600000?Math.floor(age/60000)+'m ago':(age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago')))+'</span></td>';
+    var bw=allReadings.filter(function(x){return x.levelIdx===li&&x.bodyIdx===bi&&x.backwash===true;}),lb=bw.length?bw.reduce(function(a,c){return a.ts>c.ts?a:c;}):null,bd=lb?calDaysAgo(lb.ts):null;
+    h+='<td><span class="gl-age '+(bd==null?'none':(bd<=7?'ok':(bd<=14?'warn':'alert')))+'" title="'+(lb?escHtml('Backwash logged '+(lb.when||new Date(lb.ts).toLocaleString('en-US'))):'')+'">'+(bd==null?'Never recorded':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago')))+'</span></td>';
+    var openTxt='<span class="gl-none">-</span>';
+    if(maintState!=='unknown'){
+      var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}),op=maintOpenItems(recs);
+      if(op.length){var th=maintThreads(recs).filter(function(t){return t.entry.id===op[0].id;})[0],need=th?threadNeed(th):op[0].followUpNote;
+        openTxt='<span class="gl-open" title="'+escHtml('Still needed: '+need)+'"><b>'+escHtml(op[0].equipment)+'</b>'+(op.length>1?' +'+(op.length-1)+' more':'')+'<small>'+escHtml(need)+'</small></span>';}
+    }
+    h+='<td>'+openTxt+'</td></tr>';
+  });
+  el.innerHTML=h+'</tbody></table></div></div>';
+}
+// ---- Barrels on the Overview: exceptions only (the full table lives on the Barrels tab) ----
+function renderBarrelsAttention(){
+  var el=document.getElementById('barrels-attention');if(!el)return;
+  var today=barrelToday(),st=BARRELS.map(function(b){return barrelStats(allReadings,b.key,today);});
+  var attn=st.filter(function(s){return s.status==='overdue'||s.status==='soon';}).sort(function(a,b){return(a.status==='overdue'?0:1)-(b.status==='overdue'?0:1);});
+  var ok=st.filter(function(s){return s.status==='ok';}),noRec=st.filter(function(s){return s.status==='none'||s.status==='tracking';});
+  var h='<div class="visual-card"><div class="pu-trend-head"><div><div class="visual-title">Chemical barrels'+(attn.length?' <span class="maint-count">'+attn.length+'</span>':' <span class="maint-count zero">0</span>')+'</div><div class="visual-sub">Barrels at or near the end of their usual life</div></div><button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="showDashTab(\'barrels\')">All barrels</button></div>';
+  if(!attn.length)h+='<div class="maint-empty">No barrel is near the end of its usual life.</div>';
+  attn.forEach(function(s){
+    h+='<div class="maint-item"><div class="maint-item-head"><b>'+escHtml(s.barrel.label)+'</b><span class="bar-pill '+(s.status==='overdue'?'overdue':'soon')+'">'+(s.status==='overdue'?'Past usual':'Due soon')+'</span></div>'
+      +'<div class="maint-item-sub">Day '+s.daysIn+' of about '+s.avgDays+' - estimated empty '+escHtml(barrelDateLabel(s.estEmpty))+' ('+escHtml(barrelIn(s.daysLeft))+')</div></div>';
+  });
+  var next=ok.filter(function(s){return s.daysLeft!=null;}).sort(function(a,b){return a.daysLeft-b.daysLeft;})[0];
+  var notes=[];if(next)notes.push('Next to run out: <b>'+escHtml(next.barrel.label)+'</b>, '+escHtml(barrelIn(next.daysLeft))+' ('+escHtml(barrelDateLabel(next.estEmpty))+').');
+  if(ok.length)notes.push(ok.length+' of 7 barrels are within their usual life.');
+  if(noRec.length)notes.push(noRec.length+' barrel'+(noRec.length!==1?'s have':' has')+' no duration estimate yet (record the change dates on the Barrels tab).');
+  h+='<div class="maint-item-sub" style="margin-top:8px;line-height:1.6;">'+notes.join('<br>')+'</div></div>';
+  el.innerHTML=h;
+}
 function renderMaint(){
-  var el=document.getElementById('maint-section');if(!el)return;
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
   var open=maintOpenItems(maintRecords),threads=maintThreads(maintRecords),openSet=new Set(open.map(function(e){return e.id;})),thById={},h='<div class="maint-panels">';
   threads.forEach(function(t){thById[t.entry.id]=t;});
@@ -1225,7 +1270,9 @@ function renderMaint(){
     });
     h+=more('recent',threads.length,rShown,maintShowAllRecent);
   }
-  el.innerHTML=h+'</div></div>';
+  var marker='</div><div class="visual-card"><div class="visual-title">Recent aquatic maintenance',cut=h.indexOf(marker),prefix='<div class="maint-panels">'.length;
+  var openHTML=h.slice(prefix,cut)+'</div>',recentHTML=h.slice(cut+6)+'</div>';
+  document.getElementById('maint-open-slot').innerHTML=openHTML;document.getElementById('maint-recent-slot').innerHTML=recentHTML;
 }
 var windowDays=7;
 var miniCharts={};
@@ -1569,7 +1616,7 @@ function renderDashboard(){
   var shockCount=0; // bodies whose latest reading is over the CC limit (current state, not every old reading in the window)
   var orpIssues=0;
   var actionCount=0;
-  var alerts=[];
+  var alertGroups=[];
 
   // Get latest per body and count
   LEVELS.forEach(function(l,li){
@@ -1584,7 +1631,7 @@ function renderDashboard(){
       var status=overallStatus(latest);
       if(status==='alert'){
         var urgentActions=getActions(latest).filter(function(a){return a.urgent;});
-        urgentActions.forEach(function(a){alerts.push(escHtml(b.name+' ('+l.short+'): '+a.text));});
+        if(urgentActions.length)alertGroups.push({li:li,bi:bi,name:b.name+' ('+l.short+')',lines:urgentActions.map(function(a){return escHtml(a.text);})});
       }
     });
   });
@@ -1597,13 +1644,14 @@ function renderDashboard(){
   document.getElementById('s-actions').style.color=actionCount>0?'var(--warn-text)':'var(--success-text)';
 
   // Alert bar
-  var alertBar=document.getElementById('alert-bar');
-  var alertList=document.getElementById('alert-list');
-  if(alerts.length){
-    alertBar.classList.add('visible');
-    alertList.innerHTML=alerts.map(function(a){return'<li class="alert-item">'+a+'</li>';}).join('');
+  var alertBar=document.getElementById('alert-bar'),groupsEl=document.getElementById('alert-groups'),titleEl=document.getElementById('alert-title');
+  alertBar.classList.add('visible');
+  if(alertGroups.length){
+    alertBar.classList.remove('clear');titleEl.textContent='Action required - '+alertGroups.length+' bod'+(alertGroups.length!==1?'ies':'y');
+    groupsEl.innerHTML=alertGroups.map(function(g){return '<div class="alert-group"><div class="alert-group-head"><a href="#" onclick="jumpToCard('+g.li+','+g.bi+');return false;">'+escHtml(g.name)+'</a></div><ul>'+g.lines.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';}).join('');
   }else{
-    alertBar.classList.remove('visible');
+    alertBar.classList.add('clear');titleEl.textContent='No action required';
+    groupsEl.innerHTML='<div class="alert-clear-line">Every body of water with a recent reading is within limits.</div>';
   }
 
   // Destroy old mini charts
@@ -1729,6 +1777,7 @@ function renderDashboard(){
   document.getElementById('level-sections').innerHTML=html;
   renderMaint();
   renderBarrels();
+  renderBarrelsAttention();
   if(document.getElementById('tab-barrels-content').style.display!=='none')renderBarrelsTab();
   renderSpend();
 
@@ -1794,209 +1843,18 @@ function renderDashboard(){
   },50);
 }
 
-var donutChart=null;
-
-function renderVisuals(filtered){
-  var allLatest=[];
-  LEVELS.forEach(function(l,li){
-    l.bodies.forEach(function(b,bi){
-      var latest=getLatestForBody(li,bi,filtered);
-      allLatest.push({level:l,body:b,li:li,bi:bi,latest:latest});
-    });
-  });
-
-  renderDonut(allLatest);
-  renderTimeline(allLatest);
-  renderBackwash(allLatest);
-  renderHeatmap(allLatest);
-}
-
-function buildDonutChart(canvasId,legendId,items,chartRef){
-  var counts={ok:0,warn:0,alert:0,none:0};
-  items.forEach(function(item){
-    var s=overallStatus(item.latest);
-    counts[s]=(counts[s]||0)+1;
-  });
-  var data=[counts.ok,counts.warn,counts.alert,counts.none];
-  var colors=['#22c55e','#f97316','#ef4444','#6b7280'];
-  var labels=['All clear','Monitor','Action needed','No data'];
-
-  if(chartRef[0]){chartRef[0].destroy();chartRef[0]=null;}
-  var canvas=document.getElementById(canvasId);
-  if(!canvas)return;
-  chartRef[0]=new Chart(canvas,{
-    type:'doughnut',
-    data:{
-      labels:labels,
-      datasets:[{data:data,backgroundColor:colors,borderWidth:2,borderColor:'var(--bg)',hoverOffset:4}]
-    },
-    options:{
-      responsive:false,
-      cutout:'65%',
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          callbacks:{
-            label:function(ctx){
-              var noun=canvasId==='donut-pools'?'pool':'spa';
-              return ' '+ctx.label+': '+ctx.parsed+' '+noun+(ctx.parsed===1?'':'s');
-            }
-          }
-        }
-      }
-    }
-  });
-
-  var leg=document.getElementById(legendId);
-  if(!leg)return;
-  leg.innerHTML=labels.map(function(l,i){
-    if(data[i]===0)return '';
-    return '<div class="donut-leg-row">'
-      +'<span class="donut-leg-dot" style="background:'+colors[i]+';"></span>'
-      +'<span>'+l+'</span>'
-      +'<span class="donut-leg-val">'+data[i]+'</span>'
-      +'</div>';
-  }).join('');
-}
-
-var donutPoolsRef=[null];
-var donutSpasRef=[null];
-
-function renderDonut(allLatest){
-  var pools=allLatest.filter(function(item){return !item.body.spa;});
-  var spas=allLatest.filter(function(item){return item.body.spa;});
-  buildDonutChart('donut-pools','donut-legend-pools',pools,donutPoolsRef);
-  buildDonutChart('donut-spas','donut-legend-spas',spas,donutSpasRef);
-}
-
-function renderTimeline(allLatest){
-  var now=Date.now();
-  var maxAge=72*60*60*1000; // 72 hours = full bar
-  var html='';
-  allLatest.forEach(function(item){
-    var latest=item.latest;
-    var age=latest?now-latest.ts:null;
-    var pct=age!=null?Math.max(0,100-Math.min(100,(age/maxAge)*100)):0;
-    var color=age==null?'#6b7280':age<24*3600*1000?'#22c55e':age<48*3600*1000?'#f97316':'#ef4444';
-    var ageText=age==null?'Never':age<3600000?Math.floor(age/60000)+'m ago':age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago';
-    var name=item.body.name+' ('+item.level.short+')';
-    html+='<div class="tl-row">'
-      +'<span class="tl-label" title="'+name+'">'+name+'</span>'
-      +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
-      +'<span class="tl-age">'+ageText+'</span>'
-      +'</div>';
-  });
-  document.getElementById('timeline-rows').innerHTML=html;
-}
-
 
 
 // Whole CALENDAR days between a past time and now (not elapsed 24-hour blocks): 9:22 AM Wednesday viewed at 8:30 AM Friday is 2 days ago, not "yesterday".
 function calDaysAgo(ts,nowTs){var n=new Date(nowTs==null?Date.now():nowTs),t=new Date(ts);return Math.round((Date.UTC(n.getFullYear(),n.getMonth(),n.getDate())-Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()))/86400000);}
-function renderBackwash(allLatest){
-  var wrap=document.getElementById('backwash-rows');
-  if(!wrap)return;
-  var html='';
-  allLatest.forEach(function(item){
-    // Find most recent reading with backwash:true for this body
-    var bwReadings=allReadings.filter(function(r){
-      return r.levelIdx===item.li&&r.bodyIdx===item.bi&&r.backwash===true;
-    });
-    var lastBW=bwReadings.length?bwReadings.reduce(function(a,b){return a.ts>b.ts?a:b;}):null;
-    var age=lastBW?calDaysAgo(lastBW.ts):null;
-    // Colour: green 0-7 days, amber 8-14 days, red 15+ days, grey never
-    var color=age===null?'#6b7280':age<=7?'#22c55e':age<=14?'#f97316':'#ef4444';
-    var pct=age===null?0:Math.max(5,Math.min(100,100-Math.min(100,(age/21)*100)));
-    var ageText=age===null?'Never recorded':age===0?'Today':age===1?'Yesterday':age+' days ago';
-    var name=item.body.name+' ('+item.level.short+')';
-    html+='<div class="tl-row">'
-      +'<span class="tl-label" title="'+name+'">'+name+'</span>'
-      +'<div class="tl-bar-track"><div class="tl-bar-fill" style="width:'+pct.toFixed(1)+'%;background:'+color+';"></div></div>'
-      +'<span class="tl-age" title="'+(lastBW?escHtml('Backwash logged '+(lastBW.when||new Date(lastBW.ts).toLocaleString('en-US'))):'')+'">'+ageText+'</span>'
-      +'</div>';
-  });
-  wrap.innerHTML=html;
-}
-
-function renderHeatmap(allLatest){
-  var params=[
-    {key:'orp',label:'ORP',check:function(item){
-      var s=orpStatus(item.latest);
-      if(!s)return null;
-      var val=item.latest.readings.orp;
-      return{status:s,val:val!=null?val+' mV':'--'};
-    }},
-    {key:'fc',label:'Free Cl',check:function(item){
-      var r=item.latest.readings;
-      if(r.fc==null)return null;
-      var s=r.fc<1.5||r.fc>10?'alert':r.fc<2?'warn':'ok';
-      return{status:s,val:r.fc+' ppm'};
-    }},
-    {key:'cc',label:'Combined Cl',check:function(item){
-      var r=item.latest.readings;
-      if(r.cc==null||r.fc==null||r.fc<=0)return null;
-      var limit=r.fc*0.5;
-      var s=r.cc>=limit?'alert':r.cc>=limit*0.8?'warn':'ok';
-      return{status:s,val:r.cc.toFixed(1)+' ppm'};
-    }},
-    {key:'pH',label:'pH',check:function(item){
-      var r=item.latest.readings;
-      if(r.pH==null)return null;
-      var s=r.pH<7.2||r.pH>8.0?'alert':r.pH<7.4||r.pH>7.8?'warn':'ok';
-      return{status:s,val:r.pH.toFixed(1)};
-    }},
-    {key:'lsi',label:'LSI',check:function(item){
-      var lsi=item.latest.lsi;
-      if(lsi==null)return null;
-      var s=lsi<-0.5||lsi>0.5?'alert':lsi<-0.3||lsi>0.3?'warn':'ok';
-      return{status:s,val:parseFloat(lsi).toFixed(2)};
-    }},
-    {key:'temp',label:'Temp (F)',check:function(item){
-      var r=item.latest.readings;
-      if(r.temp==null)return null;
-      return{status:'ok',val:r.temp+'F'};
-    }}
-  ];
-
-  var html='<table class="hm-table"><thead><tr><th>Body</th>';
-  var showTester=allLatest.some(function(i){return i.latest&&i.latest.tester;});
-  params.forEach(function(p){html+='<th>'+p.label+'</th>';});
-  if(showTester)html+='<th>Tested by</th>';
-  html+='</tr></thead><tbody>';
-
-  allLatest.forEach(function(item){
-    html+='<tr><td>'+item.body.name+'<br><span style="font-size:12px;font-weight:400;color:var(--text3);">'+item.level.short+'</span></td>';
-    if(!item.latest){
-      params.forEach(function(){html+='<td><span class="hm-cell hm-none">No data</span></td>';});
-      if(showTester)html+='<td><span class="hm-cell hm-none">--</span></td>';
-    }else{
-      params.forEach(function(p){
-        var result=p.check(item);
-        if(!result){html+='<td><span class="hm-cell hm-none">--</span></td>';return;}
-        var cls=result.status==='alert'?'hm-alert':result.status==='warn'?'hm-warn':'hm-ok';
-        html+='<td><span class="hm-cell '+cls+'">'+result.val+'</span></td>';
-      });
-      if(showTester)html+='<td><span class="hm-cell hm-none" style="background:none;color:var(--text2);">'+(item.latest&&item.latest.tester?item.latest.tester:'--')+'</span></td>';
-    }
-    html+='</tr>';
-  });
-
-  html+='</tbody></table>';
-  document.getElementById('heatmap-wrap').innerHTML=html;
-}
-
 function renderVisuals(filtered){
   var allLatest=[];
   LEVELS.forEach(function(l,li){
     l.bodies.forEach(function(b,bi){
-      var latest=getLatestForBody(li,bi,filtered);
-      allLatest.push({level:l,body:b,li:li,bi:bi,latest:latest});
+      allLatest.push({level:l,body:b,li:li,bi:bi,latest:getLatestForBody(li,bi,filtered)});
     });
   });
-  renderDonut(allLatest);
-  renderTimeline(allLatest);
-  renderBackwash(allLatest);
-  renderHeatmap(allLatest);
+  renderGlance(allLatest);
 }
 
 function showDashTab(tab){
@@ -2040,6 +1898,17 @@ function lsiPill(lsi){
 function chartText(){var v=getComputedStyle(document.documentElement).getPropertyValue('--text3').trim();return v||'#62625e';} // chart labels follow the theme gray (light/dark)
 function escHtml(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function noteBox(n,pad){return '<div style="font-size:13px;color:var(--info-text);background:var(--info-bg);border:0.5px solid var(--info-border);border-radius:var(--radius);padding:'+pad+';margin-bottom:6px;white-space:pre-wrap;">Note: '+escHtml(n)+'</div>';}
+function histDayKey(e){var d=new Date(e.ts);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function withDayHeaders(entries,cards){ // a heading for each day, so the order (newest first, top to bottom) is obvious
+  var out=[],last=null,counts={};
+  entries.forEach(function(e){var k=histDayKey(e);counts[k]=(counts[k]||0)+1;});
+  entries.forEach(function(e,i){
+    var k=histDayKey(e);
+    if(k!==last){last=k;out.push('<div class="dash-day"><span>'+escHtml(new Date(e.ts).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'}))+'</span><span class="dash-day-count">'+counts[k]+' entr'+(counts[k]!==1?'ies':'y')+'</span></div>');}
+    out.push(cards[i]);
+  });
+  return out.join('');
+}
 function renderDashHistory(){
   updateUnnamedButton();
   if(histView==='maint'){renderMaintHistory();return;}
@@ -2051,13 +1920,13 @@ function renderDashHistory(){
   }
   entries.sort(function(a,b){return b.ts-a.ts;});
   var summary=document.getElementById("hist-summary");
-  if(summary)summary.textContent=entries.length+" reading"+(entries.length!==1?"s":"")+(filter==="all"?" across all bodies":" for selected body");
+  if(summary)summary.textContent=entries.length+" reading"+(entries.length!==1?"s":"")+(filter==="all"?" across all bodies":" for selected body")+" - newest first, top to bottom";
   var list=document.getElementById("dash-hist-list");
   if(!entries.length){
     list.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;">No readings found.</div>';
     return;
   }
-  list.innerHTML=entries.map(function(e){
+  var cardList=entries.map(function(e){
     if(e.outOfService){
       return '<div class="dash-hist-entry" style="border-color:var(--warn-border);background:var(--warn-bg);">'
         +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--warn-text);">OUT OF SERVICE: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
@@ -2115,7 +1984,8 @@ function renderDashHistory(){
       +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">Backwash performed</span></div>':'')
       +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
       +'</div>';
-  }).join("");
+  });
+  list.innerHTML=withDayHeaders(entries,cardList);
 }
 
 // What deleting a status entry does to the body's out-of-service state (its latest out-of-service / return-to-service entry decides it).
