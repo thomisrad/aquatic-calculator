@@ -312,6 +312,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dash-day{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 8px;padding-bottom:5px;border-bottom:0.5px solid var(--border2);font-size:13px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;}
 .dash-day:first-child{margin-top:4px;}
 .dash-day-count{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
+.dash-day-wx{margin-left:14px;font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--info-text);}
 </style>
 </head>
 <body>
@@ -343,7 +344,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v2.0.3 - Nov 7, 2026</span>
+        <span class="version">v2.1.1 - Nov 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -507,11 +508,16 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
         <button onclick="exportDashCSV()" style="font-size:14px;padding:6px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text2);font-family:var(--font);cursor:pointer;">Export CSV</button>
       </div>
     </div>
+    <div id="wx-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 12px;font-size:13px;color:var(--text3);">
+      <button class="refresh-btn" style="margin-left:0;white-space:nowrap;" onclick="ensureWeather(true)">Update weather</button>
+      <span id="wx-msg" class="pu-msg"></span>
+      <span>Daily high and UV: weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:var(--info-text);">Open-Meteo.com</a> (proof of concept)</span>
+    </div>
     <div id="dash-hist-list"></div>
   </div><!-- end tab-history-content -->
 
   <div class="dash-footer">
-    OSLU Aquatic Management Dashboard | Data from OSLU Aquatic Chemical Calculator<br>
+    OSLU Aquatic Management Dashboard | Data from OSLU Aquatic Chemical Calculator | Weather data by <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:inherit;">Open-Meteo.com</a><br>
     For water chemistry questions consult your Senior Maintenance Manager.
   </div>
 
@@ -607,6 +613,7 @@ function setHistView(v){
   document.getElementById('hv-maint').classList.toggle('active',v==='maint');
   document.getElementById('hist-title').textContent=v==='maint'?'Aquatic maintenance log':'All readings';
   document.getElementById('hist-search').style.display=v==='maint'?'block':'none';
+  document.getElementById('wx-row').style.display=v==='maint'?'none':'flex';
   renderDashHistory();
 }
 function renderMaintHistory(){
@@ -755,6 +762,7 @@ function buildPurchCSV(list){
 
 // ===== PURCHASES on the dashboard (read for the spend tile, add/delete in the Purchases tab) =====
 var PURCH_API=GH_API.replace(GH_FILE,'aquatic-purchases.json');
+var WEATHER_API=GH_API.replace(GH_FILE,'aquatic-weather.json');
 var purchRecords=[],purchState='unknown',puMonth=null,puRetry=null; // purchState: 'ok' | 'stale' (refresh failed) | 'unknown' (never loaded)
 function renderSpend(){
   var lab=document.getElementById('spend-label'),val=document.getElementById('s-spend'),sub=document.getElementById('s-spend-sub');if(!val)return;
@@ -1239,6 +1247,112 @@ function renderBarrelsAttention(){
   h+='<div class="maint-item-sub" style="margin-top:8px;line-height:1.6;">'+notes.join('<br>')+'</div></div>';
   el.innerHTML=h;
 }
+// ===== WEATHER LOGIC BEGIN =====
+// Daily high temperature (F) and UV index for the building, from the free Open-Meteo service (proof of concept, non-commercial).
+// COMMERCIAL USE: Open-Meteo's free service is for non-commercial use only. For commercial use set WEATHER_API_KEY to a paid key
+// (calls then go to Open-Meteo's "customer-" hosts); confirm the exact host names in their documentation first.
+// The data is licensed CC BY 4.0: "Weather data by Open-Meteo.com" must be shown wherever it is displayed.
+// Location: One South Lake Union, 110 Boren Ave N, Seattle, WA 98109 (coordinates estimated to within about a block; the weather models' grid is ~10 km, so this level of precision is plenty).
+var WEATHER_LAT=47.6196,WEATHER_LON=-122.3339,WEATHER_TZ='America/Los_Angeles',WEATHER_API_KEY='';
+var WEATHER_PATHS={archive:'archive-api.open-meteo.com/v1/archive',hist:'historical-forecast-api.open-meteo.com/v1/forecast',fc:'api.open-meteo.com/v1/forecast'};
+function weatherDayKey(ts){var d=new Date(ts);return d.getFullYear()+'-'+barrelP2(d.getMonth()+1)+'-'+barrelP2(d.getDate());}
+function weatherUrl(kind,startDate,endDate,vars,pastDays){
+  var host=WEATHER_PATHS[kind];if(WEATHER_API_KEY)host='customer-'+host;
+  var q='latitude='+WEATHER_LAT+'&longitude='+WEATHER_LON+'&daily='+vars.join(',')+'&temperature_unit=fahrenheit&timezone='+encodeURIComponent(WEATHER_TZ);
+  if(kind==='fc')q+='&past_days='+pastDays+'&forecast_days=1';else q+='&start_date='+startDate+'&end_date='+endDate;
+  if(WEATHER_API_KEY)q+='&apikey='+encodeURIComponent(WEATHER_API_KEY);
+  return 'https://'+host+'?'+q;
+}
+function weatherNum(v,lo,hi){return(typeof v==='number'&&isFinite(v)&&v>=lo&&v<=hi)?Math.round(v*10)/10:null;}   // implausible values (wrong units, errors) are dropped, never stored
+function weatherParseDaily(json){
+  var out={},dd=json&&json.daily;if(!dd||!Array.isArray(dd.time))return out;
+  dd.time.forEach(function(t,i){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(String(t)))return;
+    var hi=weatherNum(dd.temperature_2m_max?dd.temperature_2m_max[i]:null,-40,130),uv=weatherNum(dd.uv_index_max?dd.uv_index_max[i]:null,0,20);
+    if(hi==null&&uv==null)return;out[t]={highF:hi,uv:uv};
+  });
+  return out;
+}
+function weatherCleanList(list){return(list||[]).filter(function(r){return r&&typeof r.date==='string'&&barrelDayNum(r.date)!=null;});}
+function weatherEarliest(readings){var m=null;(readings||[]).forEach(function(r){if(r&&typeof r.ts==='number'&&isFinite(r.ts)&&(m==null||r.ts<m))m=r.ts;});return m==null?null:weatherDayKey(m);}
+// Which days still need weather: from the first reading to yesterday. A day with a temperature but no UV is retried for 3 days after it was stored, then left alone.
+function weatherNeeded(earliest,yesterday,rows,nowTs){
+  var have={};(rows||[]).forEach(function(r){if(r&&typeof r.date==='string')have[r.date]=r;});
+  var a=barrelDayNum(earliest),b=barrelDayNum(yesterday),out=[];if(a==null||b==null||b<a)return out;
+  for(var n=a;n<=b;n++){var date=barrelDateFromDayNum(n),r=have[date];
+    if(!r||r.highF==null||(r.uv==null&&(nowTs-(r.at||0))<3*86400000))out.push(date);}
+  return out;
+}
+// Fill gaps only: a value already stored is never changed. Returns null when there is nothing to write.
+function weatherMergePlan(remoteList,got,nowTs){
+  var byDate={};(remoteList||[]).forEach(function(r,i){if(r&&typeof r.date==='string')byDate[r.date]={row:r,i:i};});
+  var list=(remoteList||[]).slice(),added=0,removed=0;
+  Object.keys(got).sort().forEach(function(date){
+    var g=got[date],ex=byDate[date];
+    if(!ex){list.push({date:date,highF:g.highF,uv:g.uv,src:g.src,at:nowTs});added++;return;}
+    var row=ex.row,needHi=row.highF==null&&g.highF!=null,needUv=row.uv==null&&g.uv!=null;
+    if(needHi||needUv){list[ex.i]={date:date,highF:needHi?g.highF:row.highF,uv:needUv?g.uv:row.uv,src:(row.src?row.src+'+':'')+g.src,at:nowTs};added++;removed++;}
+  });
+  if(!added&&!removed)return null;
+  list.sort(function(a,b){return String(a&&a.date||'')<String(b&&b.date||'')?-1:1;});
+  return{list:list,added:added,removed:removed};
+}
+function weatherLabel(w){
+  if(!w)return '';var p=[];
+  if(w.highF!=null)p.push('High '+Math.round(w.highF)+' F');
+  if(w.uv!=null)p.push('UV '+(Math.round(w.uv*10)/10).toFixed(1));
+  return p.join(' - ');
+}
+function weatherByDate(rows){var m={};(rows||[]).forEach(function(r){if(r&&typeof r.date==='string')m[r.date]=r;});return m;}
+// ===== WEATHER LOGIC END =====
+
+// ---- Weather: fetching and saving ----
+var weatherRecords=[],weatherBusy=false,WEATHER_TRY_KEY='aq_weather_try';
+function wxMsg(kind,text){var el=document.getElementById('wx-msg');if(!el)return;el.className='pu-msg '+kind;el.textContent=text;}
+async function weatherFetchJson(url){
+  try{var c=new AbortController(),t=setTimeout(function(){c.abort();},15000),r=await fetch(url,{signal:c.signal});clearTimeout(t);if(!r.ok)return null;return await r.json();}
+  catch(e){return null;}
+}
+// Try the sources in order and stop as soon as every needed day has both values; each call is optional, none can break the dashboard.
+async function weatherCollect(needed){
+  var got={},problems=[],today=barrelToday();
+  function absorb(parsed,src){Object.keys(parsed).forEach(function(d){
+    if(needed.indexOf(d)<0)return;
+    var g=got[d],p=parsed[d],newHi=(!g||g.highF==null)&&p.highF!=null,newUv=(!g||g.uv==null)&&p.uv!=null;
+    if(!newHi&&!newUv)return;                                   // nothing new from this source for this day
+    if(!g)g=got[d]={highF:null,uv:null,srcs:[]};
+    if(newHi)g.highF=p.highF;if(newUv)g.uv=p.uv;
+    if(g.srcs.indexOf(src)<0)g.srcs.push(src);                  // remember every source that contributed, e.g. "archive+hist"
+  });}
+  function incomplete(){return needed.filter(function(d){return !got[d]||got[d].highF==null||got[d].uv==null;});}
+  var j=await weatherFetchJson(weatherUrl('archive',needed[0],needed[needed.length-1],['temperature_2m_max','uv_index_max']));
+  if(!j)j=await weatherFetchJson(weatherUrl('archive',needed[0],needed[needed.length-1],['temperature_2m_max']));   // if UV is refused there, at least the temperature
+  if(j)absorb(weatherParseDaily(j),'archive');else problems.push('archive');
+  var inc=incomplete();
+  if(inc.length){var j2=await weatherFetchJson(weatherUrl('hist',inc[0],inc[inc.length-1],['temperature_2m_max','uv_index_max']));if(j2)absorb(weatherParseDaily(j2),'hist');else problems.push('hist');}
+  inc=incomplete();
+  if(inc.length){var back=barrelDaysBetween(inc[0],today);if(back!=null&&back<=92){var j3=await weatherFetchJson(weatherUrl('fc',null,null,['temperature_2m_max','uv_index_max'],Math.min(92,back+1)));if(j3)absorb(weatherParseDaily(j3),'forecast');else problems.push('forecast');}}
+  Object.keys(got).forEach(function(d){got[d].src=got[d].srcs.join('+');delete got[d].srcs;});
+  return{got:got,problems:problems,noTemp:needed.filter(function(d){return !got[d]||got[d].highF==null;}).length,noUv:needed.filter(function(d){return !got[d]||got[d].uv==null;}).length};
+}
+async function ensureWeather(manual){
+  if(weatherBusy||!allReadings.length)return;
+  var earliest=weatherEarliest(allReadings);if(!earliest)return;
+  var yesterday=barrelDateFromDayNum(barrelDayNum(barrelToday())-1),now=Date.now(),needed=weatherNeeded(earliest,yesterday,weatherRecords,now);
+  if(!needed.length){if(manual)wxMsg('ok','Weather is up to date: '+weatherRecords.length+' day'+(weatherRecords.length!==1?'s':'')+' stored.');return;}
+  if(!manual){var last=0;try{last=+localStorage.getItem(WEATHER_TRY_KEY)||0;}catch(e){}if(now-last<6*3600000)return;}   // automatic tries: at most once every 6 hours
+  try{localStorage.setItem(WEATHER_TRY_KEY,String(now));}catch(e){}
+  weatherBusy=true;wxMsg('info','Fetching high temperature and UV for '+needed.length+' day'+(needed.length!==1?'s':'')+'...');
+  var res=await weatherCollect(needed),n=Object.keys(res.got).length;
+  if(!n){weatherBusy=false;wxMsg('err','Could not reach the weather service. It will retry later; use Update weather to try now.');return;}
+  var wr=await ghMutate(function(remote){return weatherMergePlan(remote,res.got,Date.now());},'Weather: '+n+' day'+(n!==1?'s':''),WEATHER_API);
+  weatherBusy=false;
+  if(!wr.ok){wxMsg('err','Fetched the weather but could not save it ('+wr.reason+'). The token needs permission to write.');return;}
+  weatherRecords=weatherCleanList(wr.list);
+  wxMsg('ok','Weather updated: '+n+' day'+(n!==1?'s':'')+' stored'+(res.noUv?'. UV was not available for '+res.noUv+' day'+(res.noUv!==1?'s':''):'')+(res.noTemp?'. No temperature for '+res.noTemp+' day'+(res.noTemp!==1?'s':''):'')+'.');
+  if(document.getElementById('tab-history-content').style.display!=='none'&&histView==='readings')renderDashHistory();
+}
+function weatherDayHTML(ts){var w=weatherByDate(weatherRecords)[weatherDayKey(ts)],t=weatherLabel(w);return t?'<span class="dash-day-wx">'+escHtml(t)+'</span>':'';}
 function renderMaint(){
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
   var open=maintOpenItems(maintRecords),threads=maintThreads(maintRecords),openSet=new Set(open.map(function(e){return e.id;})),thById={},h='<div class="maint-panels">';
@@ -1402,8 +1516,9 @@ async function ghMutate(mutator,message,url){
 
 async function loadData(){
   setSyncBadge('syncing','Loading...');
-  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API),ghFetchRemote(PURCH_API)]); // readings + maintenance + purchases, in parallel
-  var rem=both[0],mrem=both[1],prem=both[2];
+  var both=await Promise.all([ghFetchRemote(),ghFetchRemote(MAINT_API),ghFetchRemote(PURCH_API),ghFetchRemote(WEATHER_API)]); // readings + maintenance + purchases + weather, in parallel
+  var rem=both[0],mrem=both[1],prem=both[2],wrem=both[3];
+  if(wrem.ok)weatherRecords=weatherCleanList(wrem.list); // a weather failure never blocks the pool/spa views
   if(prem.ok){purchRecords=prem.list;purchState='ok';}
   else{purchState=(purchState==='ok'||purchState==='stale')?'stale':'unknown';} // a purchases failure never blocks the pool/spa views
   if(mrem.ok){maintRecords=mrem.list;maintState='ok';}
@@ -1416,6 +1531,7 @@ async function loadData(){
     renderDashboard();
     if(document.getElementById('tab-purchases-content').style.display!=='none')renderPurchView();
     startAutoRefresh();
+    ensureWeather(false); // fills any missing days in the background (at most every 6 hours)
     return;
   }
   if(rem.reason==='auth'){setSyncBadge('err','Invalid token');alert('Token invalid or expired. Please re-enter.');resetToken();return;}
@@ -1911,7 +2027,7 @@ function withDayHeaders(entries,cards){ // a heading for each day, so the order 
   entries.forEach(function(e){var k=histDayKey(e);counts[k]=(counts[k]||0)+1;});
   entries.forEach(function(e,i){
     var k=histDayKey(e);
-    if(k!==last){last=k;out.push('<div class="dash-day"><span>'+escHtml(new Date(e.ts).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'}))+'</span><span class="dash-day-count">'+counts[k]+' entr'+(counts[k]!==1?'ies':'y')+'</span></div>');}
+    if(k!==last){last=k;out.push('<div class="dash-day"><span>'+escHtml(new Date(e.ts).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',year:'numeric'}))+weatherDayHTML(e.ts)+'</span><span class="dash-day-count">'+counts[k]+' entr'+(counts[k]!==1?'ies':'y')+'</span></div>');}
     out.push(cards[i]);
   });
   return out.join('');
@@ -2042,10 +2158,11 @@ function exportDashCSV(){
   var entries=allReadings.slice();
   if(filter!=="all"){var p=filter.split("-");entries=entries.filter(function(e){return e.levelIdx===parseInt(p[0])&&e.bodyIdx===parseInt(p[1]);});}
   entries.sort(function(a,b){return b.ts-a.ts;});
-  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)","Entry type","Reason or note","Backwash"]];
+  var rows=[["Date","Tester","Level","Body","Volume (gal)","LSI","ORP (mV)","ORP Setpoint (mV)","pH","Free Chlorine (ppm)","Combined Chlorine (ppm)","Total Alkalinity (ppm)","Calcium Hardness (ppm)","Cyanuric Acid (ppm)","Temperature (F)","Entry type","Reason or note","Backwash","Day high (F)","Day UV index"]];
+  var wxMap=weatherByDate(weatherRecords);
   entries.forEach(function(e){
-    var r=e.readings||{};
-    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":""]);
+    var r=e.readings||{},wx=wxMap[weatherDayKey(e.ts)]||{};
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":"",wx.highF!=null?wx.highF:"",wx.uv!=null?wx.uv:""]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
   var blob=new Blob([csv],{type:"text/csv"});
