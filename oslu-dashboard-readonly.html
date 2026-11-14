@@ -314,6 +314,13 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dash-day-count{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
 .dash-day-wx{margin-left:14px;font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--info-text);}
 .ro-badge{display:inline-block;vertical-align:middle;font-size:12px;font-weight:500;letter-spacing:0.06em;padding:3px 10px;margin-left:8px;border-radius:20px;background:var(--info-text);color:var(--bg);}
+.ro-copy-btn{font-size:13px;padding:7px 14px;border:0.5px solid var(--info-border);border-radius:20px;background:var(--info-bg);color:var(--info-text);font-family:var(--font);cursor:pointer;font-weight:500;margin-left:0;}
+.ro-copy-btn:hover{filter:brightness(0.96);}
+.ro-copy-msg{font-size:13px;color:var(--success-text);}
+.ro-modal{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.ro-modal-card{background:var(--bg);color:var(--text);border-radius:12px;max-width:760px;width:100%;max-height:85vh;display:flex;flex-direction:column;gap:10px;padding:16px;box-shadow:var(--card-shadow);}
+.ro-modal-title{font-size:14px;color:var(--text2);}
+.ro-modal pre{margin:0;overflow:auto;font-size:13px;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--bg2);border-radius:8px;padding:12px;}
 </style>
 </head>
 <body>
@@ -330,7 +337,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v2.1.1 read-only - Nov 7, 2026</span>
+        <span class="version">v2.1.1 read-only 2 - Nov 7, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -350,6 +357,9 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <button class="window-btn" id="wall" onclick="setWindow(0)">All time</button>
     <span class="last-updated" id="last-updated"></span>
     <button class="refresh-btn" onclick="loadData()">Refresh</button>
+    <button class="ro-copy-btn" id="ro-copy-actions" onclick="copyActionItems()">Copy action items</button>
+    <button class="ro-copy-btn" id="ro-copy-latest" onclick="copyLatestReadings()">Copy all latest readings</button>
+    <span class="ro-copy-msg" id="ro-copy-msg" aria-live="polite"></span>
   </div>
 
   <!-- Alert bar -->
@@ -1025,6 +1035,74 @@ function weatherByDate(rows){var m={};(rows||[]).forEach(function(r){if(r&&typeo
 var weatherRecords=[];
 // Try the sources in order and stop as soon as every needed day has both values; each call is optional, none can break the dashboard.
 function weatherDayHTML(ts){var w=weatherByDate(weatherRecords)[weatherDayKey(ts)],t=weatherLabel(w);return t?'<span class="dash-day-wx">'+escHtml(t)+'</span>':'';}
+// ---- Copy buttons: plain text for Teams or email ----
+var lastAlertGroups=[],roMsgTimer=null;
+function roStamp(){return new Date().toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});}
+function roWindowLabel(){return windowDays===7?'Last 7 days':(windowDays===30?'Last 30 days':'All time');}
+function buildActionText(){ // exactly what the red "Action required" bar shows right now
+  var L=['OSLU AQUATICS - ACTION REQUIRED','Generated: '+roStamp(),'Latest reading for each body of water ('+roWindowLabel()+' view)','================================'];
+  if(!lastAlertGroups.length){L.push('');L.push('No action required. Every body of water with a recent reading is within limits.');}
+  else lastAlertGroups.forEach(function(g){L.push('');L.push(g.name);g.raw.forEach(function(t){L.push('  - '+t);});});
+  L.push('');L.push('================================');L.push('OSLU Aquatics Dashboard (read-only) v2.1.1 - Nov 7, 2026');
+  return L.join('\n');
+}
+function buildLatestText(){ // the calculator's "Copy all latest readings" report, from each body's latest real test
+  var lines=['OSLU AQUATIC PROPERTY REPORT','Generated: '+roStamp(),'================================'];
+  LEVELS.forEach(function(l,li){
+    lines.push('');lines.push(l.name.toUpperCase());lines.push('----------------');
+    l.bodies.forEach(function(b,bi){
+      var e=getLatestForBody(li,bi,allReadings),oos=getOOSStatus(li,bi,allReadings);
+      if(!e){lines.push(b.name+' ('+b.vol.toLocaleString()+' gal): No reading on record');if(oos)lines.push('  OUT OF SERVICE: '+oos.reason+' (since '+oos.since+')');return;}
+      var r=e.readings;
+      lines.push(b.name+' ('+b.vol.toLocaleString()+' gal)');
+      if(oos)lines.push('  OUT OF SERVICE: '+oos.reason+' (since '+oos.since+')');   // so an old reading is never mistaken for a current one
+      lines.push('  Tested: '+e.when+(e.tester?' by '+e.tester:''));
+      if(r.orp!=null)lines.push('  ORP: '+r.orp+' mV'+(r.orpSetpoint?' / SP: '+r.orpSetpoint+' mV':''));
+      if(r.pH!=null)lines.push('  pH: '+r.pH);
+      if(r.fc!=null)lines.push('  Free chlorine: '+r.fc+' ppm');
+      if(r.cc!=null)lines.push('  Combined chlorine: '+r.cc+' ppm');
+      if(r.ta!=null)lines.push('  Total alkalinity: '+r.ta+' ppm');
+      if(r.ch!=null)lines.push('  Calcium hardness: '+r.ch+' ppm');
+      if(r.cya!=null)lines.push('  Cyanuric acid: '+r.cya+' ppm');
+      if(r.temp!=null)lines.push('  Temperature: '+r.temp+' F');
+      if(e.lsi!=null)lines.push('  LSI: '+parseFloat(e.lsi).toFixed(2));
+      if(e.backwash)lines.push('  Backwash performed: Yes');
+      if(e.notes)lines.push('  Notes: '+e.notes);
+      var actions=e.doses?e.doses.filter(function(d){return!d.ok;}).map(function(d){return d.chem+': '+d.amount;}):[];
+      if(actions.length)lines.push('  Actions: '+actions.join(' | '));
+    });
+  });
+  lines.push('');lines.push('================================');lines.push('OSLU Aquatics Dashboard (read-only) v2.1.1 - Nov 7, 2026');
+  return lines.join('\n');
+}
+function roCopyDone(btnId,msg){
+  var b=document.getElementById(btnId),m=document.getElementById('ro-copy-msg');
+  if(b){if(!b.getAttribute('data-label'))b.setAttribute('data-label',b.textContent);b.textContent='Copied!';}
+  if(m)m.textContent=msg;
+  clearTimeout(roMsgTimer);
+  roMsgTimer=setTimeout(function(){['ro-copy-actions','ro-copy-latest'].forEach(function(id){var x=document.getElementById(id);if(x&&x.getAttribute('data-label')){x.textContent=x.getAttribute('data-label');x.removeAttribute('data-label');}});if(m)m.textContent='';},2500);
+}
+function roCopy(text,btnId,msg){
+  function fallback(){showCopyFallback(text,btnId,msg);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){roCopyDone(btnId,msg);}).catch(fallback);}
+  else fallback();
+}
+function copyActionItems(){roCopy(buildActionText(),'ro-copy-actions','Action items copied. Paste into Teams or email.');}
+function copyLatestReadings(){roCopy(buildLatestText(),'ro-copy-latest','All 7 bodies copied. Paste into Teams or email.');}
+// If the browser will not copy automatically, show the text already selected so Ctrl+C (or long-press, Copy) finishes the job.
+function showCopyFallback(text,btnId,msg){
+  closeCopyFallback();
+  var w=document.createElement('div');w.id='ro-modal';w.className='ro-modal';
+  w.innerHTML='<div class="ro-modal-card" role="dialog" aria-label="Copy text"><div class="ro-modal-title">Your browser did not allow automatic copying. The text below is selected: press Ctrl+C (or long-press and choose Copy).</div><pre id="ro-copy-pre"></pre><button class="ro-copy-btn" onclick="closeCopyFallback()">Close</button></div>';
+  document.body.appendChild(w);
+  var pre=document.getElementById('ro-copy-pre');pre.textContent=text;
+  var copied=false;
+  try{var rg=document.createRange();rg.selectNodeContents(pre);var sel=window.getSelection();sel.removeAllRanges();sel.addRange(rg);copied=document.execCommand('copy');}catch(e){}
+  if(copied){closeCopyFallback();roCopyDone(btnId,msg);return;}
+  w.addEventListener('click',function(ev){if(ev.target===w)closeCopyFallback();});
+}
+function closeCopyFallback(){var m=document.getElementById('ro-modal');if(m)m.remove();}
+
 function renderMaint(){
   var warn=maintState==='stale'?'<div class="maint-warn">Aquatic maintenance data could not be refreshed - showing the last copy loaded.</div>':(maintState==='unknown'?'<div class="maint-warn">Aquatic maintenance data unavailable.</div>':'');
   var open=maintOpenItems(maintRecords),threads=maintThreads(maintRecords),openSet=new Set(open.map(function(e){return e.id;})),thById={},h='<div class="maint-panels">';
@@ -1359,7 +1437,7 @@ function renderDashboard(){
       var status=overallStatus(latest);
       if(status==='alert'){
         var urgentActions=getActions(latest).filter(function(a){return a.urgent;});
-        if(urgentActions.length)alertGroups.push({li:li,bi:bi,name:b.name+' ('+l.short+')',lines:urgentActions.map(function(a){return escHtml(a.text);})});
+        if(urgentActions.length)alertGroups.push({li:li,bi:bi,name:b.name+' ('+l.short+')',lines:urgentActions.map(function(a){return escHtml(a.text);}),raw:urgentActions.map(function(a){return a.text;})});
       }
     });
   });
@@ -1374,6 +1452,7 @@ function renderDashboard(){
   // Alert bar
   var alertBar=document.getElementById('alert-bar'),groupsEl=document.getElementById('alert-groups'),titleEl=document.getElementById('alert-title');
   alertBar.classList.add('visible');
+  lastAlertGroups=alertGroups;
   if(alertGroups.length){
     alertBar.classList.remove('clear');titleEl.textContent='Action required - '+alertGroups.length+' bod'+(alertGroups.length!==1?'ies':'y');
     groupsEl.innerHTML=alertGroups.map(function(g){return '<div class="alert-group"><div class="alert-group-head"><a href="#" onclick="jumpToCard('+g.li+','+g.bi+');return false;">'+escHtml(g.name)+'</a></div><ul>'+g.lines.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul></div>';}).join('');
