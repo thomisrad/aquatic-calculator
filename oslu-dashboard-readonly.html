@@ -313,6 +313,10 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
 .dash-day:first-child{margin-top:4px;}
 .dash-day-count{font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3);}
 .dash-day-wx{margin-left:14px;font-size:12px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--info-text);}
+.glance td.gl-bw{white-space:normal;}   /* the tag drops under the text only when the screen is too narrow for one line */
+.gl-bw .gl-age{display:inline-block;white-space:nowrap;}
+.gl-due{display:inline-block;margin-left:2px;font-size:12px;font-weight:500;padding:1px 9px;border-radius:20px;border:0.5px solid var(--warn-border);background:var(--warn-bg);color:var(--warn-text);white-space:nowrap;}
+.gl-due.overdue{border-color:var(--danger-border);background:var(--danger-bg);color:var(--danger-text);}
 .ro-badge{display:inline-block;vertical-align:middle;font-size:12px;font-weight:500;letter-spacing:0.06em;padding:3px 10px;margin-left:8px;border-radius:20px;background:var(--info-text);color:var(--bg);}
 .ro-copy-btn{font-size:13px;padding:7px 14px;border:0.5px solid var(--info-border);border-radius:20px;background:var(--info-bg);color:var(--info-text);font-family:var(--font);cursor:pointer;font-weight:500;margin-left:0;}
 .ro-copy-btn:hover{filter:brightness(0.96);}
@@ -337,7 +341,7 @@ body{font-family:var(--font);background:var(--bg3);color:var(--text);min-height:
     <div class="header-right">
       <span class="sync-badge syncing" id="sync-badge">Connecting...</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="version">v2.1.1 read-only 2 - Nov 7, 2026</span>
+        <span class="version">v2.3.0 read-only - Nov 21, 2026</span>
         <span id="refresh-countdown" style="font-size:12px;color:var(--text3);"></span>
       </div>
     </div>
@@ -909,6 +913,51 @@ function barrelStats(list,key,today){
   return s;
 }
 // ===== BARREL LOGIC END =====
+// ===== FILTER LOGIC BEGIN (identical in the calculator and the dashboard) =====
+// Bodies with CARTRIDGE filters instead of sand. Cleaning one is saved like a backwash (so it stays in the backwash log) but flagged cartridge:true,
+// and the dashboard tracks the time BETWEEN cleanings. Keys are level-body: L2 Pool '1-0' has 1 cartridge filter, L13 Hot tub '2-1' has 2
+// (Pentair FullFloXF C-Series, replacement cartridge ULTRA-A18). Backwashes recorded before the change are left alone and do not count here.
+var CARTRIDGE_BODIES={'1-0':{count:1},'2-1':{count:2}};
+function isCartridgeBody(li,bi){return !!CARTRIDGE_BODIES[li+'-'+bi];}
+function cartridgeCount(li,bi){var c=CARTRIDGE_BODIES[li+'-'+bi];return c?c.count:0;}
+function filterDayKey(ts){var d=new Date(ts);return d.getFullYear()+'-'+barrelP2(d.getMonth()+1)+'-'+barrelP2(d.getDate());}
+function cartridgeCleanings(list,li,bi){ // one per calendar day, oldest first
+  var all=(list||[]).filter(function(e){return e&&e.cartridge===true&&e.levelIdx===li&&e.bodyIdx===bi&&typeof e.ts==='number'&&isFinite(e.ts);}).sort(function(a,b){return a.ts-b.ts;});
+  var seen={},out=[];all.forEach(function(e){var k=filterDayKey(e.ts);if(!seen[k]){seen[k]=1;out.push(e);}});
+  return out;
+}
+function cartridgeStats(list,li,bi,today){
+  var ev=cartridgeCleanings(list,li,bi),s={count:ev.length,last:null,daysAgo:null,intervals:[],lastInterval:null,avgInterval:null};
+  if(!ev.length)return s;
+  s.last=ev[ev.length-1];s.daysAgo=barrelDaysBetween(filterDayKey(s.last.ts),today||barrelToday());
+  for(var i=1;i<ev.length;i++)s.intervals.push(barrelDaysBetween(filterDayKey(ev[i-1].ts),filterDayKey(ev[i].ts)));
+  if(s.intervals.length){var recent=s.intervals.slice(-5),sum=0;recent.forEach(function(x){sum+=x;});s.lastInterval=s.intervals[s.intervals.length-1];s.avgInterval=Math.round(sum/recent.length);}
+  return s;
+}
+function cartridgeIntervalText(s){
+  if(!s||!s.count)return '';
+  if(!s.intervals.length)return 'First cleaning on record: the time between cleanings shows after the next one.';
+  var shown=s.intervals.slice(-5);
+  return 'Time between cleanings: '+shown.join(', ')+' days'+(shown.length>1?' (average '+s.avgInterval+')':'');
+}
+var CARTRIDGE_MAX_MONTHS=6;   // the filter's label: "Filter should be manually cleaned semi-annually"
+function filterAddMonths(dayKey,n){
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dayKey||''));if(!m)return null;
+  var first=new Date(+m[1],+m[2]-1+n,1),dim=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();   // Aug 31 + 6 months = Feb 28 (or 29)
+  return first.getFullYear()+'-'+barrelP2(first.getMonth()+1)+'-'+barrelP2(Math.min(+m[3],dim));
+}
+function cartridgeDue(s,today){ // when the next cleaning is due: 6 months after the last one. "soon" = within 30 days.
+  if(!s||!s.last)return null;
+  var due=filterAddMonths(filterDayKey(s.last.ts),CARTRIDGE_MAX_MONTHS),left=barrelDaysBetween(today||barrelToday(),due);
+  return{due:due,daysLeft:left,status:left<0?'overdue':(left<=30?'soon':'ok')};
+}
+function cartridgeDueText(du){
+  var base='Manufacturer: clean at least every '+CARTRIDGE_MAX_MONTHS+' months.';
+  if(!du)return base;
+  if(du.status==='overdue')return base+' OVERDUE: it was due by '+barrelDateLabel(du.due)+' ('+(-du.daysLeft)+' day'+(du.daysLeft!==-1?'s':'')+' ago).';
+  return base+' Next due by '+barrelDateLabel(du.due)+' ('+(du.daysLeft===0?'today':'in '+du.daysLeft+' day'+(du.daysLeft!==1?'s':''))+').';
+}
+// ===== FILTER LOGIC END =====
 
 // ---- Chemical barrels on the dashboard ----
 var BAR_PILL={none:['none','No record'],tracking:['tracking','Tracking'],ok:['ok','OK'],soon:['soon','Due soon'],overdue:['overdue','Past usual']};
@@ -988,8 +1037,18 @@ function renderGlance(allLatest){
     }
     var age=latest?now-latest.ts:null,tcls=age==null?'none':(age<24*3600000?'ok':(age<48*3600000?'warn':'alert'));
     h+='<td><span class="gl-age '+tcls+'">'+(age==null?'Never':(age<3600000?Math.floor(age/60000)+'m ago':(age<86400000?Math.floor(age/3600000)+'h ago':Math.floor(age/86400000)+'d ago')))+'</span></td>';
-    var bw=allReadings.filter(function(x){return x.levelIdx===li&&x.bodyIdx===bi&&x.backwash===true;}),lb=bw.length?bw.reduce(function(a,c){return a.ts>c.ts?a:c;}):null,bd=lb?calDaysAgo(lb.ts):null;
-    h+='<td><span class="gl-age plain" title="'+(lb?escHtml('Backwash logged '+(lb.when||new Date(lb.ts).toLocaleString('en-US'))):'')+'">'+(bd==null?'Never recorded':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago')))+'</span></td>';
+    var bwTxt,bwTitle,bwTag='',bwTagCls='';
+    if(isCartridgeBody(li,bi)){   // cartridge filter: only cartridge cleanings count (older sand-era backwashes are ignored here)
+      var cs=cartridgeStats(allReadings,li,bi),civ=cartridgeIntervalText(cs),du=cartridgeDue(cs);
+      bwTxt=cs.last?'Cartridge: '+barrelAgo(cs.daysAgo):'Never recorded';
+      bwTitle=cs.last?('Cartridge cleaned '+(cs.last.when||'')+'. '+civ+' '+cartridgeDueText(du)):('No cartridge cleaning recorded yet. '+cartridgeDueText(null));
+      if(du&&du.status!=='ok'){bwTag=du.status==='overdue'?'overdue':'due soon';bwTagCls=du.status;}   // the manufacturer's 6-month rule
+    }else{
+      var bw=allReadings.filter(function(x){return x.levelIdx===li&&x.bodyIdx===bi&&x.backwash===true;}),lb=bw.length?bw.reduce(function(a,c){return a.ts>c.ts?a:c;}):null,bd=lb?calDaysAgo(lb.ts):null;
+      bwTxt=bd==null?'Never recorded':(bd===0?'Today':(bd===1?'Yesterday':bd+' days ago'));
+      bwTitle=lb?'Backwash logged '+(lb.when||new Date(lb.ts).toLocaleString('en-US')):'';
+    }
+    h+='<td class="gl-bw"><span class="gl-age plain" title="'+escHtml(bwTitle)+'">'+escHtml(bwTxt)+'</span>'+(bwTag?' <span class="gl-due '+bwTagCls+'" title="'+escHtml(cartridgeDueText(du))+'">'+bwTag+'</span>':'')+'</td>';
     var openTxt='<span class="gl-none">-</span>';
     if(maintState!=='unknown'){
       var recs=maintRecords.filter(function(e){return e.levelIdx===li&&e.bodyIdx===bi;}),op=maintOpenItems(recs);
@@ -1043,7 +1102,7 @@ function buildActionText(){ // exactly what the red "Action required" bar shows 
   var L=['OSLU AQUATICS - ACTION REQUIRED','Generated: '+roStamp(),'Latest reading for each body of water ('+roWindowLabel()+' view)','================================'];
   if(!lastAlertGroups.length){L.push('');L.push('No action required. Every body of water with a recent reading is within limits.');}
   else lastAlertGroups.forEach(function(g){L.push('');L.push(g.name);g.raw.forEach(function(t){L.push('  - '+t);});});
-  L.push('');L.push('================================');L.push('OSLU Aquatics Dashboard (read-only) v2.1.1 - Nov 7, 2026');
+  L.push('');L.push('================================');L.push('OSLU Aquatics Dashboard (read-only) v2.3.0 - Nov 21, 2026');
   return L.join('\n');
 }
 function buildLatestText(){ // the calculator's "Copy all latest readings" report, from each body's latest real test
@@ -1066,13 +1125,13 @@ function buildLatestText(){ // the calculator's "Copy all latest readings" repor
       if(r.cya!=null)lines.push('  Cyanuric acid: '+r.cya+' ppm');
       if(r.temp!=null)lines.push('  Temperature: '+r.temp+' F');
       if(e.lsi!=null)lines.push('  LSI: '+parseFloat(e.lsi).toFixed(2));
-      if(e.backwash)lines.push('  Backwash performed: Yes');
+      if(e.backwash)lines.push(e.cartridge?'  Cartridge cleaned: Yes':'  Backwash performed: Yes');
       if(e.notes)lines.push('  Notes: '+e.notes);
       var actions=e.doses?e.doses.filter(function(d){return!d.ok;}).map(function(d){return d.chem+': '+d.amount;}):[];
       if(actions.length)lines.push('  Actions: '+actions.join(' | '));
     });
   });
-  lines.push('');lines.push('================================');lines.push('OSLU Aquatics Dashboard (read-only) v2.1.1 - Nov 7, 2026');
+  lines.push('');lines.push('================================');lines.push('OSLU Aquatics Dashboard (read-only) v2.3.0 - Nov 21, 2026');
   return lines.join('\n');
 }
 function roCopyDone(btnId,msg){
@@ -1539,7 +1598,7 @@ function renderDashboard(){
 
         // Backwash tag
         if(latest.backwash){
-          html+='<div style="font-size:13px;font-weight:500;color:var(--success-text);background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:6px;">Backwash performed - '+timeAgo(latest.ts)+'</div>';
+          html+='<div style="font-size:13px;font-weight:500;color:var(--success-text);background:var(--success-bg);border:0.5px solid var(--success-border);border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:6px;">'+(latest.cartridge?'Cartridge cleaned':'Backwash performed')+' - '+timeAgo(latest.ts)+'</div>';
         }
         // Notes
         if(latest.notes){
@@ -1758,9 +1817,13 @@ function renderDashHistory(){
         +'</div></div></div>';
     }
     if(e.backwashOnly){
+      var cIv='';
+      if(e.cartridge){var cl=cartridgeCleanings(allReadings,e.levelIdx,e.bodyIdx),cix=-1;for(var ck=0;ck<cl.length;ck++){if(cl[ck].id===e.id){cix=ck;break;}}
+        if(cix>0)cIv=barrelDaysBetween(filterDayKey(cl[cix-1].ts),filterDayKey(e.ts))+' days since the previous cleaning';else if(cix===0)cIv='First cleaning on record';}
       return '<div class="dash-hist-entry" style="border-color:var(--info-border);background:var(--info-bg);">'
-        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">BACKWASH PERFORMED: '+escHtml(e.body)+' - '+escHtml(e.level)+'</div>'
+        +'<div class="dash-hist-head"><div><div class="dash-hist-who" style="color:var(--info-text);">'+(e.cartridge?'CARTRIDGE CLEANED: ':'BACKWASH PERFORMED: ')+escHtml(e.body)+' - '+escHtml(e.level)+(e.cartridge&&e.cartridgeCount?' ('+escHtml(e.cartridgeCount)+' cartridge'+(e.cartridgeCount!==1?'s':'')+')':'')+'</div>'
         +'<div class="dash-hist-when" style="text-align:left;">'+escHtml(e.when)+'</div>'
+        +(cIv?'<div style="font-size:13px;color:var(--info-text);">'+escHtml(cIv)+'</div>':'')
         +(e.notes?'<div style="font-size:13px;color:var(--info-text);">Note: '+escHtml(e.notes)+'</div>':'')
         +(e.tester?'<div style="font-size:13px;color:var(--info-text);">By: '+escHtml(e.tester)+'</div>':'')
         +'</div></div></div>';
@@ -1788,7 +1851,7 @@ function renderDashHistory(){
       +(r.temp!=null?'<div class="dash-hist-param">Temp <span>'+r.temp+' F</span></div>':'')
       +'</div>'
       +suggestedHTML(e)
-      +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">Backwash performed</span></div>':'')
+      +(e.backwash===true?'<div style="margin-top:6px;"><span class="maint-pill closed" style="margin-left:0;">'+(e.cartridge?'Cartridge cleaned':'Backwash performed')+'</span></div>':'')
       +(e.notes?noteBox(e.notes,'5px 9px').replace('margin-bottom:6px','margin-top:6px'):'')
       +'</div>';
   });
@@ -1807,7 +1870,7 @@ function exportDashCSV(){
   var wxMap=weatherByDate(weatherRecords);
   entries.forEach(function(e){
     var r=e.readings||{},wx=wxMap[weatherDayKey(e.ts)]||{};
-    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?"Backwash":(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":"",wx.highF!=null?wx.highF:"",wx.uv!=null?wx.uv:""]);
+    rows.push([e.when,e.tester||"",e.level,e.body,e.volume||"",e.lsi!=null?e.lsi:"",r.orp||"",r.orpSetpoint||"",r.pH||"",r.fc||"",r.cc||"",r.ta||"",r.ch||"",r.cya||"",r.temp||"",e.outOfService?"Out of service":(e.returnedToService?"Returned to service":(e.backwashOnly?(e.cartridge?"Cartridge cleaned":"Backwash"):(e.barrelChange?"Barrel changed":"Reading"))),e.outOfService?(e.reason||""):(e.barrelChange?(e.barrelLabel+" ("+e.barrelGal+" gal)"+(e.notes?" - "+e.notes:"")):(e.notes||"")),e.backwash?"Yes":"",wx.highF!=null?wx.highF:"",wx.uv!=null?wx.uv:""]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\n");
   var blob=new Blob([csv],{type:"text/csv"});
